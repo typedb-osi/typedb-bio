@@ -1,0 +1,484 @@
+define 
+
+######
+# CORD19
+######
+
+# Entities
+
+paper sub entity, 
+	has paper-id, 
+	has title,
+	has year, 
+	has volume, 
+	has issn, 
+	has pmid,
+	plays authored-paper, 
+	plays containing-paper, 
+	plays referenced-paper,
+	plays referencing-paper; 
+
+paragraph sub entity, # This plays the abstract/body_text roles
+	has section-name, # Abstract/text
+	has text, 
+	has language,
+	plays containing-span-paragraph, 
+	plays contained-paper-paragraph,
+	plays mentioning-paragraph,
+	plays contained-patent-paragraph; 
+
+span sub entity, 
+	has start,
+	has end,
+	has text,
+	plays referencing-paragraph,
+	plays contained-span;
+
+cite-span sub span;
+ref-span sub span; 
+
+person sub entity,
+	has first-name,
+	has middle-name,
+	has last-name, 
+	has email,
+	plays author,
+	plays affiliated,
+	plays patent-applicant,
+	plays patent-owner,
+	plays inventor; 
+
+organisation sub entity, 
+	has name, 
+	plays affiliating,
+	plays located, 
+	plays locating,
+	plays patent-owner,
+	plays patent-applicant, 
+	plays inventor; 
+	laboratory sub organisation; 
+	institution sub organisation;
+	company sub organisation; 
+
+geo-location sub entity,
+	has name, 
+	plays locating,
+	plays located;
+country sub geo-location; 
+settlement sub geo-location; 
+region sub geo-location;
+
+# Relations
+
+authorship sub relation, 
+	relates author, 
+	relates authored-paper;
+
+affiliateship sub relation, 
+	relates affiliated,
+	relates affiliating;
+
+located-in sub relation, 
+	relates locating, 
+	relates located;
+
+paper-paragraph-containment sub relation, 
+	relates containing-paper, 
+	relates contained-paper-paragraph; 
+
+patent-paragraph-containment sub relation, 
+	relates containing-patent, 
+	relates contained-patent-paragraph; 
+
+paragraph-span-containment sub relation,
+	relates contained-span, 
+	relates containing-span-paragraph;
+
+mentioning sub relation, 
+	relates mentioning-paragraph, 
+	relates mentioned;
+
+bibliography-reference sub relation, 
+	has ref-id,
+	has venue, 
+	has pages,
+	relates referencing-paragraph,
+	relates referencing-paper,
+	relates referenced-paper;
+
+# Attributes
+
+identifier sub attribute, datatype string; 
+paper-id sub identifier;
+title sub attribute, datatype string; 
+section-name sub attribute, datatype string; 
+text sub attribute, datatype string; 
+start sub attribute, datatype long; 
+end sub attribute, datatype long; 
+name sub attribute, datatype string; 
+first-name sub name; 
+middle-name sub name; 
+last-name sub name; 
+email sub attribute, datatype string; 
+ref-id sub identifier;
+title sub attribute, datatype string; 
+year sub attribute, datatype long; 
+venue sub attribute, datatype string; 
+volume sub attribute, datatype long; 
+issn sub attribute, datatype string; 
+pages sub attribute, datatype string; 
+pmid sub attribute, datatype string; 
+language sub attribute, datatype string;
+
+### Rules: 
+### 1: When text -> cite span -> bib reference -> paper then text -> paper 
+
+######
+### LENS 
+######
+
+patent sub entity,
+	has publication-number, 
+	has lens-id,
+	has publication-date,
+	has publication-year,
+	has application-number,
+	has application-date,
+	has priority-numbers, 
+	has earliest-priority-date,
+	has title, 
+	has URL,
+	has patent-type,
+	has cited-by-patent-count,
+	has simple-family-size,
+	has extended-family-size,
+	has sequence-count,
+	has cpc-classifications, 
+	has IPCR-classifications,
+	has US-classifications,
+	has NPL-citation-count,
+	has NPL-resolved-citation-count,
+	has NPL-resolved-lens-id,
+	has NPL-resolved-external-id,
+	has NPL-citations,
+	plays granted-patent,
+	plays applied-patent,
+	plays invented,
+	plays owned-patent,
+	plays containing-patent,
+	plays simple-familiar-patent;
+
+jurisdiction sub entity, 
+	has name, 
+	plays granting-jurisdiction;
+
+## Relations
+
+grantship sub relation, 
+	relates granting-jurisdiction,
+	relates granted-patent;
+
+application sub relation,
+	relates applied-patent,
+	relates patent-applicant;
+
+invention sub relation,
+	relates invented,
+	relates inventor;
+
+ownership sub relation, 
+	relates patent-owner,
+	relates owned-patent;
+
+simple-lens-family sub relation, 
+	has family-id,
+	relates simple-familiar-patent;
+
+extended-lens-family sub relation, 
+	has family-id,
+	relates extended-familiar-patent;
+
+publication-number sub attribute, datatype string;
+lens-id sub identifier;
+family-id sub identifier;
+publication-date sub attribute, datatype string;
+publication-year sub attribute, datatype string;
+application-number sub identifier;
+application-date sub attribute, datatype string;
+priority-numbers sub attribute, datatype long;
+earliest-priority-date sub attribute, datatype string;
+URL sub attribute, datatype string;
+patent-type sub attribute, datatype string;
+cited-by-patent-count sub attribute, datatype string;
+simple-family-size sub attribute, datatype string;
+extended-family-size sub attribute, datatype string;
+sequence-count sub attribute, datatype string;
+cpc-classifications sub attribute, datatype string;
+IPCR-classifications sub attribute, datatype string;
+US-classifications sub attribute, datatype string;
+NPL-citation-count sub attribute, datatype string;
+NPL-resolved-citation-count sub attribute, datatype string;
+NPL-resolved-lens-id sub attribute, datatype string;
+NPL-resolved-external-id sub attribute, datatype string;
+NPL-citations sub attribute, datatype string;
+
+
+######
+### Molecular Schema
+######
+
+gene sub entity,
+    has gene-symbol,
+    has entrez-id,
+    has ensembl-gene-stable-id,
+    has ensembl-xref,
+    has gene-name,
+    plays encoding-gene,
+    plays mentioned,
+    plays associated-gene,
+    plays target-gene;
+transcript sub entity, 
+	has ensembl-transcript-stable-id, 
+	plays encoded-transcript,
+	plays translating-transcript,
+	plays mentioned;
+protein sub entity,
+    has uniprot-id,
+    has uniprot-symbol,
+    has uniprot-name,
+    has ensembl-protein-stable-id, 
+    has go-evidence-code,
+    has go-taxon,
+    has go-id,
+    has function-description,
+    plays modulated,
+	plays activating-protein,
+	plays activated-protein,
+    plays translated-protein,
+    plays associated-protein, 
+    plays mentioned,
+    plays encoded-protein,
+    plays expressed-protein,
+    plays interacting-protein,
+    plays participating-protein,
+    plays target-protein;
+disease sub entity,
+    has disease-name,
+    has disease-id,
+    plays associated-disease,
+    plays affected-disease;
+drug sub entity,
+    has drug-name,
+    has drug-chembl-id,
+    plays inhibitor,
+    plays antagonist,
+    plays blocker,
+    plays therapeutic,
+    plays interacted-drug,
+    plays associated-drug,
+    plays resulting-drug;
+compound sub entity,
+	plays participating-compound,
+	plays modulator;
+tissue sub entity,
+    has tissue-name,
+    plays enhanced-tissue,
+    plays tissue-context,
+    plays associated-tissue;
+pathway sub entity,
+    has pathway-name,
+    has pathway-id,
+    plays participated-pathway;
+
+## Relations
+transcription sub relation, 
+	relates encoding-gene,
+	relates encoded-transcript;
+translation sub relation, 
+	relates translated-protein,
+	relates translating-transcript;
+protein-complex sub relation, 
+	has complexportal-name,
+	has complexportal-id,
+	has complexportal-object-symbol,
+	has go-id,
+	has go-taxon,
+	has pmid,
+	has go-evidence-code,
+	plays mentioned,
+	relates associated-protein;
+gene-protein-encoding sub relation,
+	relates encoded-protein,
+	relates encoding-gene;
+protein-disease-association sub relation,
+    relates associated-protein,
+    relates associated-disease;
+gene-disease-association sub relation,
+    relates associated-gene,
+    relates associated-disease;
+gene-tissue-association sub relation,
+	relates associated-tissue,
+	relates associated-gene;
+drug-protein-interaction sub relation,
+    relates inhibitor,
+    relates antagonist,
+    relates blocker,
+    relates target-protein;
+drug-gene-interaction sub relation,
+    relates target-gene,
+    relates interacted-drug;
+tissue-enhancement sub relation,
+    relates enhanced-tissue,
+    relates expressed-protein;
+process-localisation sub relation,
+    relates biomolecular-process,
+    relates tissue-context;
+protein-protein-interaction sub relation,
+    relates interacting-protein,
+    relates activating-protein,
+    relates activated-protein,
+    plays biomolecular-process;
+drug-disease-association sub relation,
+    relates affected-disease,
+    relates therapeutic;
+pathway-participation sub relation,
+	relates participating-protein,
+	relates participated-pathway;
+disease-tissue-association sub relation,
+    relates associated-disease,
+    relates associated-tissue;
+drug-tissue-association sub relation,
+    relates associated-drug,
+    relates associated-tissue;
+drug-compound-combination sub relation, 
+	relates participating-compound,
+	relates resulting-drug;
+modulation sub relation,
+	relates modulator,
+	relates modulated;
+
+
+## Attributes
+
+name sub attribute, datatype string;
+	disease-name sub name;
+	database-name sub name;
+	uniprot-name sub name;
+	gene-symbol sub name;
+	ensembl-xref sub name; 
+	uniprot-symbol sub name; 
+	complexportal-name sub name;
+	complexportal-object-symbol sub name;
+	gene-name sub name;
+	protein-name sub name;
+	pathway-name sub name;
+	tissue-name sub name;
+	drug-name sub name;
+
+identifier sub attribute, datatype string;
+	complex-id sub identifier;
+		complexportal-id sub complex-id;
+	gene-id sub identifier;
+		ensembl-gene-stable-id sub gene-id;
+		entrez-id sub gene-id;
+	protein-id sub identifier;
+		uniprot-id sub protein-id;
+		ensembl-protein-stable-id sub protein-id;
+		uniprot-id sub protein-id;
+		ensembl-id sub protein-id;
+	transcript-id sub identifier;
+		ensembl-transcript-stable-id sub transcript-id;
+	go-id sub identifier;
+	disease-id sub identifier;
+
+	GEOStudy-id sub identifier;
+	GEOComparison-id sub identifier;
+	pathway-id sub identifier;
+	drug-chembl-id sub identifier;
+
+go-evidence-code sub attribute, datatype string; 
+go-taxon sub attribute, datatype long; 
+function-description sub attribute, datatype string;
+
+### Rules
+
+protein-complex-protein sub rule,
+when {
+	$pr isa protein; 
+	$para isa paragraph; 
+	$r1 (mentioning-paragraph: $para, mentioned: $pr) isa mentioning;
+	$prc (associated-protein: $pr) isa protein-complex;
+}, then {
+	(mentioning-paragraph: $para, mentioned: $prc) isa mentioning;
+};
+
+when-protein-complex-gene sub rule,
+when {
+	$pr isa protein; 
+	$para isa paragraph; 
+	$g isa gene; 
+	$t isa transcript;
+	$r3 (encoding-gene: $g, encoded-transcript: $t) isa transcription; 
+	$r1 (mentioning-paragraph: $para, mentioned: $g) isa mentioning;
+	$r4 (translating-transcript: $t, translated-protein: $p) isa translation; 
+	$prc (associated-protein: $pr) isa protein-complex;
+}, then {
+	(mentioning-paragraph: $para, mentioned: $prc) isa mentioning;
+};
+
+gene-disease-association-and-gene-protein-encoding-protein-disease-association sub rule,
+when {
+    $g isa gene;
+    $pr isa protein;
+    $di isa disease;
+    $r1 (associated-disease: $di, associated-gene: $g) isa gene-disease-association;
+    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
+}, then {
+    (associated-protein: $pr, associated-disease: $di) isa protein-disease-association;
+};
+
+gene-tissue-association-gene-protein-encoding-implies-tissue-enhancement sub rule,
+when {
+    $g isa gene;
+    $pr isa protein;
+    $ti isa tissue;
+    $r1 (associated-tissue: $ti, associated-gene: $g) isa gene-tissue-association;
+    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
+}, then {
+    (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
+};
+
+drug-gene-interaction-and-gene-protein-encoding-implies-drug-protein-interaction sub rule,
+when {
+    $g isa gene;
+    $pr isa protein;
+    $dr isa drug;
+    $r1 ($dr, target-gene: $g) isa drug-gene-interaction;
+    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
+}, then {
+    (target-protein: $pr, inhibitor: $dr) isa drug-protein-interaction;
+};
+
+protein-disease-association-and-tissue-enhancement-implies-disease-tissue-association sub rule,
+when {
+   $di isa disease;
+   $pr isa protein;
+   $ti isa tissue;
+   $r1 (associated-disease: $di, associated-protein: $pr) isa protein-disease-association;
+   $r2 (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
+}, then {
+   (associated-disease: $di, associated-tissue: $ti) isa disease-tissue-association;
+};
+
+drug-gene-interaction-and-gene-tissue-association-implies-drug-tissue-association sub rule,
+when {
+   $dr isa drug;
+   $ti isa tissue;
+   $ge isa gene;
+   $r1 (interacted-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
+   $r2 (associated-gene: $ge, associated-tissue: $ti) isa gene-tissue-association;
+}, then {
+   (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
+};
+
+
