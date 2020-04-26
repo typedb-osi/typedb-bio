@@ -63,8 +63,10 @@ organisation sub entity,
 geo-location sub entity,
 	has name, 
 	plays locating,
-	plays located;
-country sub geo-location; 
+	plays located,
+	plays discovering-location;
+country sub geo-location,
+	has country-name; 
 settlement sub geo-location; 
 region sub geo-location;
 
@@ -119,6 +121,7 @@ name sub attribute, datatype string;
 first-name sub name; 
 middle-name sub name; 
 last-name sub name; 
+country-name sub name;
 email sub attribute, datatype string; 
 ref-id sub identifier;
 title sub attribute, datatype string; 
@@ -234,9 +237,11 @@ gene sub entity,
     has ensembl-xref,
     has gene-name,
     plays encoding-gene,
+    plays transcribing-gene,
     plays mentioned,
     plays associated-gene,
-    plays target-gene;
+    plays target-gene,
+    plays hosting-gene;
 transcript sub entity, 
 	has ensembl-transcript-stable-id, 
 	plays encoded-transcript,
@@ -244,6 +249,7 @@ transcript sub entity,
 	plays mentioned;
 protein sub entity,
     has uniprot-id,
+    has uniprot-entry-name,
     has uniprot-symbol,
     has uniprot-name,
     has ensembl-protein-stable-id, 
@@ -261,7 +267,9 @@ protein sub entity,
     plays expressed-protein,
     plays interacting-protein,
     plays participating-protein,
-    plays target-protein;
+    plays target-protein,
+    plays associating,
+    plays hosting-protein;
 disease sub entity,
     has disease-name,
     has disease-id,
@@ -289,10 +297,20 @@ pathway sub entity,
     has pathway-name,
     has pathway-id,
     plays participated-pathway;
+organism sub entity,
+	has organism-name,
+	plays associated-organism,
+	plays hosting-organism;
+virus sub entity, 
+	has genbank-id, 
+	has virus-name, 
+	has identity-percentage,
+	plays hosted-virus,
+	plays discovered-virus;
 
 ## Relations
 transcription sub relation, 
-	relates encoding-gene,
+	relates transcribing-gene,
 	relates encoded-transcript;
 translation sub relation, 
 	relates translated-protein,
@@ -356,6 +374,21 @@ drug-compound-combination sub relation,
 modulation sub relation,
 	relates modulator,
 	relates modulated;
+organism-association sub relation, 
+	relates associated-organism,
+	relates associating;
+organism-virus-hosting sub relation,
+	relates hosted-virus,
+	relates hosting-organism;
+protein-virus-hosting sub relation,
+	relates hosted-virus,
+	relates hosting-protein;
+gene-virus-hosting sub relation, 
+	relates hosted-virus,
+	relates hosting-gene;
+discovery sub relation,
+	relates discovered-virus,
+	relates discovering-location;
 
 
 ## Attributes
@@ -371,9 +404,12 @@ name sub attribute, datatype string;
 	complexportal-object-symbol sub name;
 	gene-name sub name;
 	protein-name sub name;
+	uniprot-entry-name sub name;
 	pathway-name sub name;
 	tissue-name sub name;
 	drug-name sub name;
+	organism-name sub name;
+	virus-name sub name; 
 
 identifier sub attribute, datatype string;
 	complex-id sub identifier;
@@ -390,12 +426,14 @@ identifier sub attribute, datatype string;
 		ensembl-transcript-stable-id sub transcript-id;
 	go-id sub identifier;
 	disease-id sub identifier;
+	genbank-id sub identifier;
 
 	GEOStudy-id sub identifier;
 	GEOComparison-id sub identifier;
 	pathway-id sub identifier;
 	drug-chembl-id sub identifier;
 
+identity-percentage sub attribute, datatype string;
 go-evidence-code sub attribute, datatype string; 
 go-taxon sub attribute, datatype long; 
 function-description sub attribute, datatype string;
@@ -418,7 +456,7 @@ when {
 	$para isa paragraph; 
 	$g isa gene; 
 	$t isa transcript;
-	$r3 (encoding-gene: $g, encoded-transcript: $t) isa transcription; 
+	$r3 (transcribing-gene: $g, encoded-transcript: $t) isa transcription; 
 	$r1 (mentioning-paragraph: $para, mentioned: $g) isa mentioning;
 	$r4 (translating-transcript: $t, translated-protein: $p) isa translation; 
 	$prc (associated-protein: $pr) isa protein-complex;
@@ -481,4 +519,13 @@ when {
    (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
 };
 
-
+virus-gene-then-virus-protein sub rule,
+when {
+	$g isa gene; 
+	$v isa virus;
+	$p isa protein; 
+	$1 (hosting-gene: $g, hosted-virus: $v) isa gene-virus-hosting;
+	$2 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
+}, then {
+	(hosting-protein: $p, hosted-virus: $v) isa protein-virus-hosting;
+};
