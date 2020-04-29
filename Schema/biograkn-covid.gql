@@ -241,7 +241,7 @@ gene sub entity,
     plays mentioned,
     plays associated-gene,
     plays target-gene,
-    plays hosting-gene;
+	plays associated-virus-gene;
 transcript sub entity, 
 	has ensembl-transcript-stable-id, 
 	plays encoded-transcript,
@@ -269,7 +269,7 @@ protein sub entity,
     plays participating-protein,
     plays target-protein,
     plays associating,
-    plays hosting-protein;
+    plays hosting-virus-protein;
 disease sub entity,
     has disease-name,
     has disease-id,
@@ -306,6 +306,7 @@ virus sub entity,
 	has virus-name, 
 	has identity-percentage,
 	plays hosted-virus,
+	plays associated-virus,
 	plays discovered-virus;
 
 ## Relations
@@ -380,20 +381,19 @@ organism-association sub relation,
 organism-virus-hosting sub relation,
 	relates hosted-virus,
 	relates hosting-organism;
-protein-virus-hosting sub relation,
-	relates hosted-virus,
-	relates hosting-protein;
-gene-virus-hosting sub relation, 
-	relates hosted-virus,
-	relates hosting-gene;
+protein-virus-association sub relation,
+	relates associated-virus,
+	relates hosting-virus-protein;
+gene-virus-association sub relation, 
+	relates associated-virus,
+	relates associated-virus-gene;
 discovery sub relation,
 	relates discovered-virus,
 	relates discovering-location;
 
 
 ## Attributes
-
-name sub attribute, datatype string;
+# Name attributes: 
 	disease-name sub name;
 	database-name sub name;
 	uniprot-name sub name;
@@ -524,8 +524,8 @@ when {
 	$g isa gene; 
 	$v isa virus;
 	$p isa protein; 
-	$1 (hosting-gene: $g, hosted-virus: $v) isa gene-virus-hosting;
+	$1 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
 	$2 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
 }, then {
-	(hosting-protein: $p, hosted-virus: $v) isa protein-virus-hosting;
+	(associated-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
 };

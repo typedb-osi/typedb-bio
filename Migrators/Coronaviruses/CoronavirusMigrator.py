@@ -10,7 +10,7 @@ def coronavirusMigrator(uri, keyspace):
 	print('Starting with Coronavirus file.')
 	print('.....')
 
-	# Temporary manual ingesetion of locations
+	# Temporary manual ingestion of locations
 	graql = f"""insert $c isa country, has country-name 'China'; $c2 isa country, has country-name 'Kingdom of Saudi Arabia'; 
 	$c3 isa country, has country-name 'USA'; $c4 isa country, has country-name 'South Korea';"""
 	tx.query(graql)
@@ -61,13 +61,15 @@ def coronavirusMigrator(uri, keyspace):
 		for i in raw_file:
 			data = {}
 			data['coronavirus'] = i[0].strip()
-			data['gene-name'] = i[1].strip()
+			data['uniprot-id'] = i[1].strip()
 			data['entrez-id'] = i[2].strip()
 			import_file.append(data)
 		for q in import_file: 
 			graql = f"""match $v isa virus, has virus-name "{q['coronavirus']}"; 
-			$g isa gene, has gene-name "{q['gene-name']}", has entrez-id "{q['entrez-id']}";
-			insert $r2 (hosting-gene: $g, hosted-virus: $v) isa gene-virus-hosting;"""
+			$p isa protein, has uniprot-id "{q['uniprot-id']}";
+			$g isa gene, has entrez-id "{q['entrez-id']}";
+			insert $r2 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
+			$r3 (associated-virus-protein: $p, hosted-virus: $v) isa protein-virus-association;"""
 			tx.query(graql)
 			print(graql)
 		tx.commit()
