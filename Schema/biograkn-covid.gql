@@ -230,6 +230,12 @@ NPL-citations sub attribute, datatype string;
 ### Molecular Schema
 ######
 
+variant sub entity,
+	has snpId,
+	plays located-variant;
+chromosome sub entity, 
+	has chromosome-name,
+	plays locating-chromosome;
 gene sub entity,
     has gene-symbol,
     has entrez-id,
@@ -241,7 +247,8 @@ gene sub entity,
     plays mentioned,
     plays associated-gene,
     plays target-gene,
-	plays associated-virus-gene;
+	plays associated-virus-gene,
+	plays located-gene;
 transcript sub entity, 
 	has ensembl-transcript-stable-id, 
 	plays encoded-transcript,
@@ -273,8 +280,13 @@ protein sub entity,
 disease sub entity,
     has disease-name,
     has disease-id,
+    has disease-type,
+	plays categorised-disease,
     plays associated-disease,
     plays affected-disease;
+disease-class sub entity, 
+	has class-name,
+	plays associated-class;
 drug sub entity,
     has drug-name,
     has drug-chembl-id,
@@ -333,6 +345,7 @@ protein-disease-association sub relation,
     relates associated-protein,
     relates associated-disease;
 gene-disease-association sub relation,
+	has disgenet-score,
     relates associated-gene,
     relates associated-disease;
 gene-tissue-association sub relation,
@@ -390,11 +403,23 @@ gene-virus-association sub relation,
 discovery sub relation,
 	relates discovered-virus,
 	relates discovering-location;
+chromosome-location sub relation,
+	has start-location, 
+	has end-location,
+	relates located-variant,
+	relates located-gene,
+	relates locating-chromosome;
+disease-class-association sub relation,
+	relates categorised-disease,
+	relates associated-class; 
 
 
 ## Attributes
 # Name attributes: 
+	chromosome-name sub name;
+	class-name sub name; 
 	disease-name sub name;
+	disease-type sub name;
 	database-name sub name;
 	uniprot-name sub name;
 	gene-symbol sub name;
@@ -432,11 +457,15 @@ identifier sub attribute, datatype string;
 	GEOComparison-id sub identifier;
 	pathway-id sub identifier;
 	drug-chembl-id sub identifier;
+	snpId sub identifier;
 
 identity-percentage sub attribute, datatype string;
 go-evidence-code sub attribute, datatype string; 
 go-taxon sub attribute, datatype long; 
 function-description sub attribute, datatype string;
+start-location sub attribute, datatype long;
+end-location sub attribute, datatype long;
+disgenet-score sub attribute, datatype double;
 
 ### Rules
 
@@ -527,5 +556,5 @@ when {
 	$1 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
 	$2 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
 }, then {
-	(associated-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
+	(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
 };
