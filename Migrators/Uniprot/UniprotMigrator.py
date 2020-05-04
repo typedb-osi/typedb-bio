@@ -5,11 +5,9 @@ from inspect import cleandoc
 
 from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
+from Migrators.Helpers.batchLoader import batch_job
 
-num_threads = 8 # Number of threads to enable multi threading
-ctn = 500 # This sets the number of queries are made before we commit
-
-def uniprotMigrate(uri, keyspace, num):
+def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
 	client = GraknClient(uri=uri)
 	session = client.session(keyspace=keyspace)
 	batches_pr = []
@@ -39,15 +37,15 @@ def uniprotMigrate(uri, keyspace, num):
 			data['uniprot-id'] = i[0]
 			data['uniprot-entry-name'] = i[1]
 			data['protein-name'] = i[3]
-			data['gene-name'] = i[4]
+			data['gene-symbol'] = i[4]
 			data['organism'] = i[5]
 			data['function-description'] = i[7]
 			data['ensembl-transcript'] = i[11]
 			data['entrez-id'] = i[12]
 			uniprotdb.append(data)
 
-		insertGenes(uniprotdb, session)
-		insertTranscripts(uniprotdb, session)
+		insertGenes(uniprotdb, session, num_threads, ctn)
+		insertTranscripts(uniprotdb, session, num_threads, ctn)
 
 		# Insert proteins # 
 		# tx = session.transaction().write()
@@ -68,9 +66,9 @@ def uniprotMigrate(uri, keyspace, num):
 					tvariable = tvariable + 1
 			if gene is not None: 
 				try: 
-					graql = graql + "$g isa gene, has gene-name '" + gene + "';"
+					graql = graql + "$g isa gene, has gene-symbol '" + gene + "';"
 				except Exception: 
-					graql = "match $g isa gene, has gene-name '" + gene + "';"
+					graql = "match $g isa gene, has gene-symbol '" + gene + "';"
 			try: 
 				graql = graql + "$h isa organism, has organism-name '" + q['organism'] + "';"
 			except Exception:
@@ -104,7 +102,7 @@ $r (associated-organism: $h, associating: $a) isa organism-association;"""
 		pool.join()
 		# tx.commit()
 		print('.....')
-		print('Finished migrating the Uniprot file.')
+		print('Finished migrating Uniprot file.')
 		print('.....')
 		session.close()
 		client.close()
@@ -136,31 +134,31 @@ def transcriptHelper(q):
 # Returns: a list of [gene, entrez-id]
 # Method removes synonyms from genes and only takes the first one
 def geneHelper(q): 
-	gene_name = q['gene-name']
+	gene_name = q['gene-symbol']
 	entrez_id = q['entrez-id'][0:-1]
 	if gene_name.find(' ') is not -1:
 		gene_name = gene_name[0:gene_name.find(' ')]
 	list = [gene_name, entrez_id]
 	return list
 
-# Insert genes from gene-name. 
+# Insert genes from gene-symbol. 
 # NB: We only insert the first name, if there are synonyms, we ignore them. 
-def insertGenes(uniprotdb, session): 
+def insertGenes(uniprotdb, session, num_threads, ctn): 
 	counter = 0
 	gene_list = []
 	batches = []
 	batches2 = []
 	for q in uniprotdb: 
-		if q['gene-name'] is not "":
+		if q['gene-symbol'] is not "":
 			gene_list.append(geneHelper(q)) 
 			
-	# gene_list = list(dict.fromkeys(gene_list)) # TO DO: Remove duplicate gene-names
+	# gene_list = list(dict.fromkeys(gene_list)) # TO DO: Remove duplicate gene-symbols
 
 	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	for g in gene_list:
 		counter = counter + 1
-		graql = f"""insert $g isa gene, has gene-name '{g[0]}', has entrez-id '{g[1]}';"""
+		graql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
 		batches.append(graql)
 		del graql
 		# tx.query(graql)
@@ -178,7 +176,7 @@ def insertGenes(uniprotdb, session):
 	# tx.commit()
 
 # Insert transcripts 
-def insertTranscripts(uniprotdb, session):
+def insertTranscripts(uniprotdb, session, num_threads, ctn):
 	transcript_list = []
 	batches = []
 	batches2 = []
