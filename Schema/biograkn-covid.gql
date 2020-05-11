@@ -6,7 +6,7 @@ define
 
 # Entities
 
-paper sub entity, 
+publication sub entity, 
 	has paper-id, 
 	has title,
 	has year, 
@@ -289,12 +289,16 @@ disease-class sub entity,
 	plays associated-class;
 drug sub entity,
     has drug-name,
-    has drug-chembl-id,
+    has chembl-id,
+    has drug-claim-name,
+    has drug-claim-source,
+    plays interacting-drug,
     plays inhibitor,
+    plays substrate,
     plays antagonist,
     plays blocker,
     plays therapeutic,
-    plays interacted-drug,
+    plays interacting-drug,
     plays associated-drug,
     plays resulting-drug;
 compound sub entity,
@@ -353,12 +357,15 @@ gene-tissue-association sub relation,
 	relates associated-gene;
 drug-protein-interaction sub relation,
     relates inhibitor,
+    relates substrate,
     relates antagonist,
     relates blocker,
+    relates interacting-drug,
     relates target-protein;
 drug-gene-interaction sub relation,
+	has interaction-type,
     relates target-gene,
-    relates interacted-drug;
+    relates interacting-drug;
 tissue-enhancement sub relation,
     relates enhanced-tissue,
     relates expressed-protein;
@@ -435,6 +442,7 @@ disease-class-association sub relation,
 	drug-name sub name;
 	organism-name sub name;
 	virus-name sub name; 
+	drug-claim-name sub name;
 
 identifier sub attribute, datatype string;
 	complex-id sub identifier;
@@ -456,9 +464,12 @@ identifier sub attribute, datatype string;
 	GEOStudy-id sub identifier;
 	GEOComparison-id sub identifier;
 	pathway-id sub identifier;
-	drug-chembl-id sub identifier;
+	chembl-id sub identifier;
 	snpId sub identifier;
 
+
+  
+drug-claim-source sub attribute, datatype string;
 identity-percentage sub attribute, datatype string;
 go-evidence-code sub attribute, datatype string; 
 go-taxon sub attribute, datatype long; 
@@ -466,6 +477,7 @@ function-description sub attribute, datatype string;
 start-location sub attribute, datatype long;
 end-location sub attribute, datatype long;
 disgenet-score sub attribute, datatype double;
+interaction-type sub attribute, datatype string;
 
 ### Rules
 
@@ -542,7 +554,7 @@ when {
    $dr isa drug;
    $ti isa tissue;
    $ge isa gene;
-   $r1 (interacted-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
+   $r1 (interacting-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
    $r2 (associated-gene: $ge, associated-tissue: $ti) isa gene-tissue-association;
 }, then {
    (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
