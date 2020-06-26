@@ -44,4 +44,4 @@ $r6 (mentioning-paragraph: $pr2, mentioned: $prcom) isa mentioning;
 get; 
 
 ```
-More example available from **Query Examples* directory.
+More example available from **Query Examples** directory.
