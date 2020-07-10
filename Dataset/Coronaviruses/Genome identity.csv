@@ -1,13 +1,13 @@
 GenBank ID ,Coronavirus ,Identity % ,Host ,Location discovered 
-MN908947,2019-nCoV[Wuhan-Hu-1],100,Human ,China 
+MN908947,2019-nCoV,100,Human ,China 
 MN938384,2019-nCoV[HKU-SZ-002a],99.99,Human ,China 
 MN975262,2019-nCoV[HKU-SZ-005b],99.98,Human ,China 
-AY390556,SARS-CoV[GZ02],79.7,Human ,China 
+AY390556,SARS-CoV[GZ02],79.7,Human ,China , SARS, SARS-CoV-2
 AY485277,SARS-CoV[Sino1-11,79.7,Human ,China 
 AY508724,SARS-CoV[NS-1],79.69,Human ,China 
 AY278489,SARS-COV[GD01],79.65,Human ,China 
-KT006149,MERS-CoV[ChinaGD01],54.1,Human ,China 
-KM027262,MERS-CoV[2014KSA_683,54.02,Human ,Kingdom of Saudi Arabia 
+KT006149,MERS-CoV[ChinaGD01],54.1,Human ,China
+KM027262,MERS-CoV[2014KSA_683],54.02,Human ,Kingdom of Saudi Arabia, MERS, MERS-CoV
 DQ415904,HCoV-HKU1,52.41,Human ,China 
 KJ958219,HCoV-OC43,51.08,Human ,China 
 AC 000192,MHV ,50.23,Mouse ,USA 

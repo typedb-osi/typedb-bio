@@ -12,7 +12,7 @@ def coronavirusMigrator(uri, keyspace):
 
 	# Temporary manual ingestion of locations
 	graql = f"""insert $c isa country, has country-name 'China'; $c2 isa country, has country-name 'Kingdom of Saudi Arabia'; 
-	$c3 isa country, has country-name 'USA'; $c4 isa country, has country-name 'South Korea';"""
+	$c3 isa country, has country-name 'USA'; $c4 isa country, has country-name 'South Korea'; $o isa organism, has organism-name 'Mouse';"""
 	tx.query(graql)
 	tx.commit()
 
@@ -29,17 +29,32 @@ def coronavirusMigrator(uri, keyspace):
 		for i in raw_file:
 			data = {}
 			data['genbank-id'] = i[0]
-			data['coronavirus'] = i[1].strip()
 			data['identity%'] = i[2]
 			data['host'] = i[3][0:-1].strip()
-			data['location-discovered'] = i[4][0:-1]
+			data['location-discovered'] = i[4].strip()
+			data['coronavirus-1'] = i[1].strip()
+			try: 
+				data['coronavirus-2'] = i[5].strip()
+			except Exception: 
+				pass
+			try: 
+				data['coronavirus-3'] = i[6].strip()
+			except Exception:
+				pass
 			import_file.append(data)
 		for q in import_file: 
-			print(q)
+			virus_name = ""
+			try: 
+				virus_name = f""" has virus-name "{q['coronavirus-1']}", has virus-name "{q['coronavirus-2']}", has virus-name "{q['coronavirus-3']}", """
+			except Exception:
+				try: 
+					virus_name = f""" has virus-name "{q['coronavirus-1']}", has virus-name "{q['coronavirus-2']}", """
+				except Exception: 
+					virus_name = f""" has virus-name "{q['coronavirus-1']}", """
+			print(virus_name)
 			graql = f"""match $c isa country, has country-name "{q['location-discovered']}"; 
 			$o isa organism, has organism-name "{q['host']}";
-			insert $v isa virus, has genbank-id "{q['genbank-id']}", 
-			has virus-name "{q['coronavirus']}", 
+			insert $v isa virus, has genbank-id "{q['genbank-id']}", {virus_name}
 			has identity-percentage "{q['identity%']}";
 			$r (discovering-location: $c, discovered-virus: $v) isa discovery;
 			$r1 (hosting-organism: $o, hosted-virus: $v) isa organism-virus-hosting;"""

@@ -6,9 +6,9 @@ define
 
 # Entities
 
-paper sub entity, 
+publication sub entity, 
 	has paper-id, 
-	has title,
+	key title,
 	has year, 
 	has volume, 
 	has issn, 
@@ -110,28 +110,28 @@ bibliography-reference sub relation,
 
 # Attributes
 
-identifier sub attribute, datatype string; 
+identifier sub attribute, value string; 
 paper-id sub identifier;
-title sub attribute, datatype string; 
-section-name sub attribute, datatype string; 
-text sub attribute, datatype string; 
-start sub attribute, datatype long; 
-end sub attribute, datatype long; 
-name sub attribute, datatype string; 
+title sub attribute, value string; 
+section-name sub attribute, value string; 
+text sub attribute, value string; 
+start sub attribute, value long; 
+end sub attribute, value long; 
+name sub attribute, value string; 
 first-name sub name; 
 middle-name sub name; 
 last-name sub name; 
 country-name sub name;
-email sub attribute, datatype string; 
+email sub attribute, value string; 
 ref-id sub identifier;
-title sub attribute, datatype string; 
-year sub attribute, datatype long; 
-venue sub attribute, datatype string; 
-volume sub attribute, datatype long; 
-issn sub attribute, datatype string; 
-pages sub attribute, datatype string; 
-pmid sub attribute, datatype string; 
-language sub attribute, datatype string;
+title sub attribute, value string; 
+year sub attribute, value long; 
+venue sub attribute, value string; 
+volume sub attribute, value long; 
+issn sub attribute, value string; 
+pages sub attribute, value string; 
+pmid sub attribute, value string; 
+language sub attribute, value string;
 
 ### Rules: 
 ### 1: When text -> cite span -> bib reference -> paper then text -> paper 
@@ -201,29 +201,29 @@ extended-lens-family sub relation,
 	has family-id,
 	relates extended-familiar-patent;
 
-publication-number sub attribute, datatype string;
+publication-number sub attribute, value string;
 lens-id sub identifier;
 family-id sub identifier;
-publication-date sub attribute, datatype string;
-publication-year sub attribute, datatype string;
+publication-date sub attribute, value string;
+publication-year sub attribute, value string;
 application-number sub identifier;
-application-date sub attribute, datatype string;
-priority-numbers sub attribute, datatype long;
-earliest-priority-date sub attribute, datatype string;
-URL sub attribute, datatype string;
-patent-type sub attribute, datatype string;
-cited-by-patent-count sub attribute, datatype string;
-simple-family-size sub attribute, datatype string;
-extended-family-size sub attribute, datatype string;
-sequence-count sub attribute, datatype string;
-cpc-classifications sub attribute, datatype string;
-IPCR-classifications sub attribute, datatype string;
-US-classifications sub attribute, datatype string;
-NPL-citation-count sub attribute, datatype string;
-NPL-resolved-citation-count sub attribute, datatype string;
-NPL-resolved-lens-id sub attribute, datatype string;
-NPL-resolved-external-id sub attribute, datatype string;
-NPL-citations sub attribute, datatype string;
+application-date sub attribute, value string;
+priority-numbers sub attribute, value long;
+earliest-priority-date sub attribute, value string;
+URL sub attribute, value string;
+patent-type sub attribute, value string;
+cited-by-patent-count sub attribute, value string;
+simple-family-size sub attribute, value string;
+extended-family-size sub attribute, value string;
+sequence-count sub attribute, value string;
+cpc-classifications sub attribute, value string;
+IPCR-classifications sub attribute, value string;
+US-classifications sub attribute, value string;
+NPL-citation-count sub attribute, value string;
+NPL-resolved-citation-count sub attribute, value string;
+NPL-resolved-lens-id sub attribute, value string;
+NPL-resolved-external-id sub attribute, value string;
+NPL-citations sub attribute, value string;
 
 
 ######
@@ -281,6 +281,7 @@ disease sub entity,
     has disease-name,
     has disease-id,
     has disease-type,
+    plays mentioned,
 	plays categorised-disease,
     plays associated-disease,
     plays affected-disease;
@@ -289,12 +290,16 @@ disease-class sub entity,
 	plays associated-class;
 drug sub entity,
     has drug-name,
-    has drug-chembl-id,
+    has chembl-id,
+    has drug-claim-name,
+    has drug-claim-source,
+    plays interacting-drug,
     plays inhibitor,
+    plays substrate,
     plays antagonist,
     plays blocker,
     plays therapeutic,
-    plays interacted-drug,
+    plays interacting-drug,
     plays associated-drug,
     plays resulting-drug;
 compound sub entity,
@@ -353,12 +358,15 @@ gene-tissue-association sub relation,
 	relates associated-gene;
 drug-protein-interaction sub relation,
     relates inhibitor,
+    relates substrate,
     relates antagonist,
     relates blocker,
+    relates interacting-drug,
     relates target-protein;
 drug-gene-interaction sub relation,
+	has interaction-type,
     relates target-gene,
-    relates interacted-drug;
+    relates interacting-drug;
 tissue-enhancement sub relation,
     relates enhanced-tissue,
     relates expressed-protein;
@@ -435,8 +443,9 @@ disease-class-association sub relation,
 	drug-name sub name;
 	organism-name sub name;
 	virus-name sub name; 
+	drug-claim-name sub name;
 
-identifier sub attribute, datatype string;
+identifier sub attribute, value string;
 	complex-id sub identifier;
 		complexportal-id sub complex-id;
 	gene-id sub identifier;
@@ -456,16 +465,17 @@ identifier sub attribute, datatype string;
 	GEOStudy-id sub identifier;
 	GEOComparison-id sub identifier;
 	pathway-id sub identifier;
-	drug-chembl-id sub identifier;
+	chembl-id sub identifier;
 	snpId sub identifier;
 
-identity-percentage sub attribute, datatype string;
-go-evidence-code sub attribute, datatype string; 
-go-taxon sub attribute, datatype long; 
-function-description sub attribute, datatype string;
-start-location sub attribute, datatype long;
-end-location sub attribute, datatype long;
-disgenet-score sub attribute, datatype double;
+drug-claim-source sub attribute, value string;
+identity-percentage sub attribute, value string;
+go-evidence-code sub attribute, value string; 
+go-taxon sub attribute, value long; 
+function-description sub attribute, value string;
+start-location sub attribute, value long;
+end-location sub attribute, value long;
+disgenet-score sub attribute, value double;
 
 ### Rules
 
@@ -542,7 +552,7 @@ when {
    $dr isa drug;
    $ti isa tissue;
    $ge isa gene;
-   $r1 (interacted-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
+   $r1 (interacting-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
    $r2 (associated-gene: $ge, associated-tissue: $ti) isa gene-tissue-association;
 }, then {
    (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
@@ -558,3 +568,5 @@ when {
 }, then {
 	(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
 };
+
+
