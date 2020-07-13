@@ -1,47 +1,89 @@
 # BioGrakn COVID 
 
-**[Overview](#overview)** | **[Installation](#installation)** |
- **[Examples](#examples)** 
+**[Overview](#overview)** | **[Quickstart](#Quickstart)** | **[Installation](#installation)** | **[Datasets](#Datasets)** |
+ **[Examples](#examples)** | **[How You Can Help](#How-You-Can-Help)**
 
 [![Discussion Forum](https://img.shields.io/discourse/https/discuss.grakn.ai/topics.svg)](https://discuss.grakn.ai)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-grakn-796de3.svg)](https://stackoverflow.com/questions/tagged/grakn)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-graql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/graql)
 
-BioGrakn COVID is an open source project to build a knowledge graph to enable research in the SARS-CoV-2 virus and COVID-19.
+BioGrakn Covid is an open source project to build a knowledge graph to enable research in COVID-19 and related disease areas.
 
 ## Overview
-BioGrakn COVID provides an intuitive way to query interconnected and heterogeneous biomedical data in one single place. The schema that models the underlying knowledge graph alongside the descriptive query language, Graql, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, the automated reasoning capability of Grakn, allows BioGrakn to become an intelligent database of biomedical data that infers implicit knowledge based on the explicitly stored data. BioGrakn can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
+We're excited to release an open source knowledge graph to speed up the research into Covid-19. Our goal is to provide a way for researchers to easily analyse and query large amounts of data and papers related to the virus.
+
+BioGrakn Covid makes it easy to quickly trace information sources and identify articles and the information therein. This first release includes entities from papers, diseases, proteins, genes, viruses, tissues, pathways, and drugs. 
+
+For example, by querying for the virus SARS-CoV-2, we can find the associated protein Proteasome subunit alpha type-2 and the drug Carfilzomib, which is a known potential inhibitor of the SARS-CoV-2 main protease. We can also find the gene that encodes for it (PSMA2) and find papers where it's been mentioned.
+
+![query_1](Images/query_1.png)
+
+The schema that models the underlying knowledge graph alongside the descriptive query language, Graql, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, Grakn's automated reasoning, allows BioGrakn to become an intelligent database of biomedical data for the Covid research field that infers implicit knowledge based on the explicitly stored data. BioGrakn Covid can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
+
+## Quickstart
+BioGrakn Covid is free to access via an Azure VM. You can query it using Workbase: 
+1. Download and run Workbase ([download](https://grakn.ai/download#workbase))
+2. Make sure Grakn isn't running on your local machine
+3. On the main Workbase screen, change the host IP address to 51.132.219.112 and port 4855
+4. Click connect, select the keyspace *biograkn_covid* and start exploring the data!
+
+You can also connect programmatically using one of the Grakn clients ([link](https://dev.grakn.ai/docs/client-api/overview)). Use the IP address, port and keyspace as specified above.
 
 ## Installation
-**Prerequesites**: Python >3.6, [Grakn Core 1.8.0](https://grakn.ai/download#core), [Grakn Python Client API](https://dev.grakn.ai/docs/client-api/python), [Grakn Workbase 1.3.1](https://grakn.ai/download#workbase) (optional but, recommended)
+**Prerequesites**: Python >3.6, [Grakn Core 1.8.0](https://grakn.ai/download#core), [Grakn Python Client API](https://dev.grakn.ai/docs/client-api/python), [Grakn Workbase 1.3.4](https://grakn.ai/download#workbase).
 ```bash
     cd <path/to/biograkn-covid>/
     python migrator.py
 ```
-Grab a coffee while the migrator builds the database and schema for you!
+First, make sure to download all source datasets and put them in the `Datasets` folder. You can find the links below. Then, grab a coffee while the migrator builds the database and schema for you!
 
 ## Examples
 Graql queries can be run either on grakn console, on workbase or through client APIs.  However, we encourage running the queries on Grakn Workbase to have the best visual experience. Please follow this [tutorial](https://www.youtube.com/watch?v=Y9awBeGqTes&t=197s) on how to run queries on Workbase.
 
 ```bash
-# For the  gene "SIRT7" give me abstracts mentioned, and for all the authors,
-# their patents, and then which protein complexes are mentioned in there, and give me the individual proteins
+# Return drugs that are associated to genes, which have been mentioned in the same 
+# paper as the gene which is associated to SARS.
 
 match 
-$g isa gene, has gene-symbol "SIRT7"; 
-$p isa paper;
-$a isa person;
-$patent isa patent; 
-$pr isa paragraph;
-$pr2 isa paragraph;
-$r1 (mentioning-paragraph: $pr, mentioned: $g) isa mentioning;
-$r2 (contained-paper-paragraph: $pr, containing-paper: $p) isa paper-paragraph-containment;
-$r3 (authored-paper: $p, author: $a) isa authorship; 
-$r4 (inventor: $a, invented: $patent) isa invention; 
-$r5 (containing-patent: $patent, contained-patent-paragraph: $pr2) isa patent-paragraph-containment;
-$prcom (associated-protein: $protein, associated-protein: $protein2) isa protein-complex; 
-$r6 (mentioning-paragraph: $pr2, mentioned: $prcom) isa mentioning; 
-get; 
+$v isa virus, has virus-name "SARS"; 
+$g isa gene; 
+$1 ($g, $v) isa gene-virus-association; 
+$2 ($g, $pu) isa mention; 
+$3 ($pu, $g2) isa mention; 
+$g2 isa gene; 
+$g2 != $g; 
+$4 ($g2, $dr); $dr isa drug; 
+get; offset 0; limit 10;
 
 ```
-More example available from **Query Examples** directory.
+
+![query_1](Images/query_2.png)
+
+## Datasets
+
+Currently the datasets we've integrated include:
+1. [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.
+2. [CORD-NER](https://xuanwang91.github.io/2020-03-20-cord19-ner/): The CORD-19 dataset that the White House released has been annotated and made publicly available. It uses various NER methods to recognise named entities on CORD-19 with distant or weak supervision.
+3. [Uniprot](https://www.uniprot.org/uniprot/?query=proteome:UP000005640%20reviewed:yes): We’ve downloaded the reviewed human subset, and ingested genes, transcripts and protein identifiers.
+4. [Coronaviruses](https://github.com/graknlabs/biograkn-covid/tree/master/Dataset/Coronaviruses): This is an annotated dataset of Coronaviruses and their potential drug targets put together by Oxford Pharmagenesis.
+5. [DGIdb](http://www.dgidb.org/downloads): We’ve taken the *Interactions TSV* which includes all drug-gene interactions.
+6. [Human Protein Atlas](https://www.proteinatlas.org/about/download): The *Normal Tissue Data* includes the expression profiles for proteins in human tissues.
+7. [Reactome](https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt): This dataset connects pathways and their participating proteins.
+8. [DisGeNet](https://www.disgenet.org/downloads): We’ve taken the *curated gene-disease-associations* dataset, which contains associations from Uniprot, CGI, ClinGen, Genomics England and CTD, PsyGeNET, and Orphanet.
+
+We plan to add many more datasets!
+
+## **How You Can Help**
+
+This is an on-going project and we need your help! If you want to contribute, you can help out by helping us including:
+
+- Migrate more data sources (e.g. clinical trials, DrugBank, Excelra)
+- Extend the schema by adding relevant rules
+- Create a website
+- Write tutorials and articles for researchers to get started
+
+If you wish to get in touch, please talk to us on the #biograkn channel on our Discord ([link here](http://www.grakn.ai/discord)).
+
+- Konrad Myśliwiec ([LinkedIn](https://www.linkedin.com/in/konrad-my%C5%9Bliwiec-764ba9163/))
+- Kim Wager ([Linkedin](https://www.linkedin.com/in/kimwager/))
+- Tomás Sabat ([LinkedIn](https://www.linkedin.com/in/tom%C3%A1s-sabat-83265841/))

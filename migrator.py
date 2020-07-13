@@ -16,6 +16,7 @@ NUM_DIS = 200000 # Total diseases to migrate
 NUM_DR = 40000 # Total drug to migrate (32k total)
 NUM_INT = 50000 # Total drug-gene interactions to migrate (42k total)
 NUM_PATH = 5000000 # Total pathway associations to migrate
+
 NUM_PA = 10000000 # Total Tissues <> Genes to migrate
 NUM_NER = 1000000 # Total number of publications (authors: 110k; journals: 1.7k; publications: 29k)
 num_threads = 8 # Number of threads to enable multi threading

@@ -20,10 +20,10 @@ def cord_ner_migrator(uri, keyspace, num_ner, num_threads, ctn):
 	        f.read().replace("}\n{", "},\n{") + 
 	    "]")
 	data = data[:num_ner]
-	# insert_authors(data, num_threads, ctn, session)	
-	# insert_journals(data, num_threads, ctn, session)
-	# insert_publications_journals(data, num_threads, ctn, session)
-	# insert_publications_with_authors(data, num_threads, 5, session)
+	insert_authors(data, num_threads, ctn, session)	
+	insert_journals(data, num_threads, ctn, session)
+	insert_publications_journals(data, num_threads, ctn, session)
+	insert_publications_with_authors(data, num_threads, 5, session)
 	insert_entities_pub(data, num_threads, ctn, session)
 
 
@@ -272,8 +272,8 @@ def classify_type(type):
 		return "virus" 
 	if type == "VIRUS":
 		return "virus" 
-	# if type == "TISSUE":
-	# 	return "tissue"
+	if type == "TISSUE":
+		return "tissue"
 	# if type == "CHEMICAL":
 	# 	return "chemical"
 	if type == "GENE_OR_GENOME":
