@@ -76,15 +76,15 @@ def coronavirusMigrator(uri, keyspace):
 		for i in raw_file:
 			data = {}
 			data['coronavirus'] = i[0].strip()
-			data['uniprot-id'] = i[1].strip()
-			data['entrez-id'] = i[2].strip()
+			data['uniprot-id'] = i[3].strip()
+			data['entrez-id'] = i[4].strip()
 			import_file.append(data)
 		for q in import_file: 
 			graql = f"""match $v isa virus, has virus-name "{q['coronavirus']}"; 
 			$p isa protein, has uniprot-id "{q['uniprot-id']}";
 			$g isa gene, has entrez-id "{q['entrez-id']}";
 			insert $r2 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
-			$r3 (associated-virus-protein: $p, hosted-virus: $v) isa protein-virus-association;"""
+			$r3 (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;"""
 			tx.query(graql)
 			print(graql)
 		tx.commit()

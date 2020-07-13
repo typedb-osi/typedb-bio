@@ -6,20 +6,27 @@ define
 
 # Entities
 
+journal sub entity, 
+	has journal-name,
+	plays publishing-journal; 
+
 publication sub entity, 
-	has paper-id, 
-	key title,
-	has year, 
+	has paper-id,
+	has title,
+	has doi,
+	has publish-time, 
 	has volume, 
 	has issn, 
 	has pmid,
-	plays authored-paper, 
+	plays mentioning,
+	plays published-publication,
+	plays authored-publication, 
 	plays containing-paper, 
 	plays referenced-paper,
 	plays referencing-paper; 
 
-paragraph sub entity, # This plays the abstract/body_text roles
-	has section-name, # Abstract/text
+paragraph sub entity,
+	has section-name,
 	has text, 
 	has language,
 	plays containing-span-paragraph, 
@@ -41,6 +48,7 @@ person sub entity,
 	has first-name,
 	has middle-name,
 	has last-name, 
+	has published-name,
 	has email,
 	plays author,
 	plays affiliated,
@@ -74,7 +82,7 @@ region sub geo-location;
 
 authorship sub relation, 
 	relates author, 
-	relates authored-paper;
+	relates authored-publication;
 
 affiliateship sub relation, 
 	relates affiliated,
@@ -96,8 +104,11 @@ paragraph-span-containment sub relation,
 	relates contained-span, 
 	relates containing-span-paragraph;
 
-mentioning sub relation, 
+mention sub relation, 
+	has start, 
+	has end, 
 	relates mentioning-paragraph, 
+	relates mentioning, 
 	relates mentioned;
 
 bibliography-reference sub relation, 
@@ -108,6 +119,10 @@ bibliography-reference sub relation,
 	relates referencing-paper,
 	relates referenced-paper;
 
+publishing sub relation, 
+	relates publishing-journal,
+	relates published-publication; 
+
 # Attributes
 
 identifier sub attribute, value string; 
@@ -115,23 +130,25 @@ paper-id sub identifier;
 title sub attribute, value string; 
 section-name sub attribute, value string; 
 text sub attribute, value string; 
-start sub attribute, value long; 
-end sub attribute, value long; 
+start sub attribute, value string; 
+end sub attribute, value string; 
 name sub attribute, value string; 
 first-name sub name; 
 middle-name sub name; 
 last-name sub name; 
 country-name sub name;
+published-name sub name;
 email sub attribute, value string; 
 ref-id sub identifier;
 title sub attribute, value string; 
-year sub attribute, value long; 
+publish-time sub attribute, value string; 
 venue sub attribute, value string; 
 volume sub attribute, value long; 
 issn sub attribute, value string; 
 pages sub attribute, value string; 
 pmid sub attribute, value string; 
 language sub attribute, value string;
+doi sub attribute, value string; 
 
 ### Rules: 
 ### 1: When text -> cite span -> bib reference -> paper then text -> paper 
@@ -230,18 +247,37 @@ NPL-citations sub attribute, value string;
 ### Molecular Schema
 ######
 
+substance sub entity; 
+
+chemical sub substance,
+	has chemical-name; 
+
 variant sub entity,
 	has snpId,
 	plays located-variant;
 chromosome sub entity, 
 	has chromosome-name,
 	plays locating-chromosome;
-gene sub entity,
+
+fully-formed-anatomical-structure sub entity;
+
+cell sub fully-formed-anatomical-structure,
+	has cell-name;
+
+tissue sub fully-formed-anatomical-structure,
+    has tissue-name,
+    plays enhanced-tissue,
+    plays expressed-tissue,
+    plays tissue-context,
+    plays associated-tissue;
+
+gene sub fully-formed-anatomical-structure,
     has gene-symbol,
     has entrez-id,
     has ensembl-gene-stable-id,
     has ensembl-xref,
     has gene-name,
+    plays expressing-gene,
     plays encoding-gene,
     plays transcribing-gene,
     plays mentioned,
@@ -249,12 +285,12 @@ gene sub entity,
     plays target-gene,
 	plays associated-virus-gene,
 	plays located-gene;
-transcript sub entity, 
+transcript sub fully-formed-anatomical-structure, 
 	has ensembl-transcript-stable-id, 
 	plays encoded-transcript,
 	plays translating-transcript,
 	plays mentioned;
-protein sub entity,
+protein sub chemical,
     has uniprot-id,
     has uniprot-entry-name,
     has uniprot-symbol,
@@ -277,7 +313,10 @@ protein sub entity,
     plays target-protein,
     plays associating,
     plays hosting-virus-protein;
-disease sub entity,
+pathological-function sub entity;
+cell-function sub pathological-function,
+	has cell-function-name;
+disease sub pathological-function,
     has disease-name,
     has disease-id,
     has disease-type,
@@ -305,11 +344,6 @@ drug sub entity,
 compound sub entity,
 	plays participating-compound,
 	plays modulator;
-tissue sub entity,
-    has tissue-name,
-    plays enhanced-tissue,
-    plays tissue-context,
-    plays associated-tissue;
 pathway sub entity,
     has pathway-name,
     has pathway-id,
@@ -318,10 +352,11 @@ organism sub entity,
 	has organism-name,
 	plays associated-organism,
 	plays hosting-organism;
-virus sub entity, 
+virus sub organism, 
 	has genbank-id, 
 	has virus-name, 
 	has identity-percentage,
+	plays mentioned,
 	plays hosted-virus,
 	plays associated-virus,
 	plays discovered-virus;
@@ -421,6 +456,11 @@ disease-class-association sub relation,
 	relates categorised-disease,
 	relates associated-class; 
 
+expression sub relation, 
+	has expression-value, 
+	has expression-value-reliability,
+	relates expressed-tissue,
+	relates expressing-gene;
 
 ## Attributes
 # Name attributes: 
@@ -437,6 +477,10 @@ disease-class-association sub relation,
 	complexportal-object-symbol sub name;
 	gene-name sub name;
 	protein-name sub name;
+	journal-name sub name;
+	cell-function-name sub name;
+	cell-name sub name;
+	chemical-name sub name;
 	uniprot-entry-name sub name;
 	pathway-name sub name;
 	tissue-name sub name;
@@ -468,6 +512,10 @@ identifier sub attribute, value string;
 	chembl-id sub identifier;
 	snpId sub identifier;
 
+
+
+expression-value sub attribute, value string; 
+expression-value-reliability sub attribute, value string; 
 drug-claim-source sub attribute, value string;
 identity-percentage sub attribute, value string;
 go-evidence-code sub attribute, value string; 
@@ -476,32 +524,10 @@ function-description sub attribute, value string;
 start-location sub attribute, value long;
 end-location sub attribute, value long;
 disgenet-score sub attribute, value double;
+interaction-type sub attribute, value string;
 
 ### Rules
 
-protein-complex-protein sub rule,
-when {
-	$pr isa protein; 
-	$para isa paragraph; 
-	$r1 (mentioning-paragraph: $para, mentioned: $pr) isa mentioning;
-	$prc (associated-protein: $pr) isa protein-complex;
-}, then {
-	(mentioning-paragraph: $para, mentioned: $prc) isa mentioning;
-};
-
-when-protein-complex-gene sub rule,
-when {
-	$pr isa protein; 
-	$para isa paragraph; 
-	$g isa gene; 
-	$t isa transcript;
-	$r3 (transcribing-gene: $g, encoded-transcript: $t) isa transcription; 
-	$r1 (mentioning-paragraph: $para, mentioned: $g) isa mentioning;
-	$r4 (translating-transcript: $t, translated-protein: $p) isa translation; 
-	$prc (associated-protein: $pr) isa protein-complex;
-}, then {
-	(mentioning-paragraph: $para, mentioned: $prc) isa mentioning;
-};
 
 gene-disease-association-and-gene-protein-encoding-protein-disease-association sub rule,
 when {
@@ -569,4 +595,13 @@ when {
 	(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
 };
 
-
+gene-protein-publication sub rule,
+when {
+	$p isa protein; 
+	$g isa gene; 
+	$pu isa publication; 
+	$1 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
+	$2 (mentioned: $g, mentioning: $pu) isa mention; 
+}, then {
+	(mentioned: $p, mentioning: $pu) isa mention; 
+};

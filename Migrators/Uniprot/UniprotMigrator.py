@@ -48,7 +48,6 @@ def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
 		insertTranscripts(uniprotdb, session, num_threads, ctn)
 
 		# Insert proteins # 
-		# tx = session.transaction().write()
 		counter = 0
 		pool = ThreadPool(num_threads)
 		batches = []
@@ -89,18 +88,13 @@ $r (associated-organism: $h, associating: $a) isa organism-association;"""
 
 			batches.append(graql)
 			del graql
-		# 	tx.query(graql)
 			if counter % ctn == 0:
-		# 		tx.commit()
-		# 		tx = session.transaction().write()
-				# print(str(counter) + " proteins, and gene/transcript relations committed!")
 				batches_pr.append(batches)
 				batches = []
 		batches_pr.append(batches)
 		pool.map(partial(batch_job, session), batches_pr)
 		pool.close()
 		pool.join()
-		# tx.commit()
 		print('.....')
 		print('Finished migrating Uniprot file.')
 		print('.....')
@@ -161,12 +155,8 @@ def insertGenes(uniprotdb, session, num_threads, ctn):
 		graql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
 		batches.append(graql)
 		del graql
-		# tx.query(graql)
 		if counter % ctn == 0:
 			batches2.append(batches)
-			# tx.commit()
-			# tx = session.transaction().write()
-			# print(str(counter) + " genes committed!")
 			batches = []
 	batches2.append(batches)
 	pool.map(partial(batch_job, session), batches2)
@@ -195,19 +185,14 @@ def insertTranscripts(uniprotdb, session, num_threads, ctn):
 		graql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
 		batches.append(graql)
 		del graql
-		# tx.query(graql)
 		if counter % ctn == 0:
 			batches2.append(batches)
-			# tx.commit()
-			# tx = session.transaction().write()
-			# print(str(counter) + " transcripts committed!")
 			batches = []
 	batches2.append(batches)
 	pool.map(partial(batch_job, session), batches2)
 	pool.close()
 	pool.join()
 	print('Transcripts committed!')
-	# tx.commit()
 
 def batch_job(session, batch):
 	tx = session.transaction().write()

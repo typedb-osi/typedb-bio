@@ -8,7 +8,7 @@ def insertSchema(uri, keyspace):
 	print('.....')
 	print('Inserting schema...')
 	print('.....')
-	with open("../biograkn-covid/Schema/biograkn-covid-1.8.gql", "r") as graql_file:
+	with open("../biograkn-covid/Schema/biograkn-covid.gql", "r") as graql_file:
 		schema = graql_file.read()
 	with session.transaction().write() as write_transaction:
 		write_transaction.query(schema)

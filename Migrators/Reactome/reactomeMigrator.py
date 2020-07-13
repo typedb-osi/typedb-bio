@@ -13,7 +13,7 @@ def reactomeMigrator(uri, keyspace, num_path, num_threads, ctn):
 	client = GraknClient(uri=uri)
 	session = client.session(keyspace=keyspace)
 	pathway_associations = filterHomoSapiens(num_path)
-	# insertPathways(uri, keyspace, num_threads, ctn, session, pathway_associations)
+	insertPathways(uri, keyspace, num_threads, ctn, session, pathway_associations)
 	insertPathwayInteractions(uri, keyspace, num_threads, ctn, session, pathway_associations)
 	session.close()
 	client.close()
