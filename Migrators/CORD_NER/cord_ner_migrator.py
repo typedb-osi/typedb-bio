@@ -23,7 +23,7 @@ def cord_ner_migrator(uri, keyspace, num_ner, num_threads, ctn):
 	insert_authors(data, num_threads, ctn, session)	
 	insert_journals(data, num_threads, ctn, session)
 	insert_publications_journals(data, num_threads, ctn, session)
-	insert_publications_with_authors(data, num_threads, 5, session)
+	insert_publications_with_authors(data, num_threads, 1, session)
 	insert_entities_pub(data, num_threads, ctn, session)
 
 
@@ -32,26 +32,48 @@ def cord_ner_migrator(uri, keyspace, num_ner, num_threads, ctn):
 # Return: List of authors
 def author_names(author_string):
 	author_list = []
-	if author_string.find("',") != -1:
-		ind = author_string.find("',")
-	else:
+
+	ind = author_string.find('",') 
+	ind2 = author_string.find("',")
+	if ind < ind2: 
+		ind = ind
+	else: 
+		ind = ind2
+
+	if author_string.find(';') != -1:
 		ind = author_string.find(';')
 	author_string = author_string.replace("]","").replace("[","")
-	first_name = author_string[:ind].replace("'", "")
+	first_name = author_string[:ind].replace("'", "").replace('"', "")
 	rest_name = author_string[ind + 2:]
 	author_list.append(first_name)
 	while ind > 2:
-		if author_string.find("',") != -1:
-			ind = rest_name.find("',") + 1
+
+		ind1 = rest_name.find('",') 
+		ind2 = rest_name.find("',")
+		if ind1 < ind2: 
+			ind = ind2 + 1
+		elif ind1 < ind2 and ind1 == -1:
+			ind = ind2 + 1
+		elif ind1 > ind2 and ind2 == -1:
+			ind = ind1 + 1
+		elif ind1 > ind2:
+			ind = ind2 + 1
 		else:
-			ind = rest_name.find(';')
+			ind = rest_name.find(';') 
+
+		# if author_string.find("',") != -1:
+		# 	ind = rest_name.find("',") + 1
+		# if author_string.find(';') != -1:
+		# 	ind = rest_name.find(';')
+
 		if ind == -1:
-			author_list.append(rest_name.replace("'", ""))
+			author_list.append(rest_name.replace("'", "").replace('"', ""))
 		elif ind == 0:
 			ind = -1
-			author_list.append(rest_name[:ind].replace("'", ""))
+			author_list.append(rest_name[:ind].replace("'", "").replace('"', ""))
 		else: 
-			author_list.append(rest_name[:ind].replace("'", ""))
+			author_list.append(rest_name[:ind].replace("'", "").replace('"', ""))
+
 		rest_name = rest_name[ind + 2:] 
 	return author_list
 
@@ -80,10 +102,10 @@ def insert_authors(data, num_threads, ctn, session):
 	if counter % ctn == 0:
 		batches_pr.append(batches)
 		batches = []	
-	batches_pr.append(batches)
-	pool.map(partial(batch_job, session), batches_pr)
-	pool.close()
-	pool.join()
+	# batches_pr.append(batches)
+	# pool.map(partial(batch_job, session), batches_pr)
+	# pool.close()
+	# pool.join()
 	print('.....')
 	print('Finished inserting authors.')
 	print('.....')
