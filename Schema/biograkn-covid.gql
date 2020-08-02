@@ -110,6 +110,7 @@ mention sub relation,
 	has source,	#CORD NER, SemMed etc 
 	relates mentioning-paragraph, 
 	relates mentioning, 
+	relates mentioned,
 	relates mentioned-genes-relation;
 
 bibliography-reference sub relation, 
