@@ -106,10 +106,11 @@ paragraph-span-containment sub relation,
 
 mention sub relation, 
 	has start, 
-	has end, 
+	has end,
+	has source,	#CORD NER, SemMed etc 
 	relates mentioning-paragraph, 
 	relates mentioning, 
-	relates mentioned;
+	relates mentioned-genes-relation;
 
 bibliography-reference sub relation, 
 	has ref-id,
@@ -143,12 +144,14 @@ ref-id sub identifier;
 title sub attribute, value string; 
 publish-time sub attribute, value string; 
 venue sub attribute, value string; 
-volume sub attribute, value long; 
+volume sub attribute, value string; 
 issn sub attribute, value string; 
 pages sub attribute, value string; 
 pmid sub attribute, value string; 
 language sub attribute, value string;
 doi sub attribute, value string; 
+source sub attribute, value string;
+sentence-text sub attribute, value string;
 
 ### Rules: 
 ### 1: When text -> cite span -> bib reference -> paper then text -> paper 
@@ -284,7 +287,51 @@ gene sub fully-formed-anatomical-structure,
     plays associated-gene,
     plays target-gene,
 	plays associated-virus-gene,
-	plays located-gene;
+	plays located-gene,
+	plays inhibited,
+	plays inhibiting,
+	plays interacted,
+	plays interacting,
+	plays coexisting,
+	plays comparing,
+	plays compared,
+	plays higher,
+	plays lower,
+	plays stimulating,
+	plays stimulated,
+	plays converting,
+	plays converted,
+	plays producing,
+	plays produced,
+	plays neg-coexisting,
+	plays neg-inhibited,
+	plays neg-inhibiting,
+	plays neg-interacted,
+	plays neg-interacting,
+	plays neg-stimulating,
+	plays neg-stimulated,
+	plays neg-producing,
+	plays neg-produced,
+	plays neg-constituting,
+	plays neg-constituted,
+	plays similar,
+	plays neg-similar,
+	plays locating,
+	plays located,
+	plays constituting,
+	plays constituted,
+	plays neg-higher,
+	plays neg-lower,
+	plays neg-converting,
+	plays neg-converted,
+	plays disrupting,
+	plays disrupted,
+	plays augmenting,
+	plays augmented,
+	plays affecting,
+	plays affected,
+	plays associated,
+	plays associating;
 transcript sub fully-formed-anatomical-structure, 
 	has ensembl-transcript-stable-id, 
 	plays encoded-transcript,
@@ -461,6 +508,142 @@ expression sub relation,
 	has expression-value-reliability,
 	relates expressed-tissue,
 	relates expressing-gene;
+
+inhibition sub relation,
+	relates inhibited,
+	relates inhibiting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+interaction sub relation,
+	relates interacted,
+	relates interacting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+coexistance sub relation,
+	relates coexisting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+comparison sub relation,
+	relates compared,
+	relates comparing,
+	relates higher,
+	relates lower,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+stimulation sub relation,
+	relates stimulated,
+	relates stimulating,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+conversion sub relation,
+	relates converted,
+	relates converting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+production sub relation,
+	relates producing,
+	relates produced,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+ neg-coexistance sub relation,
+	relates neg-coexisting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+ neg-inhibition sub relation,
+	relates neg-inhibited,
+	relates neg-inhibiting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-interaction sub relation,
+	relates neg-interacted,
+	relates neg-interacting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-stimulation sub relation,
+	relates neg-stimulated,
+	relates neg-stimulating,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-production sub relation,
+	relates neg-produced,
+	relates neg-producing,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-constitution sub relation,
+	relates neg-constituted,
+	relates neg-constituting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+similarity sub relation,
+	relates similar,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-similarity sub relation,
+	relates neg-similar,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+location sub relation,
+	relates located,
+	relates locating,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+constitution sub relation,
+	relates constituted,
+	relates constituting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-comparison sub relation,
+	relates neg-higher,
+	relates neg-lower,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+neg-conversion sub relation,
+	relates neg-converted,
+	relates neg-converting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+disruption sub relation,
+	relates disrupted,
+	relates disrupting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+augmentation sub relation,
+	relates augmented,
+	relates augmenting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+affection sub relation,
+	relates affected,
+	relates affecting,
+	plays mentioned-genes-relation,
+	has sentence-text;
+
+association sub relation,
+	relates associated,
+	relates associating,
+	plays mentioned-genes-relation,
+	has sentence-text;
 
 ## Attributes
 # Name attributes: 
