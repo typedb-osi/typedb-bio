@@ -1,21 +1,17 @@
-from grakn.client import GraknClient
-import os
-import csv 
-import json
-import untangle
+import csv
 # from multiprocessing.dummy import Pool as ThreadPool
 import multiprocessing
-from functools import partial
-import datetime
-from Migrators.Helpers.batchLoader import batch_job
+
 import pandas as pd
+import untangle
+from grakn.client import GraknClient
 
 
 def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
     
     print("Migrate 'Subject_CORD_NER.csv'")
 
-    file_path = "../biograkn-covid/Dataset/SemMed/Subject_CORD_NER.csv"
+    file_path = "Dataset/SemMed/Subject_CORD_NER.csv"
     raw_file = openFile(file_path, 1)[:num_semmed]
     pmids_set = list(set([tupple[3] for tupple in raw_file]))        #get set of pmids
 
@@ -24,7 +20,7 @@ def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
     journal_names = get_journal_names(xml_articles_data)
     author_names = get_authors_names(xml_articles_data)
     publications_list = get_publication_data(xml_articles_data)
-    relationship_data = get_relationship_data('../biograkn-covid/Dataset/SemMed/Subject_CORD_NER.csv')[:num_semmed]
+    relationship_data = get_relationship_data('Dataset/SemMed/Subject_CORD_NER.csv')[:num_semmed]
 
     print("--------Loading journals---------")
     load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, keyspace)
@@ -37,7 +33,7 @@ def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
 
     print("Migrate 'Object_CORD_NER.csv'")
 
-    file_path = "../biograkn-covid/Dataset/SemMed/Object_CORD_NER.csv"
+    file_path = "Dataset/SemMed/Object_CORD_NER.csv"
     raw_file = openFile(file_path, 1)[:num_semmed]
     pmids_set = list(set([tupple[3] for tupple in raw_file]))        #get set of pmids
 
@@ -46,7 +42,7 @@ def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
     journal_names = get_journal_names(xml_articles_data)
     author_names = get_authors_names(xml_articles_data)
     publications_list = get_publication_data(xml_articles_data)
-    relationship_data = get_relationship_data('../biograkn-covid/Dataset/SemMed/Object_CORD_NER.csv')[:num_semmed]
+    relationship_data = get_relationship_data('Dataset/SemMed/Object_CORD_NER.csv')[:num_semmed]
 
     print("--------Loading journals---------")
     load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, keyspace)
@@ -289,10 +285,6 @@ def fetch_articles_metadata(pmids):
     function - function name to run in paralell\n
     data - data to load by function running in parallel
     '''
-    import urllib
-    import urllib.request
-    import ssl
-    import json
     import requests
 
     ids_param = ""

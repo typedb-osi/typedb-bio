@@ -1,11 +1,11 @@
-from grakn.client import GraknClient
-import csv 
-import os
-from inspect import cleandoc
-
-from multiprocessing.dummy import Pool as ThreadPool
+import csv
 from functools import partial
+from multiprocessing.dummy import Pool as ThreadPool
+
+from grakn.client import GraknClient
+
 from Migrators.Helpers.batchLoader import batch_job
+
 
 def proteinAtlasMigrator(uri, keyspace, num, num_threads, ctn):
 	client = GraknClient(uri=uri)
@@ -16,7 +16,7 @@ def proteinAtlasMigrator(uri, keyspace, num, num_threads, ctn):
 		print('  ')
 		print('Opening HPA dataset...')
 		print('  ')
-		with open('../biograkn-covid/Dataset/HumanProteinAtlas/normal_tissue.tsv', 'rt', encoding='utf-8') as csvfile:
+		with open('Dataset/HumanProteinAtlas/normal_tissue.tsv', 'rt', encoding='utf-8') as csvfile:
 			csvreader = csv.reader(csvfile, delimiter='	')
 			raw_file = []
 			n = 0

@@ -1,12 +1,12 @@
-from grakn.client import GraknClient
-import csv 
-import os
-from inspect import cleandoc
+import csv
 import itertools
-
-from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
+from multiprocessing.dummy import Pool as ThreadPool
+
+from grakn.client import GraknClient
+
 from Migrators.Helpers.batchLoader import batch_job
+
 
 def disgenetMigrator(uri, keyspace, num, num_threads, ctn):
 
@@ -19,7 +19,7 @@ def disgenetMigrator(uri, keyspace, num, num_threads, ctn):
 		print('Opening Disgenet dataset...')
 		print('  ')
 
-		with open('../biograkn-covid/Dataset/Disgenet/all_gene_disease_associations.tsv', 'rt', encoding='utf-8') as csvfile:
+		with open('Dataset/Disgenet/all_gene_disease_associations.tsv', 'rt', encoding='utf-8') as csvfile:
 			csvreader = csv.reader(csvfile, delimiter='	')
 			raw_file = []
 			n = 0

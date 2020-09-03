@@ -1,13 +1,12 @@
-from grakn.client import GraknClient
-import csv 
-import os
-from inspect import cleandoc
 import itertools
-
-from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
+from multiprocessing.dummy import Pool as ThreadPool
+
+from grakn.client import GraknClient
+
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
+
 
 def reactomeMigrator(uri, keyspace, num_path, num_threads, ctn):
 	client = GraknClient(uri=uri)
@@ -70,7 +69,7 @@ def insertPathwayInteractions(uri, keyspace, num_threads, ctn, session, pathway_
 
 
 def filterHomoSapiens(num_path):
-	file = '../biograkn-covid/Dataset/Reactome/UniProt2Reactome_All_Levels.tsv'
+	file = 'Dataset/Reactome/UniProt2Reactome_All_Levels.tsv'
 	print('  ')
 	print('Opening Reactome...')
 	print('  ')

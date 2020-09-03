@@ -1,11 +1,11 @@
-from grakn.client import GraknClient
-import csv 
-import os
-from inspect import cleandoc
-
-from multiprocessing.dummy import Pool as ThreadPool
+import csv
 from functools import partial
+from multiprocessing.dummy import Pool as ThreadPool
+
+from grakn.client import GraknClient
+
 from Migrators.Helpers.batchLoader import batch_job
+
 
 def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
 	client = GraknClient(uri=uri)
@@ -22,7 +22,7 @@ def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
 		tx.query(org)
 		tx.commit()
 
-		with open('../biograkn-covid/Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv', 'rt', encoding='utf-8') as csvfile:
+		with open('Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv', 'rt', encoding='utf-8') as csvfile:
 			csvreader = csv.reader(csvfile, delimiter='	')
 			raw_file = []
 			n = 0
