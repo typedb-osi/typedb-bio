@@ -1,6 +1,5 @@
 from grakn.client import GraknClient
-import csv 
-import os
+
 
 def insertSchema(uri, keyspace):
 	client = GraknClient(uri=uri)
@@ -8,7 +7,7 @@ def insertSchema(uri, keyspace):
 	print('.....')
 	print('Inserting schema...')
 	print('.....')
-	with open("../biograkn-covid/Schema/biograkn-covid.gql", "r") as graql_file:
+	with open("Schema/biograkn-covid.gql", "r") as graql_file:
 		schema = graql_file.read()
 	with session.transaction().write() as write_transaction:
 		write_transaction.query(schema)

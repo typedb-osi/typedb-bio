@@ -1,6 +1,7 @@
+import csv
+
 from grakn.client import GraknClient
-import csv 
-import os
+
 
 def coronavirusMigrator(uri, keyspace):
 	client = GraknClient(uri=uri)
@@ -16,7 +17,7 @@ def coronavirusMigrator(uri, keyspace):
 	tx.query(graql)
 	tx.commit()
 
-	with open('../biograkn-covid/Dataset/Coronaviruses/Genome identity.csv', 'rt', encoding='utf-8') as csvfile:
+	with open('Dataset/Coronaviruses/Genome identity.csv', 'rt', encoding='utf-8') as csvfile:
 		tx = session.transaction().write()
 		csvreader = csv.reader(csvfile, delimiter=',')
 		raw_file = []
@@ -63,7 +64,7 @@ def coronavirusMigrator(uri, keyspace):
 		tx.commit()
 
 
-	with open('../biograkn-covid/Dataset/Coronaviruses/Host proteins (potential drug targets).csv', 'rt', encoding='utf-8') as csvfile:
+	with open('Dataset/Coronaviruses/Host proteins (potential drug targets).csv', 'rt', encoding='utf-8') as csvfile:
 		tx = session.transaction().write()
 		csvreader = csv.reader(csvfile, delimiter=',')
 		raw_file = []

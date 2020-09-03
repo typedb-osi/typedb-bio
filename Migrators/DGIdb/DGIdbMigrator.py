@@ -1,13 +1,11 @@
-from grakn.client import GraknClient
-import csv 
-import os
-from inspect import cleandoc
-import itertools
-
-from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
+from multiprocessing.dummy import Pool as ThreadPool
+
+from grakn.client import GraknClient
+
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
+
 
 def dgidbMigrator(uri, keyspace, num_dr, num_int, num_threads, ctn):
 	client = GraknClient(uri=uri)
@@ -19,7 +17,7 @@ def dgidbMigrator(uri, keyspace, num_dr, num_int, num_threads, ctn):
 			
 
 def insertDrugs(uri, keyspace, num_dr, num_threads, ctn, session): 
-	file = '../biograkn-covid/Dataset/DGIdb/dgidb_drugs.tsv'
+	file = 'Dataset/DGIdb/dgidb_drugs.tsv'
 	print('  ')
 	print('Opening DGIdb...')
 	print('  ')
@@ -58,7 +56,7 @@ def insertDrugs(uri, keyspace, num_dr, num_threads, ctn, session):
 def insertInteractions(uri, keyspace, num_int, num_threads, ctn, session):
 	batches_pr = []
 
-	file = '../biograkn-covid/Dataset/DGIdb/dgidb_interactions.tsv'
+	file = 'Dataset/DGIdb/dgidb_interactions.tsv'
 	print('  ')
 	print('Opening DGIdb-Interactions...')
 	print('  ')

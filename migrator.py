@@ -9,6 +9,7 @@ from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import proteinAtlasMi
 from Migrators.SemMed.semmed_migrator import migrate_semmed
 from timeit import default_timer as timer
 
+# for Windows URI = IP:port (127.0.0.1:48555)
 URI = "insert IP or localhost"
 KEYSPACE = "biograkn_covid"
 

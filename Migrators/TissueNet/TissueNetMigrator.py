@@ -1,11 +1,7 @@
-from grakn.client import GraknClient
-import csv 
-import os
-from inspect import cleandoc
+import csv
 
-from multiprocessing.dummy import Pool as ThreadPool
-from functools import partial
-from Migrators.Helpers.batchLoader import batch_job
+from grakn.client import GraknClient
+
 
 def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
 	client = GraknClient(uri=uri)
@@ -17,7 +13,7 @@ def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
 		print('Opening TissueNet dataset...')
 		print('  ')
 
-		with open('../biograkn-covid/Dataset/TissueNet/HPA-Protein.tsv', 'rt', encoding='utf-8') as csvfile:
+		with open('Dataset/TissueNet/HPA-Protein.tsv', 'rt', encoding='utf-8') as csvfile:
 			csvreader = csv.reader(csvfile, delimiter='	')
 			raw_file = []
 			n = 0
