@@ -28,7 +28,7 @@ The schema that models the underlying knowledge graph alongside the descriptive 
 BioGrakn Covid is free to access via an Azure VM. You can query it using Workbase: 
 1. Download and run Workbase ([download](https://grakn.ai/download#workbase))
 2. Make sure Grakn isn’t running on your local machine
-3. On the main Workbase screen, change the host to the IP address shown on this page ([link](https://bit.ly/biograkn-covid)) with port *48555*
+3. On the main Workbase screen, change the host to the IP address shown on this page ([link](https://community.grakn.ai/en/biograkn-covid-quickstart)) with port *48555*
 4. Click *connect,* select the keyspace *biograkn_covid* and start exploring the data!
 
 You can also connect programmatically using one of the Grakn clients ([link](https://dev.grakn.ai/docs/client-api/overview)). Use the IP address, port and keyspace as specified above.
