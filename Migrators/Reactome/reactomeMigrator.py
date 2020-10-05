@@ -1,7 +1,7 @@
 import itertools
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
-
+import wget
 from grakn.client import GraknClient
 
 from Migrators.Helpers.batchLoader import batch_job
@@ -69,7 +69,9 @@ def insertPathwayInteractions(uri, keyspace, num_threads, ctn, session, pathway_
 
 
 def filterHomoSapiens(num_path):
-	file = 'Dataset/Reactome/UniProt2Reactome_All_Levels.tsv'
+	url = "https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt"
+	wget.download(url, 'Dataset/Reactome/')
+	file = 'Dataset/Reactome/UniProt2Reactome_All_Levels.txt'
 	print('  ')
 	print('Opening Reactome...')
 	print('  ')
