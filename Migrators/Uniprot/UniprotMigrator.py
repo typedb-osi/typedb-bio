@@ -1,4 +1,4 @@
-from grakn.client import GraknClient
+from grakn.client import GraknClient, SessionType, TransactionType
 import csv 
 import os
 from inspect import cleandoc
@@ -8,8 +8,8 @@ from functools import partial
 from Migrators.Helpers.batchLoader import batch_job
 
 def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
-	client = GraknClient(uri=uri)
-	session = client.session(keyspace=keyspace)
+	client = GraknClient(uri)
+	session = client.session(keyspace, SessionType.DATA)
 	batches_pr = []
 
 	if num is not 0:
@@ -17,10 +17,11 @@ def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
 		print('Opening Uniprot dataset...')
 		print('  ')
 
-		tx = session.transaction().write()
+		tx = session.transaction(TransactionType.WRITE)
 		org = "insert $h isa organism, has organism-name 'Homo sapiens (Human)', has organism-name 'Human'; $o2 isa organism, has organism-name 'Avian';"
-		tx.query(org)
+		tx.query().insert(org)
 		tx.commit()
+		tx.close()
 
 		with open('../biograkn-covid/Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv', 'rt', encoding='utf-8') as csvfile:
 			csvreader = csv.reader(csvfile, delimiter='	')
@@ -44,10 +45,14 @@ def uniprotMigrate(uri, keyspace, num, num_threads, ctn):
 			data['entrez-id'] = i[12]
 			uniprotdb.append(data)
 
-		insertGenes(uniprotdb, session, num_threads, ctn)
-		insertTranscripts(uniprotdb, session, num_threads, ctn)
+		# total_genes = insertGenes(uniprotdb, session, num_threads, ctn)
+		# total_transcripts = insertTranscripts(uniprotdb, session, num_threads, ctn)
+		# insertProteinsAndRelations(uniprotdb, session, num_threads, ctn)
+		# print("Inserted " + str(total_genes) + " genes.")
+		# print("Inserted " + str(total_transcripts) + " transcripts.")
 
-		# Insert proteins # 
+
+# def insertProteinsAndRelations(uniprotdb, session, num_threads, ctn):
 		# tx = session.transaction().write()
 		counter = 0
 		pool = ThreadPool(num_threads)
@@ -154,7 +159,7 @@ def insertGenes(uniprotdb, session, num_threads, ctn):
 			
 	# gene_list = list(dict.fromkeys(gene_list)) # TO DO: Remove duplicate gene-symbols
 
-	tx = session.transaction().write()
+	# tx = session.transaction(TransactionType.WRITE)
 	pool = ThreadPool(num_threads)
 	for g in gene_list:
 		counter = counter + 1
@@ -172,7 +177,9 @@ def insertGenes(uniprotdb, session, num_threads, ctn):
 	pool.map(partial(batch_job, session), batches2)
 	pool.close()
 	pool.join()
-	print('Genes committed!')
+	total_genes = len(gene_list)
+	print(str(total_genes) + ' genes committed!')
+	return total_genes
 	# tx.commit()
 
 # Insert transcripts 
@@ -187,7 +194,7 @@ def insertTranscripts(uniprotdb, session, num_threads, ctn):
 
 	transcript_list = list(dict.fromkeys(transcript_list)) # Remove duplicate transcripts
 
-	tx = session.transaction().write()
+	# tx = session.transaction(TransactionType.WRITE)
 	pool = ThreadPool(num_threads)
 	counter = 0
 	for q in transcript_list: 
@@ -206,13 +213,16 @@ def insertTranscripts(uniprotdb, session, num_threads, ctn):
 	pool.map(partial(batch_job, session), batches2)
 	pool.close()
 	pool.join()
-	print('Transcripts committed!')
+	total_transcripts = len(transcript_list)
+	print(str(total_transcripts) + ' transcripts committed!')
+	return total_transcripts
 	# tx.commit()
 
 def batch_job(session, batch):
-	tx = session.transaction().write()
+	tx = session.transaction(TransactionType.WRITE)
 	for query in batch:
 		print(query)
-		tx.query(query)
+		tx.query().insert(query)
 	tx.commit()
+	tx.close()
 

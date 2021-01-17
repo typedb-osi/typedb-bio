@@ -90,3 +90,7 @@ def insertDiseases(disgenet, session, num_threads, ctn):
 	pool.close()
 	pool.join()
 	print('Diseases committed!')
+
+
+
+	
