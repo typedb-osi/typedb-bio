@@ -28,5 +28,3 @@ uniprotMigrate(URI, KEYSPACE, NUM_PROTEINS, num_threads, ctn)
 end = timer()
 time_in_sec = end - start
 print("Elapsed time: " + str(time_in_sec) + " seconds.")
-
-
