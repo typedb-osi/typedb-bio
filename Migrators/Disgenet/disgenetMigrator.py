@@ -1,31 +1,34 @@
-import csv
-import itertools
-from functools import partial
+from grakn.client import GraknClient, SessionType, TransactionType
+from inspect import cleandoc
+import ssl, gzip, wget, csv, os, itertools
+
 from multiprocessing.dummy import Pool as ThreadPool
-
-from grakn.client import GraknClient
-
+from functools import partial
 from Migrators.Helpers.batchLoader import batch_job
 
 
-def disgenetMigrator(uri, keyspace, num, num_threads, ctn):
-
-	client = GraknClient(uri=uri)
-	session = client.session(keyspace=keyspace)
+def disgenetMigrator(uri, database, num, num_threads, ctn):
+	client = GraknClient.core(uri)
+	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
-	if num is not 0:
+	if num != 0:
 		print('  ')
 		print('Opening Disgenet dataset...')
 		print('  ')
 
-		with open('Dataset/Disgenet/all_gene_disease_associations.tsv', 'rt', encoding='utf-8') as csvfile:
-			csvreader = csv.reader(csvfile, delimiter='	')
+		ssl._create_default_https_context = ssl._create_unverified_context
+		url = "https://www.disgenet.org/static/disgenet_ap1/files/downloads/all_gene_disease_associations.tsv.gz"
+		wget.download(url, 'Dataset/Disgenet/')
+		
+
+		with gzip.open('Dataset/Disgenet/all_gene_disease_associations.tsv.gz', 'rt') as f:
+			csvreader = csv.reader(f, delimiter='	')
 			raw_file = []
 			n = 0
 			for row in csvreader: 
 				n = n + 1
-				if n is not 1:
+				if n != 1:
 					raw_file.append(row)
 
 		disgenet = []
@@ -37,7 +40,7 @@ def disgenetMigrator(uri, keyspace, num, num_threads, ctn):
 			data['disease-name'] = i[5]
 			data['disgenet-score'] = float(i[9])
 			disgenet.append(data)
-
+		os.remove('Dataset/Disgenet/all_gene_disease_associations.tsv.gz')
 		insertDiseases(disgenet, session, num_threads, ctn)
 
 		counter = 0
@@ -75,7 +78,6 @@ def insertDiseases(disgenet, session, num_threads, ctn):
 	disease_list.sort()
 	disease_list = list(disease_list for disease_list,_ in itertools.groupby(disease_list)) # Remove duplicates
 
-	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	for d in disease_list:
 		counter = counter + 1

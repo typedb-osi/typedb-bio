@@ -1,23 +1,27 @@
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 
-from grakn.client import GraknClient
+from grakn.client import GraknClient, SessionType, TransactionType
 
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
+import ssl, wget, os
 
 
-def dgidbMigrator(uri, keyspace, num_dr, num_int, num_threads, ctn):
-	client = GraknClient(uri=uri)
-	session = client.session(keyspace=keyspace)
-	insertDrugs(uri, keyspace, num_dr, num_threads, ctn, session)
-	insertInteractions(uri, keyspace, num_int, num_threads, ctn, session)
+def dgidbMigrator(uri, database, num_dr, num_int, num_threads, ctn):
+	client = GraknClient.core(uri)
+	session = client.session(database, SessionType.DATA)
+	insertDrugs(uri, database, num_dr, num_threads, ctn, session)
+	insertInteractions(uri, database, num_int, num_threads, ctn, session)
 	session.close()
 	client.close()
-			
 
-def insertDrugs(uri, keyspace, num_dr, num_threads, ctn, session): 
-	file = 'Dataset/DGIdb/dgidb_drugs.tsv'
+def insertDrugs(uri, database, num_dr, num_threads, ctn, session): 
+	ssl._create_default_https_context = ssl._create_unverified_context
+	url = "https://www.dgidb.org/data/monthly_tsvs/2021-Jan/drugs.tsv"
+	wget.download(url, 'Dataset/DGIdb/')
+	file = 'Dataset/DGIdb/drugs.tsv'
+	
 	print('  ')
 	print('Opening DGIdb...')
 	print('  ')
@@ -30,13 +34,12 @@ def insertDrugs(uri, keyspace, num_dr, num_threads, ctn, session):
 		data['chembl-id'] = i[2]
 		data['drug-claim-source'] = i[3]
 		drugs.append(data)
-
+	os.remove('Dataset/DGIdb/drugs.tsv')
 	counter = 0
 	drugs_list = drugs
 	batches = []
 	batches2 = []
 
-	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	for d in drugs_list:
 		counter = counter + 1
@@ -53,10 +56,12 @@ def insertDrugs(uri, keyspace, num_dr, num_threads, ctn, session):
 	print('Drugs committed!')
 
 
-def insertInteractions(uri, keyspace, num_int, num_threads, ctn, session):
+def insertInteractions(uri, database, num_int, num_threads, ctn, session):
 	batches_pr = []
-
-	file = 'Dataset/DGIdb/dgidb_interactions.tsv'
+	ssl._create_default_https_context = ssl._create_unverified_context
+	url = "https://www.dgidb.org/data/monthly_tsvs/2021-Jan/interactions.tsv"
+	wget.download(url, 'Dataset/DGIdb/')
+	file = 'Dataset/DGIdb/interactions.tsv'
 	print('  ')
 	print('Opening DGIdb-Interactions...')
 	print('  ')
@@ -72,7 +77,7 @@ def insertInteractions(uri, keyspace, num_int, num_threads, ctn, session):
 		data['drug-name'] = i[7]
 		data['chembl-id'] = i[8]
 		interactions.append(data)
-
+	os.remove('Dataset/DGIdb/interactions.tsv')
 	counter = 0
 	pool = ThreadPool(num_threads)
 	batches = []

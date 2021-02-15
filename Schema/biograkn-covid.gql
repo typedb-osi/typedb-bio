@@ -7,74 +7,74 @@ define
 # Entities
 
 journal sub entity, 
-	has journal-name,
-	plays publishing-journal; 
+	owns journal-name,
+	plays publishing:publishing-journal; 
 
 publication sub entity, 
-	has paper-id,
-	has title,
-	has doi,
-	has publish-time, 
-	has volume, 
-	has issn, 
-	has pmid,
-	plays mentioning,
-	plays published-publication,
-	plays authored-publication, 
-	plays containing-paper, 
-	plays referenced-paper,
-	plays referencing-paper; 
+	owns paper-id,
+	owns title,
+	owns doi,
+	owns publish-time, 
+	owns volume, 
+	owns issn, 
+	owns pmid,
+	plays mention:mentioning,
+	plays publishing:published-publication,
+	plays authorship:authored-publication, 
+	plays paper-paragraph-containment:containing-paper, 
+	plays bibliography-reference:referenced-paper,
+	plays bibliography-reference:referencing-paper; 
 
 paragraph sub entity,
-	has section-name,
-	has text, 
-	has language,
-	plays containing-span-paragraph, 
-	plays contained-paper-paragraph,
-	plays mentioning-paragraph,
-	plays contained-patent-paragraph; 
+	owns section-name,
+	owns text, 
+	owns language,
+	plays paragraph-span-containment:containing-span-paragraph, 
+	plays paper-paragraph-containment:contained-paper-paragraph,
+	plays mention:mentioning-paragraph,
+	plays patent-paragraph-containment:contained-patent-paragraph; 
 
 span sub entity, 
-	has start,
-	has end,
-	has text,
-	plays referencing-paragraph,
-	plays contained-span;
+	owns start,
+	owns end,
+	owns text,
+	plays bibliography-reference:referencing-paragraph,
+	plays paragraph-span-containment:contained-span;
 
 cite-span sub span;
 ref-span sub span; 
 
 person sub entity,
-	has first-name,
-	has middle-name,
-	has last-name, 
-	has published-name,
-	has email,
-	plays author,
-	plays affiliated,
-	plays patent-applicant,
-	plays patent-owner,
-	plays inventor; 
+	owns first-name,
+	owns middle-name,
+	owns last-name, 
+	owns published-name,
+	owns email,
+	plays authorship:author,
+	plays affiliateship:affiliated,
+	plays application:patent-applicant,
+	plays ownership:patent-owner,
+	plays invention:inventor; 
 
 organisation sub entity, 
-	has name, 
-	plays affiliating,
-	plays located, 
-	plays locating,
-	plays patent-owner,
-	plays patent-applicant, 
-	plays inventor; 
+	owns name, 
+	plays affiliateship:affiliating,
+	plays located-in:located, 
+	plays located-in:locating,
+	plays ownership:patent-owner,
+	plays application:patent-applicant, 
+	plays invention:inventor; 
 	laboratory sub organisation; 
 	institution sub organisation;
 	company sub organisation; 
 
 geo-location sub entity,
-	has name, 
-	plays locating,
-	plays located,
-	plays discovering-location;
+	owns name, 
+	plays located-in:locating,
+	plays located-in:located,
+	plays discovery:discovering-location;
 country sub geo-location,
-	has country-name; 
+	owns country-name; 
 settlement sub geo-location; 
 region sub geo-location;
 
@@ -105,18 +105,18 @@ paragraph-span-containment sub relation,
 	relates containing-span-paragraph;
 
 mention sub relation, 
-	has start, 
-	has end,
-	has source,	#CORD NER, SemMed etc 
+	owns start, 
+	owns end,
+	owns source,	#CORD NER, SemMed etc 
 	relates mentioning-paragraph, 
 	relates mentioning, 
 	relates mentioned,
 	relates mentioned-genes-relation;
 
 bibliography-reference sub relation, 
-	has ref-id,
-	has venue, 
-	has pages,
+	owns ref-id,
+	owns venue, 
+	owns pages,
 	relates referencing-paragraph,
 	relates referencing-paper,
 	relates referenced-paper;
@@ -127,7 +127,7 @@ publishing sub relation,
 
 # Attributes
 
-identifier sub attribute, value string; 
+identifier sub attribute, abstract, value string; 
 paper-id sub identifier;
 title sub attribute, value string; 
 section-name sub attribute, value string; 
@@ -135,11 +135,11 @@ text sub attribute, value string;
 start sub attribute, value string; 
 end sub attribute, value string; 
 name sub attribute, value string; 
-first-name sub name; 
-middle-name sub name; 
-last-name sub name; 
-country-name sub name;
-published-name sub name;
+first-name sub attribute, value string; 
+middle-name sub attribute, value string; 
+last-name sub attribute, value string; 
+country-name sub attribute, value string;
+published-name sub attribute, value string;
 email sub attribute, value string; 
 ref-id sub identifier;
 title sub attribute, value string; 
@@ -162,39 +162,39 @@ sentence-text sub attribute, value string;
 ######
 
 patent sub entity,
-	has publication-number, 
-	has lens-id,
-	has publication-date,
-	has publication-year,
-	has application-number,
-	has application-date,
-	has priority-numbers, 
-	has earliest-priority-date,
-	has title, 
-	has URL,
-	has patent-type,
-	has cited-by-patent-count,
-	has simple-family-size,
-	has extended-family-size,
-	has sequence-count,
-	has cpc-classifications, 
-	has IPCR-classifications,
-	has US-classifications,
-	has NPL-citation-count,
-	has NPL-resolved-citation-count,
-	has NPL-resolved-lens-id,
-	has NPL-resolved-external-id,
-	has NPL-citations,
-	plays granted-patent,
-	plays applied-patent,
-	plays invented,
-	plays owned-patent,
-	plays containing-patent,
-	plays simple-familiar-patent;
+	owns publication-number, 
+	owns lens-id,
+	owns publication-date,
+	owns publication-year,
+	owns application-number,
+	owns application-date,
+	owns priority-numbers, 
+	owns earliest-priority-date,
+	owns title, 
+	owns URL,
+	owns patent-type,
+	owns cited-by-patent-count,
+	owns simple-family-size,
+	owns extended-family-size,
+	owns sequence-count,
+	owns cpc-classifications, 
+	owns IPCR-classifications,
+	owns US-classifications,
+	owns NPL-citation-count,
+	owns NPL-resolved-citation-count,
+	owns NPL-resolved-lens-id,
+	owns NPL-resolved-external-id,
+	owns NPL-citations,
+	plays grantship:granted-patent,
+	plays application:applied-patent,
+	plays invention:invented,
+	plays ownership:owned-patent,
+	plays patent-paragraph-containment:containing-patent,
+	plays simple-lens-family:simple-familiar-patent;
 
 jurisdiction sub entity, 
-	has name, 
-	plays granting-jurisdiction;
+	owns name, 
+	plays grantship:granting-jurisdiction;
 
 ## Relations
 
@@ -215,11 +215,11 @@ ownership sub relation,
 	relates owned-patent;
 
 simple-lens-family sub relation, 
-	has family-id,
+	owns family-id,
 	relates simple-familiar-patent;
 
 extended-lens-family sub relation, 
-	has family-id,
+	owns family-id,
 	relates extended-familiar-patent;
 
 publication-number sub attribute, value string;
@@ -254,160 +254,172 @@ NPL-citations sub attribute, value string;
 substance sub entity; 
 
 chemical sub substance,
-	has chemical-name; 
+	owns chemical-name; 
 
 variant sub entity,
-	has snpId,
-	plays located-variant;
+	owns snpId,
+	plays chromosome-location:located-variant;
 chromosome sub entity, 
-	has chromosome-name,
-	plays locating-chromosome;
+	owns chromosome-name,
+	plays chromosome-location:locating-chromosome;
 
 fully-formed-anatomical-structure sub entity;
 
 cell sub fully-formed-anatomical-structure,
-	has cell-name;
+	owns cell-name;
 
 tissue sub fully-formed-anatomical-structure,
-    has tissue-name,
-    plays enhanced-tissue,
-    plays expressed-tissue,
-    plays tissue-context,
-    plays associated-tissue;
+    owns tissue-name,
+    plays tissue-enhancement:enhanced-tissue,
+    plays expression:expressed-tissue,
+    plays process-localisation:tissue-context,
+    plays gene-tissue-association:associated-tissue,
+    plays disease-tissue-association:associated-tissue,
+    plays drug-tissue-association:associated-tissue;
 
 gene sub fully-formed-anatomical-structure,
-    has gene-symbol,
-    has entrez-id,
-    has ensembl-gene-stable-id,
-    has ensembl-xref,
-    has gene-name,
-    plays expressing-gene,
-    plays encoding-gene,
-    plays transcribing-gene,
-    plays mentioned,
-    plays associated-gene,
-    plays target-gene,
-	plays associated-virus-gene,
-	plays located-gene,
-	plays inhibited,
-	plays inhibiting,
-	plays interacted,
-	plays interacting,
-	plays coexisting,
-	plays comparing,
-	plays compared,
-	plays higher,
-	plays lower,
-	plays stimulating,
-	plays stimulated,
-	plays converting,
-	plays converted,
-	plays producing,
-	plays produced,
-	plays neg-coexisting,
-	plays neg-inhibited,
-	plays neg-inhibiting,
-	plays neg-interacted,
-	plays neg-interacting,
-	plays neg-stimulating,
-	plays neg-stimulated,
-	plays neg-producing,
-	plays neg-produced,
-	plays neg-constituting,
-	plays neg-constituted,
-	plays similar,
-	plays neg-similar,
-	plays locating,
-	plays located,
-	plays constituting,
-	plays constituted,
-	plays neg-higher,
-	plays neg-lower,
-	plays neg-converting,
-	plays neg-converted,
-	plays disrupting,
-	plays disrupted,
-	plays augmenting,
-	plays augmented,
-	plays affecting,
-	plays affected,
-	plays associated,
-	plays associating;
+    owns gene-symbol,
+    owns entrez-id,
+    owns ensembl-gene-stable-id,
+    owns ensembl-xref,
+    owns gene-name,
+    plays expression:expressing-gene,
+    plays gene-protein-encoding:encoding-gene,
+    plays transcription:transcribing-gene,
+    plays mention:mentioned,
+    plays gene-disease-association:associated-gene,
+    plays gene-tissue-association:associated-gene,
+    plays drug-gene-interaction:target-gene,
+	plays gene-virus-association:associated-virus-gene,
+	plays chromosome-location:located-gene,
+	plays inhibition:inhibited,
+	plays inhibition:inhibiting,
+	plays interaction:interacted,
+	plays interaction:interacting,
+	plays coexistance:coexisting,
+	plays comparison:comparing,
+	plays comparison:compared,
+	plays comparison:higher,
+	plays comparison:lower,
+	plays stimulation:stimulating,
+	plays stimulation:stimulated,
+	plays conversion:converting,
+	plays conversion:converted,
+	plays production:producing,
+	plays production:produced,
+	plays neg-coexistance:neg-coexisting,
+	plays neg-inhibition:neg-inhibited,
+	plays neg-inhibition:neg-inhibiting,
+	plays neg-interaction:neg-interacted,
+	plays neg-interaction:neg-interacting,
+	plays neg-stimulation:neg-stimulating,
+	plays neg-stimulation:neg-stimulated,
+	plays neg-production:neg-producing,
+	plays neg-production:neg-produced,
+	plays neg-constitution:neg-constituting,
+	plays neg-constitution:neg-constituted,
+	plays similarity:similar,
+	plays neg-similarity:neg-similar,
+	plays location:locating,
+	plays located-in:locating,
+	plays location:located,
+	plays located-in:located,
+	plays constitution:constituting,
+	plays constitution:constituted,
+	plays neg-comparison:neg-higher,
+	plays neg-comparison:neg-lower,
+	plays neg-conversion:neg-converting,
+	plays neg-conversion:neg-converted,
+	plays disruption:disrupting,
+	plays disruption:disrupted,
+	plays augmentation:augmenting,
+	plays augmentation:augmented,
+	plays affection:affecting,
+	plays affection:affected,
+	plays association:associated,
+	plays association:associating;
 transcript sub fully-formed-anatomical-structure, 
-	has ensembl-transcript-stable-id, 
-	plays encoded-transcript,
-	plays translating-transcript,
-	plays mentioned;
+	owns ensembl-transcript-stable-id, 
+	plays transcription:encoded-transcript,
+	plays translation:translating-transcript,
+	plays mention:mentioned;
 protein sub chemical,
-    has uniprot-id,
-    has uniprot-entry-name,
-    has uniprot-symbol,
-    has uniprot-name,
-    has ensembl-protein-stable-id, 
-    has go-evidence-code,
-    has go-taxon,
-    has go-id,
-    has function-description,
-    plays modulated,
-	plays activating-protein,
-	plays activated-protein,
-    plays translated-protein,
-    plays associated-protein, 
-    plays mentioned,
-    plays encoded-protein,
-    plays expressed-protein,
-    plays interacting-protein,
-    plays participating-protein,
-    plays target-protein,
-    plays associating,
-    plays hosting-virus-protein;
+    owns uniprot-id,
+    owns uniprot-entry-name,
+    owns uniprot-symbol,
+    owns uniprot-name,
+    owns ensembl-protein-stable-id, 
+    owns go-evidence-code,
+    owns go-taxon,
+    owns go-id,
+    owns function-description,
+    plays modulation:modulated,
+	plays protein-protein-interaction:activating-protein,
+	plays protein-protein-interaction:activated-protein,
+    plays translation:translated-protein,
+    plays protein-complex:associated-protein,
+	plays protein-disease-association:associated-protein, 
+    plays mention:mentioned,
+    plays gene-protein-encoding:encoded-protein,
+    plays tissue-enhancement:expressed-protein,
+    plays protein-protein-interaction:interacting-protein,
+    plays pathway-participation:participating-protein,
+    plays drug-protein-interaction:target-protein,
+    plays association:associating,
+    plays organism-association:associating,
+    plays protein-virus-association:hosting-virus-protein;
 pathological-function sub entity;
 cell-function sub pathological-function,
-	has cell-function-name;
+	owns cell-function-name;
 disease sub pathological-function,
-    has disease-name,
-    has disease-id,
-    has disease-type,
-    plays mentioned,
-	plays categorised-disease,
-    plays associated-disease,
-    plays affected-disease;
+    owns disease-name,
+    owns disease-id,
+    owns disease-type,
+    plays mention:mentioned,
+	plays disease-class-association:categorised-disease,
+    plays protein-disease-association:associated-disease,
+	plays gene-disease-association:associated-disease,
+	plays disease-tissue-association:associated-disease,
+    plays drug-disease-association:affected-disease;
 disease-class sub entity, 
-	has class-name,
-	plays associated-class;
+	owns class-name,
+	plays disease-class-association:associated-class;
 drug sub entity,
-    has drug-name,
-    has chembl-id,
-    has drug-claim-name,
-    has drug-claim-source,
-    plays interacting-drug,
-    plays inhibitor,
-    plays substrate,
-    plays antagonist,
-    plays blocker,
-    plays therapeutic,
-    plays interacting-drug,
-    plays associated-drug,
-    plays resulting-drug;
+    owns drug-name,
+    owns chembl-id,
+    owns drug-claim-name,
+    owns drug-claim-source,
+    plays drug-protein-interaction:interacting-drug,
+	plays drug-gene-interaction:interacting-drug,
+    plays drug-protein-interaction:inhibitor,
+    plays drug-protein-interaction:substrate,
+    plays drug-protein-interaction:antagonist,
+    plays drug-protein-interaction:blocker,
+    plays drug-disease-association:therapeutic,
+    plays drug-protein-interaction:interacting-drug,
+	plays drug-gene-interaction:interacting-drug,
+    plays drug-tissue-association:associated-drug,
+    plays drug-compound-combination:resulting-drug;
 compound sub entity,
-	plays participating-compound,
-	plays modulator;
+	plays drug-compound-combination:participating-compound,
+	plays modulation:modulator;
 pathway sub entity,
-    has pathway-name,
-    has pathway-id,
-    plays participated-pathway;
+    owns pathway-name,
+    owns pathway-id,
+    plays pathway-participation:participated-pathway;
 organism sub entity,
-	has organism-name,
-	plays associated-organism,
-	plays hosting-organism;
+	owns organism-name,
+	plays organism-association:associated-organism,
+	plays organism-virus-hosting:hosting-organism;
 virus sub organism, 
-	has genbank-id, 
-	has virus-name, 
-	has identity-percentage,
-	plays mentioned,
-	plays hosted-virus,
-	plays associated-virus,
-	plays discovered-virus;
+	owns genbank-id, 
+	owns virus-name, 
+	owns identity-percentage,
+	plays mention:mentioned,
+	plays organism-virus-hosting:hosted-virus,
+	plays protein-virus-association:associated-virus,
+	plays gene-virus-association:associated-virus,
+	plays discovery:discovered-virus;
 
 ## Relations
 transcription sub relation, 
@@ -417,14 +429,14 @@ translation sub relation,
 	relates translated-protein,
 	relates translating-transcript;
 protein-complex sub relation, 
-	has complexportal-name,
-	has complexportal-id,
-	has complexportal-object-symbol,
-	has go-id,
-	has go-taxon,
-	has pmid,
-	has go-evidence-code,
-	plays mentioned,
+	owns complexportal-name,
+	owns complexportal-id,
+	owns complexportal-object-symbol,
+	owns go-id,
+	owns go-taxon,
+	owns pmid,
+	owns go-evidence-code,
+	plays mention:mentioned,
 	relates associated-protein;
 gene-protein-encoding sub relation,
 	relates encoded-protein,
@@ -433,7 +445,7 @@ protein-disease-association sub relation,
     relates associated-protein,
     relates associated-disease;
 gene-disease-association sub relation,
-	has disgenet-score,
+	owns disgenet-score,
     relates associated-gene,
     relates associated-disease;
 gene-tissue-association sub relation,
@@ -447,7 +459,7 @@ drug-protein-interaction sub relation,
     relates interacting-drug,
     relates target-protein;
 drug-gene-interaction sub relation,
-	has interaction-type,
+	owns interaction-type,
     relates target-gene,
     relates interacting-drug;
 tissue-enhancement sub relation,
@@ -460,7 +472,7 @@ protein-protein-interaction sub relation,
     relates interacting-protein,
     relates activating-protein,
     relates activated-protein,
-    plays biomolecular-process;
+    plays process-localisation:biomolecular-process;
 drug-disease-association sub relation,
     relates affected-disease,
     relates therapeutic;
@@ -495,8 +507,8 @@ discovery sub relation,
 	relates discovered-virus,
 	relates discovering-location;
 chromosome-location sub relation,
-	has start-location, 
-	has end-location,
+	owns start-location, 
+	owns end-location,
 	relates located-variant,
 	relates located-gene,
 	relates locating-chromosome;
@@ -505,186 +517,186 @@ disease-class-association sub relation,
 	relates associated-class; 
 
 expression sub relation, 
-	has expression-value, 
-	has expression-value-reliability,
+	owns expression-value, 
+	owns expression-value-reliability,
 	relates expressed-tissue,
 	relates expressing-gene;
 
 inhibition sub relation,
 	relates inhibited,
 	relates inhibiting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 interaction sub relation,
 	relates interacted,
 	relates interacting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 coexistance sub relation,
 	relates coexisting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 comparison sub relation,
 	relates compared,
 	relates comparing,
 	relates higher,
 	relates lower,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 stimulation sub relation,
 	relates stimulated,
 	relates stimulating,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 conversion sub relation,
 	relates converted,
 	relates converting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 production sub relation,
 	relates producing,
 	relates produced,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
  neg-coexistance sub relation,
 	relates neg-coexisting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
  neg-inhibition sub relation,
 	relates neg-inhibited,
 	relates neg-inhibiting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-interaction sub relation,
 	relates neg-interacted,
 	relates neg-interacting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-stimulation sub relation,
 	relates neg-stimulated,
 	relates neg-stimulating,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-production sub relation,
 	relates neg-produced,
 	relates neg-producing,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-constitution sub relation,
 	relates neg-constituted,
 	relates neg-constituting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 similarity sub relation,
 	relates similar,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-similarity sub relation,
 	relates neg-similar,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 location sub relation,
 	relates located,
 	relates locating,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 constitution sub relation,
 	relates constituted,
 	relates constituting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-comparison sub relation,
 	relates neg-higher,
 	relates neg-lower,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 neg-conversion sub relation,
 	relates neg-converted,
 	relates neg-converting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 disruption sub relation,
 	relates disrupted,
 	relates disrupting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 augmentation sub relation,
 	relates augmented,
 	relates augmenting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 affection sub relation,
 	relates affected,
 	relates affecting,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 association sub relation,
 	relates associated,
 	relates associating,
-	plays mentioned-genes-relation,
-	has sentence-text;
+	plays mention:mentioned-genes-relation,
+	owns sentence-text;
 
 ## Attributes
 # Name attributes: 
-	chromosome-name sub name;
-	class-name sub name; 
-	disease-name sub name;
-	disease-type sub name;
-	database-name sub name;
-	uniprot-name sub name;
-	gene-symbol sub name;
-	ensembl-xref sub name; 
-	uniprot-symbol sub name; 
-	complexportal-name sub name;
-	complexportal-object-symbol sub name;
-	gene-name sub name;
-	protein-name sub name;
-	journal-name sub name;
-	cell-function-name sub name;
-	cell-name sub name;
-	chemical-name sub name;
-	uniprot-entry-name sub name;
-	pathway-name sub name;
-	tissue-name sub name;
-	drug-name sub name;
-	organism-name sub name;
-	virus-name sub name; 
-	drug-claim-name sub name;
+	chromosome-name sub attribute, value string;
+	class-name sub attribute, value string; 
+	disease-name sub attribute, value string;
+	disease-type sub attribute, value string;
+	database-name sub attribute, value string;
+	uniprot-name sub attribute, value string;
+	gene-symbol sub attribute, value string;
+	ensembl-xref sub attribute, value string; 
+	uniprot-symbol sub attribute, value string; 
+	complexportal-name sub attribute, value string;
+	complexportal-object-symbol sub attribute, value string;
+	gene-name sub attribute, value string;
+	protein-name sub attribute, value string;
+	journal-name sub attribute, value string;
+	cell-function-name sub attribute, value string;
+	cell-name sub attribute, value string;
+	chemical-name sub attribute, value string;
+	uniprot-entry-name sub attribute, value string;
+	pathway-name sub attribute, value string;
+	tissue-name sub attribute, value string;
+	drug-name sub attribute, value string;
+	organism-name sub attribute, value string;
+	virus-name sub attribute, value string; 
+	drug-claim-name sub attribute, value string;
 
-identifier sub attribute, value string;
+identifier sub attribute, abstract, value string;
 	complex-id sub identifier;
-		complexportal-id sub complex-id;
-	gene-id sub identifier;
+	complexportal-id sub identifier;
+	gene-id sub identifier, abstract;
 		ensembl-gene-stable-id sub gene-id;
 		entrez-id sub gene-id;
-	protein-id sub identifier;
+	protein-id sub identifier, abstract;
 		uniprot-id sub protein-id;
 		ensembl-protein-stable-id sub protein-id;
 		uniprot-id sub protein-id;
 		ensembl-id sub protein-id;
-	transcript-id sub identifier;
+	transcript-id sub identifier, abstract;
 		ensembl-transcript-stable-id sub transcript-id;
 	go-id sub identifier;
 	disease-id sub identifier;

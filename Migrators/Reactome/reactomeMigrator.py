@@ -2,22 +2,24 @@ import itertools
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 import wget
-from grakn.client import GraknClient
+from grakn.client import GraknClient, SessionType, TransactionType
+import ssl, os
 
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
 
 
-def reactomeMigrator(uri, keyspace, num_path, num_threads, ctn):
-	client = GraknClient(uri=uri)
-	session = client.session(keyspace=keyspace)
+
+def reactomeMigrator(uri, database, num_path, num_threads, ctn):
+	client = GraknClient.core(uri)
+	session = client.session(database, SessionType.DATA)
 	pathway_associations = filterHomoSapiens(num_path)
-	insertPathways(uri, keyspace, num_threads, ctn, session, pathway_associations)
-	insertPathwayInteractions(uri, keyspace, num_threads, ctn, session, pathway_associations)
+	insertPathways(uri, database, num_threads, ctn, session, pathway_associations)
+	insertPathwayInteractions(uri, database, num_threads, ctn, session, pathway_associations)
 	session.close()
 	client.close()
 			
-def insertPathways(uri, keyspace, num_threads, ctn, session, pathway_associations): 
+def insertPathways(uri, database, num_threads, ctn, session, pathway_associations): 
 	pathway_list = []
 	for p in pathway_associations: 
 		pathway_list.append([p['pathway-id'], p['pathway-name']]) 
@@ -28,7 +30,6 @@ def insertPathways(uri, keyspace, num_threads, ctn, session, pathway_association
 	batches = []
 	batches2 = []
 
-	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	for d in pathway_list:
 		counter = counter + 1
@@ -44,13 +45,12 @@ def insertPathways(uri, keyspace, num_threads, ctn, session, pathway_association
 	pool.join()
 	print('Pathways committed!')
 
-def insertPathwayInteractions(uri, keyspace, num_threads, ctn, session, pathway_associations): 
+def insertPathwayInteractions(uri, database, num_threads, ctn, session, pathway_associations): 
 	counter = 0
 	batches = []
 	batches2 = []
 
 	print(len(pathway_associations))
-	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	for d in pathway_associations:
 		counter = counter + 1
@@ -69,6 +69,7 @@ def insertPathwayInteractions(uri, keyspace, num_threads, ctn, session, pathway_
 
 
 def filterHomoSapiens(num_path):
+	ssl._create_default_https_context = ssl._create_unverified_context
 	url = "https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt"
 	wget.download(url, 'Dataset/Reactome/')
 	file = 'Dataset/Reactome/UniProt2Reactome_All_Levels.txt'
@@ -85,4 +86,5 @@ def filterHomoSapiens(num_path):
 			data['pathway-name'] = i[3]
 			data['organism'] = i[5]
 			pathway_associations.append(data)
+	os.remove('Dataset/Reactome/UniProt2Reactome_All_Levels.txt')
 	return pathway_associations

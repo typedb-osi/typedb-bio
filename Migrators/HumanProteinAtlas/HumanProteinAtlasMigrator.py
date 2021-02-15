@@ -1,21 +1,29 @@
 import csv
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
-
-from grakn.client import GraknClient
-
+import wget, ssl, os
+from grakn.client import GraknClient, SessionType, TransactionType
+from zipfile import ZipFile
 from Migrators.Helpers.batchLoader import batch_job
 
 
-def proteinAtlasMigrator(uri, keyspace, num, num_threads, ctn):
-	client = GraknClient(uri=uri)
-	session = client.session(keyspace=keyspace)
+def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
+	client = GraknClient.core(uri)
+	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
 	if num is not 0:
 		print('  ')
 		print('Opening HPA dataset...')
 		print('  ')
+
+		ssl._create_default_https_context = ssl._create_unverified_context
+		url = 'https://www.proteinatlas.org/download/normal_tissue.tsv.zip'
+		wget.download(url, 'Dataset/HumanProteinAtlas/')
+
+		with ZipFile('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip', 'r') as f:
+			f.extractall('Dataset/HumanProteinAtlas')
+
 		with open('Dataset/HumanProteinAtlas/normal_tissue.tsv', 'rt', encoding='utf-8') as csvfile:
 			csvreader = csv.reader(csvfile, delimiter='	')
 			raw_file = []
@@ -30,6 +38,8 @@ def proteinAtlasMigrator(uri, keyspace, num, num_threads, ctn):
 					d['expression-value'] = row[4]
 					d['expression-value-reliability'] = row[5]
 					raw_file.append(d)
+			os.remove('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip')
+			os.remove('Dataset/HumanProteinAtlas/normal_tissue.tsv')
 
 		tissue = []
 		for r in raw_file[:num]:
@@ -41,14 +51,13 @@ def proteinAtlasMigrator(uri, keyspace, num, num_threads, ctn):
 		insertGeneTissue(raw_file, session, num_threads, ctn)
 
 def insertTissue(tissue, session, num_threads):
-	tx = session.transaction().write()
+	tx = session.transaction(TransactionType.WRITE)
 	for t in tissue: 
 		q = 'insert $t isa tissue, has tissue-name "' + t + '";'
-		a = tx.query(q)
+		a = tx.query().insert(q)
 	tx.commit()
 
 def insertGeneTissue(raw_file, session, num_threads, ctn):
-	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	counter = 0
 	batches = []
@@ -80,7 +89,6 @@ def insertEnsemblId(raw_file, session, num_threads, ctn):
 	for r in raw_file:
 		list_of_tuples.append((r['ensembl-gene-id'], r['gene-symbol']))
 	list_of_tuples = [t for t in (set(tuple(i) for i in list_of_tuples))]
-	tx = session.transaction().write()
 	pool = ThreadPool(num_threads)
 	counter = 0
 	batches = []

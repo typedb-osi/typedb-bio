@@ -1,12 +1,11 @@
 import csv
+from grakn.client import GraknClient, SessionType, TransactionType
 
-from grakn.client import GraknClient
 
-
-def coronavirusMigrator(uri, keyspace):
-	client = GraknClient(uri=uri)
-	session = client.session(keyspace=keyspace)
-	tx = session.transaction().write()
+def coronavirusMigrator(uri, database):
+	client = GraknClient.core(uri)
+	session = client.session(database, SessionType.DATA)
+	tx = session.transaction(TransactionType.WRITE)
 	print('.....')
 	print('Starting with Coronavirus file.')
 	print('.....')
@@ -14,11 +13,12 @@ def coronavirusMigrator(uri, keyspace):
 	# Temporary manual ingestion of locations
 	graql = f"""insert $c isa country, has country-name 'China'; $c2 isa country, has country-name 'Kingdom of Saudi Arabia'; 
 	$c3 isa country, has country-name 'USA'; $c4 isa country, has country-name 'South Korea'; $o isa organism, has organism-name 'Mouse';"""
-	tx.query(graql)
+	tx.query().insert(graql)
 	tx.commit()
+	tx.close()
 
 	with open('Dataset/Coronaviruses/Genome identity.csv', 'rt', encoding='utf-8') as csvfile:
-		tx = session.transaction().write()
+		tx = session.transaction(TransactionType.WRITE)
 		csvreader = csv.reader(csvfile, delimiter=',')
 		raw_file = []
 		n = 0
@@ -60,12 +60,13 @@ def coronavirusMigrator(uri, keyspace):
 			$r (discovering-location: $c, discovered-virus: $v) isa discovery;
 			$r1 (hosting-organism: $o, hosted-virus: $v) isa organism-virus-hosting;"""
 			print(graql)
-			tx.query(graql)
+			tx.query().insert(graql)
 		tx.commit()
+		tx.close()
 
 
 	with open('Dataset/Coronaviruses/Host proteins (potential drug targets).csv', 'rt', encoding='utf-8') as csvfile:
-		tx = session.transaction().write()
+		tx = session.transaction(TransactionType.WRITE)
 		csvreader = csv.reader(csvfile, delimiter=',')
 		raw_file = []
 		n = 0
@@ -86,9 +87,10 @@ def coronavirusMigrator(uri, keyspace):
 			$g isa gene, has entrez-id "{q['entrez-id']}";
 			insert $r2 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
 			$r3 (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;"""
-			tx.query(graql)
+			tx.query().insert(graql)
 			print(graql)
 		tx.commit()
+		tx.close()
 	print('.....')
 	print('Finished with Coronavirus file.')
 	print('.....')

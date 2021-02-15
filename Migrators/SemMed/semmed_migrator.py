@@ -1,13 +1,13 @@
 import csv
 # from multiprocessing.dummy import Pool as ThreadPool
 import multiprocessing
-
 import pandas as pd
 import untangle
-from grakn.client import GraknClient
+from grakn.client import GraknClient, SessionType, TransactionType
 
+from Migrators.Helpers.batchLoader import batch_job
 
-def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
+def migrate_semmed(uri, database, num_semmed, num_threads, ctn):
     
     print("Migrate 'Subject_CORD_NER.csv'")
 
@@ -23,13 +23,13 @@ def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
     relationship_data = get_relationship_data('Dataset/SemMed/Subject_CORD_NER.csv')[:num_semmed]
 
     print("--------Loading journals---------")
-    load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, database)
     print("--------Loading authors---------")
-    load_in_parallel(migrate_authors, author_names, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_authors, author_names, num_threads, ctn, uri, database)
     print("--------Loading publications--------")
-    load_in_parallel(migrate_publications, publications_list, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_publications, publications_list, num_threads, ctn, uri, database)
     print("--------Loading relations----------")
-    load_in_parallel(migrate_relationships, relationship_data, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_relationships, relationship_data, num_threads, ctn, uri, database)
 
     print("Migrate 'Object_CORD_NER.csv'")
 
@@ -45,13 +45,13 @@ def migrate_semmed(uri, keyspace, num_semmed, num_threads, ctn):
     relationship_data = get_relationship_data('Dataset/SemMed/Object_CORD_NER.csv')[:num_semmed]
 
     print("--------Loading journals---------")
-    load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, database)
     print("--------Loading authors---------")
-    load_in_parallel(migrate_authors, author_names, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_authors, author_names, num_threads, ctn, uri, database)
     print("--------Loading publications--------")
-    load_in_parallel(migrate_publications, publications_list, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_publications, publications_list, num_threads, ctn, uri, database)
     print("--------Loading relations----------")
-    load_in_parallel(migrate_relationships, relationship_data, num_threads, ctn, uri, keyspace)
+    load_in_parallel(migrate_relationships, relationship_data, num_threads, ctn, uri, database)
     
 def get_journal_names(xml_response):
 
@@ -78,31 +78,33 @@ def get_journal_names(xml_response):
 
     return list(journals_set)
 
-def migrate_journals(uri, keyspace, journal_names: list, ctn, process_id = 0):
+def migrate_journals(uri, database, journal_names: list, ctn, process_id = 0):
     '''
     Migrate journals to Grakn \n
     journal_names - list of journal names (strings) \n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
+    with GraknClient.core(uri) as client:
+        with client.session(database, SessionType.DATA) as session:
             counter = 0
-            transaction = session.transaction().write()
+            transaction = session.transaction(TransactionType.WRITE)
             for journal_name in journal_names:
                 ##Check if journal already in Knowledge Base
                 try:
-                    match_query = 'match $j isa journal, has journal-name "{}"; get;'.format(journal_name)
-                    next(transaction.query(match_query))
+                    match_query = 'match $j isa journal, has journal-name "{}";'.format(journal_name)
+                    next(transaction.query().match(match_query))
                 except StopIteration:
                     insert_query = 'insert $j isa journal, has journal-name "{}";'.format(journal_name)
-                    transaction.query(insert_query)
+                    transaction.query().insert(insert_query)
                 if counter % ctn == 0:
                     transaction.commit()
-                    transaction = session.transaction().write()
+                    transaction.close()
+                    transaction = session.transaction(TransactionType.WRITE)
                     print("Process {} COMMITED".format(process_id))
                 print("Process {} ----- {} journals added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
+            transaction.close()
 
 def get_authors_names(xml_response):
     '''
@@ -127,31 +129,34 @@ def get_authors_names(xml_response):
 
     return list(authors_set)
 
-def migrate_authors(uri, keyspace, author_names: list, ctn, process_id = 0):
+
+def migrate_authors(uri, database, author_names: list, ctn, process_id = 0):
     '''
     Migrate authors to Grakn\n
     author_names - list of author names (strings)\n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
+    with GraknClient.core(uri) as client:
+        with client.session(database, SessionType.DATA) as session:
             counter = 0
-            transaction = session.transaction().write()
+            transaction = session.transaction(TransactionType.WRITE)
             for author_name in author_names:
                 ##Check if journal already in Knowledge Base
                 try:
-                    match_query = 'match $a isa person, has published-name "{}"; get;'.format(author_name)
-                    next(transaction.query(match_query))
+                    match_query = 'match $a isa person, has published-name "{}";'.format(author_name)
+                    next(transaction.query().match(match_query))
                 except StopIteration:
                     insert_query = 'insert $a isa person, has published-name "{}";'.format(author_name)
-                    transaction.query(insert_query, infer=False)
+                    transaction.query().insert(insert_query)
                 if counter % ctn == 0:
                     transaction.commit()
-                    transaction = session.transaction().write()
+                    transaction.close()
+                    transaction = session.transaction(TransactionType.WRITE)
                     print("Process {} COMMITED".format(process_id))
                 print("Process {} ----- {} authors added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
+            transaction.close()
 
 def get_publication_data(xml_response):
     '''
@@ -203,22 +208,22 @@ def get_publication_data(xml_response):
 
     return list(publications)
 
-def migrate_publications(uri, keyspace, publications_list: list, ctn, process_id = 0):
+def migrate_publications(uri, database, publications_list: list, ctn, process_id = 0):
     '''
     Migrate publiations to Grakn\n
     publications_list - list of dictionaries with publication data\n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
+    with GraknClient.core(uri) as client:
+        with client.session(database, SessionType.DATA) as session:
             counter = 0
-            transaction = session.transaction().write()
+            transaction = session.transaction(TransactionType.WRITE)
             for publication_dict in publications_list:
                 authors = publication_dict["authors"]   #list of authors - list of strings
                 ##Check if publication already in Knowledge Base
                 try:
-                    match_query = 'match $p isa publication, has paper-id "{}"; get;'.format(publication_dict["paper-id"])
-                    next(transaction.query(match_query))
+                    match_query = 'match $p isa publication, has paper-id "{}";'.format(publication_dict["paper-id"])
+                    next(transaction.query().match(match_query))
                 except StopIteration:
                     match_query = 'match $j isa journal, has journal-name "{}"; '.format(publication_dict["journal-name"])
                     match_query = match_query + create_authorship_query(authors)[0]
@@ -226,14 +231,16 @@ def migrate_publications(uri, keyspace, publications_list: list, ctn, process_id
                     insert_query = insert_query + create_authorship_query(authors)[1]
                     insert_query = insert_query + '(publishing-journal: $j, published-publication: $p) isa publishing;'
                     # print(match_query+insert_query)
-                    transaction.query(match_query + insert_query)
+                    transaction.query().insert(match_query + insert_query)
                 if counter % ctn == 0:
                     transaction.commit()
-                    transaction = session.transaction().write()
+                    transaction.close()
+                    transaction = session.transaction(TransactionType.WRITE)
                     print("Process {} COMMITED".format(process_id))
                 print("Process {} ----- {} publications added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
+            transaction.close()
 
 def create_authorship_query(authors_list):
     match_query = ''
@@ -250,16 +257,16 @@ def get_relationship_data(data_path):
     data_df = data_df.drop_duplicates()
     return data_df.to_numpy().tolist()
 
-def migrate_relationships(uri, keyspace, data: list, ctn, process_id = 0):
+def migrate_relationships(uri, database, data: list, ctn, process_id = 0):
     '''
     Migrate relations to Grakn\n
     data - table in a form of list of lists \n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
+    with GraknClient.core(uri) as client:
+        with client.session(database, SessionType.DATA) as session:
             counter = 0
-            transaction = session.transaction().write()
+            transaction = session.transaction(TransactionType.WRITE)
             for data_entity in data:
                 predicate_name = data_entity[1]
                 subject_name = data_entity[2]
@@ -270,15 +277,17 @@ def migrate_relationships(uri, keyspace, data: list, ctn, process_id = 0):
 
                 match_query = 'match $p isa publication, has paper-id "{}"; $g1 isa gene, has gene-symbol "{}"; $g2 isa gene, has gene-symbol "{}"; '.format(data_entity[0], data_entity[2], data_entity[3])
                 insert_query = 'insert $r ({}: $g1, {}: $g2) isa {}, has sentence-text "{}"; $m (mentioned-genes-relation: $r, mentioning: $p) isa mention, has source "SemMed";'.format(relation["active-role"], relation["passive-role"], relation["relation-name"], sentence_text)
-                transaction.query(match_query + insert_query)
+                transaction.query().insert(match_query + insert_query)
                 print(match_query + insert_query)
                 if counter % ctn == 0:
                     transaction.commit()
-                    transaction = session.transaction().write()
+                    transaction.close()
+                    transaction = session.transaction(TransactionType.WRITE)
                     print("Process {} COMMITED".format(process_id))
                 print("Process {} ----- {} relations added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
+            transaction.close()
 
 def fetch_articles_metadata(pmids):
     '''
@@ -305,7 +314,7 @@ def fetch_articles_metadata(pmids):
     xml_response = response.text
     return xml_response
 
-def load_in_parallel(function, data, num_threads, ctn, uri, keyspace):
+def load_in_parallel(function, data, num_threads, ctn, uri, database):
     '''
     Runs a specific function to load data to Grakn several time in parallel\n
     function - function name to run in paralell\n
@@ -323,8 +332,8 @@ def load_in_parallel(function, data, num_threads, ctn, uri, keyspace):
             
         else:
             chunk = data[i*chunk_size:(i+1)*chunk_size]
-
-        process = multiprocessing.Process(target = function, args = (uri, keyspace, chunk, ctn, i))
+    
+        process = multiprocessing.Process(target = function, args = (uri, database, chunk, ctn, i))
 
         process.start()
         processes.append(process)

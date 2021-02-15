@@ -3,22 +3,32 @@ from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 from timeit import default_timer as timer
 
-from grakn.client import GraknClient
+from grakn.client import GraknClient, SessionType, TransactionType
 
 from Migrators.Helpers.batchLoader import batch_job
 
 
-def cord_ner_migrator(uri, keyspace, num_ner, num_threads, ctn):
-    client = GraknClient(uri=uri)
-    session = client.session(keyspace=keyspace)
-    tx = session.transaction().write()
+def cord_ner_migrator(uri, database, num_ner, num_threads, ctn):
     print('.....')
     print('Opening CORD NER file.')
     print('.....')
+    
+    
+
+    # FIRST DOWNLOAD THE CORD-NER-FULL.json FROM THIS WEBSITE: 
+    # https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
+    # AND ADD IT TO THIS DIR: DATASET/CORD_NER/
+
+
+    # TODO: Implement a JSON streamer
     with open('Dataset/CORD_NER/CORD-NER-full.json', "r") as f:
         data = json.loads("[" +
                           f.read().replace("}\n{", "},\n{") +
                           "]")
+    
+    # The session could time out if we open it BEFORE we load the file
+    client = GraknClient.core(uri)
+    session = client.session(database, SessionType.DATA)
     data = data[:num_ner]
     insert_authors(data, num_threads, ctn, session)
     insert_journals(data, num_threads, ctn, session)
@@ -102,10 +112,10 @@ def insert_authors(data, num_threads, ctn, session):
     if counter % ctn == 0:
         batches_pr.append(batches)
         batches = []
-    # batches_pr.append(batches)
-    # pool.map(partial(batch_job, session), batches_pr)
-    # pool.close()
-    # pool.join()
+    batches_pr.append(batches)
+    pool.map(partial(batch_job, session), batches_pr)
+    pool.close()
+    pool.join()
     print('.....')
     print('Finished inserting authors.')
     print('.....')
