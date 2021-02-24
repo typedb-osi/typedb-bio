@@ -5,7 +5,7 @@ import ssl, gzip, wget, csv, os, itertools
 from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
 from Migrators.Helpers.batchLoader import batch_job
-
+from Migrators.Helpers.get_file import get_file
 
 def disgenetMigrator(uri, database, num, num_threads, ctn):
 	client = GraknClient.core(uri)
@@ -16,11 +16,9 @@ def disgenetMigrator(uri, database, num, num_threads, ctn):
 		print('  ')
 		print('Opening Disgenet dataset...')
 		print('  ')
-
-		ssl._create_default_https_context = ssl._create_unverified_context
-		url = "https://www.disgenet.org/static/disgenet_ap1/files/downloads/all_gene_disease_associations.tsv.gz"
-		wget.download(url, 'Dataset/Disgenet/')
 		
+		url = "https://www.disgenet.org/static/disgenet_ap1/files/downloads/all_gene_disease_associations.tsv.gz"
+		get_file(url, 'Dataset/Disgenet/')	
 
 		with gzip.open('Dataset/Disgenet/all_gene_disease_associations.tsv.gz', 'rt') as f:
 			csvreader = csv.reader(f, delimiter='	')
