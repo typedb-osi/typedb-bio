@@ -5,8 +5,9 @@ from grakn.client import GraknClient, SessionType, TransactionType
 
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
-import ssl, wget, os
+from Migrators.Helpers.get_file import get_file
 
+import ssl, wget, os
 
 def dgidbMigrator(uri, database, num_dr, num_int, num_threads, ctn):
 	client = GraknClient.core(uri)
@@ -17,9 +18,9 @@ def dgidbMigrator(uri, database, num_dr, num_int, num_threads, ctn):
 	client.close()
 
 def insertDrugs(uri, database, num_dr, num_threads, ctn, session): 
-	ssl._create_default_https_context = ssl._create_unverified_context
-	url = "https://www.dgidb.org/data/monthly_tsvs/2021-Jan/drugs.tsv"
-	wget.download(url, 'Dataset/DGIdb/')
+
+	#from Migrators.Helpers.get_file import get_file
+	get_file("https://www.dgidb.org/data/monthly_tsvs/2021-Jan/drugs.tsv", "Dataset/DGIdb/")
 	file = 'Dataset/DGIdb/drugs.tsv'
 	
 	print('  ')
@@ -61,6 +62,8 @@ def insertInteractions(uri, database, num_int, num_threads, ctn, session):
 	ssl._create_default_https_context = ssl._create_unverified_context
 	url = "https://www.dgidb.org/data/monthly_tsvs/2021-Jan/interactions.tsv"
 	wget.download(url, 'Dataset/DGIdb/')
+	
+	
 	file = 'Dataset/DGIdb/interactions.tsv'
 	print('  ')
 	print('Opening DGIdb-Interactions...')
@@ -102,10 +105,3 @@ def insertInteractions(uri, database, num_int, num_threads, ctn, session):
 	print('.....')
 	print('Finished migrating Drug Interactions.')
 	print('.....')
-
-
-
-
-
-
-

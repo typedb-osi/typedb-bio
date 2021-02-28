@@ -5,6 +5,7 @@ import wget, ssl, os
 from grakn.client import GraknClient, SessionType, TransactionType
 from zipfile import ZipFile
 from Migrators.Helpers.batchLoader import batch_job
+from Migrators.Helpers.get_file import get_file
 
 
 def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
@@ -17,9 +18,7 @@ def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
 		print('Opening HPA dataset...')
 		print('  ')
 
-		ssl._create_default_https_context = ssl._create_unverified_context
-		url = 'https://www.proteinatlas.org/download/normal_tissue.tsv.zip'
-		wget.download(url, 'Dataset/HumanProteinAtlas/')
+		get_file('https://www.proteinatlas.org/download/normal_tissue.tsv.zip', 'Dataset/HumanProteinAtlas/')	
 
 		with ZipFile('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip', 'r') as f:
 			f.extractall('Dataset/HumanProteinAtlas')

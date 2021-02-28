@@ -12,11 +12,10 @@ def cord_ner_migrator(uri, database, num_ner, num_threads, ctn):
     print('.....')
     print('Opening CORD NER file.')
     print('.....')
-    
-    
 
     # FIRST DOWNLOAD THE CORD-NER-FULL.json FROM THIS WEBSITE: 
     # https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
+    
     # AND ADD IT TO THIS DIR: DATASET/CORD_NER/
 
 
@@ -33,9 +32,8 @@ def cord_ner_migrator(uri, database, num_ner, num_threads, ctn):
     insert_authors(data, num_threads, ctn, session)
     insert_journals(data, num_threads, ctn, session)
     insert_publications_journals(data, num_threads, ctn, session)
-    insert_publications_with_authors(data, num_threads, 1, session)
-    insert_entities_pub(data, num_threads, ctn, session)
-
+    #>insert_publications_with_authors(data, num_threads, 1, session)  ## hangs with a large author list
+    insert_entities_pub(data, num_threads, ctn, session) # fails with logic error
 
 # Input: a string of authors
 # Return: List of authors

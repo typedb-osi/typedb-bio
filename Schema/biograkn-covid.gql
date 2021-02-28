@@ -725,79 +725,79 @@ interaction-type sub attribute, value string;
 ### Rules
 
 
-gene-disease-association-and-gene-protein-encoding-protein-disease-association sub rule,
-when {
-    $g isa gene;
-    $pr isa protein;
-    $di isa disease;
-    $r1 (associated-disease: $di, associated-gene: $g) isa gene-disease-association;
-    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
-}, then {
-    (associated-protein: $pr, associated-disease: $di) isa protein-disease-association;
-};
+# gene-disease-association-and-gene-protein-encoding-protein-disease-association sub rule,
+# when {
+#     $g isa gene;
+#     $pr isa protein;
+#     $di isa disease;
+#     $r1 (associated-disease: $di, associated-gene: $g) isa gene-disease-association;
+#     $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
+# }, then {
+#     (associated-protein: $pr, associated-disease: $di) isa protein-disease-association;
+# };
 
-gene-tissue-association-gene-protein-encoding-implies-tissue-enhancement sub rule,
-when {
-    $g isa gene;
-    $pr isa protein;
-    $ti isa tissue;
-    $r1 (associated-tissue: $ti, associated-gene: $g) isa gene-tissue-association;
-    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
-}, then {
-    (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
-};
+# gene-tissue-association-gene-protein-encoding-implies-tissue-enhancement sub rule,
+# when {
+#     $g isa gene;
+#     $pr isa protein;
+#     $ti isa tissue;
+#     $r1 (associated-tissue: $ti, associated-gene: $g) isa gene-tissue-association;
+#     $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
+# }, then {
+#     (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
+# };
 
-drug-gene-interaction-and-gene-protein-encoding-implies-drug-protein-interaction sub rule,
-when {
-    $g isa gene;
-    $pr isa protein;
-    $dr isa drug;
-    $r1 ($dr, target-gene: $g) isa drug-gene-interaction;
-    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
-}, then {
-    (target-protein: $pr, inhibitor: $dr) isa drug-protein-interaction;
-};
+# drug-gene-interaction-and-gene-protein-encoding-implies-drug-protein-interaction sub rule,
+# when {
+#     $g isa gene;
+#     $pr isa protein;
+#     $dr isa drug;
+#     $r1 ($dr, target-gene: $g) isa drug-gene-interaction;
+#     $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
+# }, then {
+#     (target-protein: $pr, inhibitor: $dr) isa drug-protein-interaction;
+# };
 
-protein-disease-association-and-tissue-enhancement-implies-disease-tissue-association sub rule,
-when {
-   $di isa disease;
-   $pr isa protein;
-   $ti isa tissue;
-   $r1 (associated-disease: $di, associated-protein: $pr) isa protein-disease-association;
-   $r2 (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
-}, then {
-   (associated-disease: $di, associated-tissue: $ti) isa disease-tissue-association;
-};
+# protein-disease-association-and-tissue-enhancement-implies-disease-tissue-association sub rule,
+# when {
+#    $di isa disease;
+#    $pr isa protein;
+#    $ti isa tissue;
+#    $r1 (associated-disease: $di, associated-protein: $pr) isa protein-disease-association;
+#    $r2 (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
+# }, then {
+#    (associated-disease: $di, associated-tissue: $ti) isa disease-tissue-association;
+# };
 
-drug-gene-interaction-and-gene-tissue-association-implies-drug-tissue-association sub rule,
-when {
-   $dr isa drug;
-   $ti isa tissue;
-   $ge isa gene;
-   $r1 (interacting-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
-   $r2 (associated-gene: $ge, associated-tissue: $ti) isa gene-tissue-association;
-}, then {
-   (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
-};
+# drug-gene-interaction-and-gene-tissue-association-implies-drug-tissue-association sub rule,
+# when {
+#    $dr isa drug;
+#    $ti isa tissue;
+#    $ge isa gene;
+#    $r1 (interacting-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
+#    $r2 (associated-gene: $ge, associated-tissue: $ti) isa gene-tissue-association;
+# }, then {
+#    (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
+# };
 
-virus-gene-then-virus-protein sub rule,
-when {
-	$g isa gene; 
-	$v isa virus;
-	$p isa protein; 
-	$1 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
-	$2 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
-}, then {
-	(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
-};
+# virus-gene-then-virus-protein sub rule,
+# when {
+# 	$g isa gene; 
+# 	$v isa virus;
+# 	$p isa protein; 
+# 	$1 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
+# 	$2 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
+# }, then {
+# 	(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
+# };
 
-gene-protein-publication sub rule,
-when {
-	$p isa protein; 
-	$g isa gene; 
-	$pu isa publication; 
-	$1 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
-	$2 (mentioned: $g, mentioning: $pu) isa mention; 
-}, then {
-	(mentioned: $p, mentioning: $pu) isa mention; 
-};
+# gene-protein-publication sub rule,
+# when {
+# 	$p isa protein; 
+# 	$g isa gene; 
+# 	$pu isa publication; 
+# 	$1 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding; 
+# 	$2 (mentioned: $g, mentioning: $pu) isa mention; 
+# }, then {
+# 	(mentioned: $p, mentioning: $pu) isa mention; 
+# };

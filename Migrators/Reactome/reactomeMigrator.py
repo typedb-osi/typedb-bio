@@ -45,7 +45,7 @@ def insertPathways(uri, database, num_threads, ctn, session, pathway_association
 	pool.join()
 	print('Pathways committed!')
 
-def insertPathwayInteractions(uri, database, num_threads, ctn, session, pathway_associations): 
+def insertPathwayInteractions(uri, database, num_threads, ctn, session, pathway_associations, verbose=False): 
 	counter = 0
 	batches = []
 	batches2 = []
@@ -60,7 +60,8 @@ def insertPathwayInteractions(uri, database, num_threads, ctn, session, pathway_
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []
-		print(counter)
+		if verbose == True:
+			print(counter)
 	batches2.append(batches)
 	pool.map(partial(batch_job, session), batches2)
 	pool.close()
