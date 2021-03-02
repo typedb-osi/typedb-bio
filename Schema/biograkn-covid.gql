@@ -275,7 +275,8 @@ tissue sub fully-formed-anatomical-structure,
     plays process-localisation:tissue-context,
     plays gene-tissue-association:associated-tissue,
     plays disease-tissue-association:associated-tissue,
-    plays drug-tissue-association:associated-tissue;
+    plays drug-tissue-association:associated-tissue,
+    plays mention:mentioned;
 
 gene sub fully-formed-anatomical-structure,
     owns gene-symbol,
