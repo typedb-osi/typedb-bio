@@ -36,7 +36,7 @@ insertSchema(URI, DATABASE)
 uniprotMigrate(URI, DATABASE, NUM_PROTEINS, num_threads, ctn)
 coronavirusMigrator(URI, DATABASE)
 reactomeMigrator(URI,DATABASE, NUM_PATH, num_threads, ctn)
-disgenetsMigrator(URI,DATABASE, NUM_DIS, num_threads, ctn) #> FAILS WITH TOO MANY OPEN FILES # 
+disgenetMigrator(URI,DATABASE, NUM_DIS, num_threads, ctn) #> FAILS WITH TOO MANY OPEN FILES # 
 dgidbMigrator(URI,DATABASE, NUM_DR, NUM_INT, num_threads, ctn)
 proteinAtlasMigrator(URI,DATABASE, NUM_PA, num_threads, ctn)
 cord_ner_migrator(URI,DATABASE, NUM_NER, num_threads, ctn) # DOWNLOAD THE CORD-NER-FULL.json (ADD TO DATASET/CORD_NER): https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
