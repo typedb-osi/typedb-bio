@@ -1,4 +1,4 @@
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 import csv 
 import os
 from inspect import cleandoc
@@ -8,7 +8,7 @@ from functools import partial
 from Migrators.Helpers.batchLoader import batch_job
 
 def uniprotMigrate(uri, database, num, num_threads, ctn):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 

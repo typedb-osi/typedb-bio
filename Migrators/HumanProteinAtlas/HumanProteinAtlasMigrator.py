@@ -2,14 +2,14 @@ import csv
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 import wget, ssl, os
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 from zipfile import ZipFile
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.get_file import get_file
 
 
 def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 

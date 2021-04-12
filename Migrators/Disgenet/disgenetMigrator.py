@@ -1,4 +1,4 @@
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 from inspect import cleandoc
 import ssl, gzip, wget, csv, os, itertools
 
@@ -8,7 +8,7 @@ from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.get_file import get_file
 
 def disgenetMigrator(uri, database, num, num_threads, ctn):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 

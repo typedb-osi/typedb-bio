@@ -2,7 +2,7 @@ import itertools
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 import wget
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 import ssl, os
 
 from Migrators.Helpers.batchLoader import batch_job
@@ -11,7 +11,7 @@ from Migrators.Helpers.open_file import openFile
 
 
 def reactomeMigrator(uri, database, num_path, num_threads, ctn):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	pathway_associations = filterHomoSapiens(num_path)
 	insertPathways(uri, database, num_threads, ctn, session, pathway_associations)

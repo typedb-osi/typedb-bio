@@ -1,9 +1,9 @@
 import csv
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 
 
 def coronavirusMigrator(uri, database):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	tx = session.transaction(TransactionType.WRITE)
 	print('.....')

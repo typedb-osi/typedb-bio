@@ -1,7 +1,7 @@
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
@@ -10,7 +10,7 @@ from Migrators.Helpers.get_file import get_file
 import ssl, wget, os
 
 def dgidbMigrator(uri, database, num_dr, num_int, num_threads, ctn):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	insertDrugs(uri, database, num_dr, num_threads, ctn, session)
 	insertInteractions(uri, database, num_int, num_threads, ctn, session)

@@ -3,7 +3,7 @@ from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 from timeit import default_timer as timer
 
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import *
 
 from Migrators.Helpers.batchLoader import batch_job
 
@@ -26,14 +26,14 @@ def cord_ner_migrator(uri, database, num_ner, num_threads, ctn):
                           "]")
     
     # The session could time out if we open it BEFORE we load the file
-    client = GraknClient.core(uri)
+    client = Grakn.core_client(uri)
     session = client.session(database, SessionType.DATA)
     data = data[:num_ner]
     insert_authors(data, num_threads, ctn, session)
     insert_journals(data, num_threads, ctn, session)
     insert_publications_journals(data, num_threads, ctn, session)
-    #>insert_publications_with_authors(data, num_threads, 1, session)  ## hangs with a large author list
-    insert_entities_pub(data, num_threads, ctn, session) # fails with logic error
+    insert_publications_with_authors(data, num_threads, 1, session)  ## hangs with a large author list
+    insert_entities_pub(data, num_threads, ctn, session) 
 
 # Input: a string of authors
 # Return: List of authors
