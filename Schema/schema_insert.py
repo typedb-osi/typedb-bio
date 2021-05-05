@@ -2,7 +2,7 @@ from grakn.client import *
 
 
 def insertSchema(uri, database):
-	client = GraknClient.core(uri)
+	client = Grakn.core_client(uri)
 	client.databases().create(database)
 	session = client.session(database, SessionType.SCHEMA)
 	print('.....')

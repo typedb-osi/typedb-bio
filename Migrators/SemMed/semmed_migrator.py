@@ -3,7 +3,7 @@ import csv
 import multiprocessing
 import pandas as pd
 import untangle
-from grakn.client import GraknClient, SessionType, TransactionType
+from grakn.client import Grakn, SessionType, TransactionType
 
 from Migrators.Helpers.batchLoader import batch_job
 
@@ -84,7 +84,7 @@ def migrate_journals(uri, database, journal_names: list, ctn, process_id = 0):
     journal_names - list of journal names (strings) \n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient.core(uri) as client:
+    with Grakn.core_client(uri) as client:
         with client.session(database, SessionType.DATA) as session:
             counter = 0
             transaction = session.transaction(TransactionType.WRITE)
@@ -136,7 +136,7 @@ def migrate_authors(uri, database, author_names: list, ctn, process_id = 0):
     author_names - list of author names (strings)\n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient.core(uri) as client:
+    with Grakn.core_client(uri) as client:
         with client.session(database, SessionType.DATA) as session:
             counter = 0
             transaction = session.transaction(TransactionType.WRITE)
@@ -214,7 +214,7 @@ def migrate_publications(uri, database, publications_list: list, ctn, process_id
     publications_list - list of dictionaries with publication data\n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient.core(uri) as client:
+    with Grakn.core_client(uri) as client:
         with client.session(database, SessionType.DATA) as session:
             counter = 0
             transaction = session.transaction(TransactionType.WRITE)
@@ -263,7 +263,7 @@ def migrate_relationships(uri, database, data: list, ctn, process_id = 0):
     data - table in a form of list of lists \n
     process_id - process id while running on multiple cores, by process_id = 0
     '''
-    with GraknClient.core(uri) as client:
+    with Grakn.core_client(uri) as client:
         with client.session(database, SessionType.DATA) as session:
             counter = 0
             transaction = session.transaction(TransactionType.WRITE)
