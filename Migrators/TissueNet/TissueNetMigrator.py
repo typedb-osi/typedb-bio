@@ -1,10 +1,10 @@
 import csv
 
-from grakn.client import GraknClient
+from grakn.client import Grakn
 
 
 def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
-	client = GraknClient(uri=uri)
+	client = Grakn(uri=uri)
 	session = client.session(keyspace=keyspace)
 	batches_pr = []
 
