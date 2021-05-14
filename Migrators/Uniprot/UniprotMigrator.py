@@ -12,7 +12,7 @@ def uniprotMigrate(uri, database, num, num_threads, ctn):
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
-	if num is not 0:
+	if num != 0:
 		print('  ')
 		print('Opening Uniprot dataset...')
 		print('  ')
@@ -30,7 +30,7 @@ def uniprotMigrate(uri, database, num, num_threads, ctn):
 			n = 0
 			for row in csvreader: 
 				n = n + 1
-				if n is not 1:
+				if n != 1:
 					raw_file.append(row)
 
 		uniprotdb = []
@@ -57,7 +57,7 @@ def uniprotMigrate(uri, database, num, num_threads, ctn):
 			counter = counter + 1
 			transcripts = transcriptHelper(q)
 			gene = geneHelper(q)[0]
-			if transcripts is not None: 
+			if transcripts != None: 
 				variables = []
 				tvariable = 1
 				graql = "match "
@@ -65,7 +65,7 @@ def uniprotMigrate(uri, database, num, num_threads, ctn):
 					variables.append(tvariable)
 					graql = graql + "$" + str(tvariable) + " isa transcript, has ensembl-transcript-stable-id '" + t + "'; "
 					tvariable = tvariable + 1
-			if gene is not None: 
+			if gene != None: 
 				try: 
 					graql = graql + "$g isa gene, has gene-symbol '" + gene + "';"
 				except Exception: 
@@ -79,12 +79,12 @@ def uniprotMigrate(uri, database, num, num_threads, ctn):
 "{q['protein-name']}", has function-description "{q['function-description']}", 
 has uniprot-entry-name "{q['uniprot-entry-name']}";
 $r (associated-organism: $h, associating: $a) isa organism-association;"""
-			if gene is not None: 
+			if gene != None: 
 				graql = graql + "$gpe (encoding-gene: $g, encoded-protein: $a) isa gene-protein-encoding;"
-			if transcripts is not None: 
+			if transcripts != None: 
 				for v in variables:
 					graql = f"""{ graql } $r{str(v)}(translating-transcript: ${str(v)}, translated-protein: $a) isa translation; """
-			if gene and transcripts is not None:
+			if gene and transcripts != None:
 				for v in variables: 
 					graql = graql + "$trans" + str(v) + "(transcribing-gene: $g, encoded-transcript: $" + str(v) + ") isa transcription;"
 
@@ -109,8 +109,8 @@ def transcriptHelper(q):
 	list = []
 	n = q['ensembl-transcript']
 	nt = n.count(';')
-	if nt is not 0:
-		while nt is not 0:
+	if nt != 0:
+		while nt != 0:
 			nt = nt - 1
 			pos = [m.start() for m in re.finditer(r";",n)]
 			if nt == 0: 
@@ -132,7 +132,7 @@ def transcriptHelper(q):
 def geneHelper(q): 
 	gene_name = q['gene-symbol']
 	entrez_id = q['entrez-id'][0:-1]
-	if gene_name.find(' ') is not -1:
+	if gene_name.find(' ') != -1:
 		gene_name = gene_name[0:gene_name.find(' ')]
 	list = [gene_name, entrez_id]
 	return list
@@ -145,7 +145,7 @@ def insertGenes(uniprotdb, session, num_threads, ctn):
 	batches = []
 	batches2 = []
 	for q in uniprotdb: 
-		if q['gene-symbol'] is not "":
+		if q['gene-symbol'] != "":
 			gene_list.append(geneHelper(q)) 
 			
 	# gene_list = list(dict.fromkeys(gene_list)) # TO DO: Remove duplicate gene-symbols
@@ -172,7 +172,7 @@ def insertTranscripts(uniprotdb, session, num_threads, ctn):
 	batches2 = []
 	for q in uniprotdb: 
 		tr = transcriptHelper(q)
-		if tr is not None: 
+		if tr != None: 
 			transcript_list = transcript_list + tr
 
 	transcript_list = list(dict.fromkeys(transcript_list)) # Remove duplicate transcripts
