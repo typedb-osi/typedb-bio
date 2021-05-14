@@ -27,7 +27,6 @@ args = parser.parse_args()
 
 # This is a global flag toggling counter and query printouts when we want to see less detail
 # there is another flag in the batch loader module
-
 global verbose 
 verbose = args.verbose
 
@@ -45,19 +44,18 @@ NUM_NER = 30000 # Total number of publications (authors: 110k; journals: 1.7k; p
 NUM_SEM = 10000000 # Total number of rows from Semmed to migrate
 
 start = timer()
-
-with client.session(database, session_type, options)
-
-insertSchema(URI, args.database)
-uniprotMigrate(URI, args.database, NUM_PROTEINS, args.num_threads, args.commit_rate)
-coronavirusMigrator(URI, args.database)
-reactomeMigrator(URI,args.database, NUM_PATH, args.num_threads, args.commit_rate)
-disgenetMigrator(URI,args.database, NUM_DIS, args.num_threads, args.commit_rate) #> FAILS WITH TOO MANY OPEN FILES # 
-dgidbMigrator(URI,args.database, NUM_DR, NUM_INT, args.num_threads, args.commit_rate)
-proteinAtlasMigrator(URI,args.database, NUM_PA, args.num_threads, args.commit_rate)
-cord_ner_migrator(URI,args.database, NUM_NER, args.num_threads, args.commit_rate) # DOWNLOAD THE CORD-NER-FULL.json (ADD TO DATASET/CORD_NER): https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
 if __name__ == "__main__":
+	insertSchema(URI, args.database, args.force)
+	uniprotMigrate(URI, args.database, NUM_PROTEINS, args.num_threads, args.commit_rate)
+	coronavirusMigrator(URI, args.database)
+	reactomeMigrator(URI,args.database, NUM_PATH, args.num_threads, args.commit_rate)
+	disgenetMigrator(URI,args.database, NUM_DIS, args.num_threads, args.commit_rate) #> FAILS WITH TOO MANY OPEN FILES # 
+	dgidbMigrator(URI,args.database, NUM_DR, NUM_INT, args.num_threads, args.commit_rate)
+	proteinAtlasMigrator(URI,args.database, NUM_PA, args.num_threads, args.commit_rate)
+	cord_ner_migrator(URI,args.database, NUM_NER, args.num_threads, args.commit_rate) # DOWNLOAD THE CORD-NER-FULL.json (ADD TO DATASET/CORD_NER): https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
 	migrate_semmed(URI,args.database, NUM_SEM, args.num_threads, args.commit_rate)
+	# add tissueNet?
+	# add CORD-19?
 end = timer()
 time_in_sec = end - start
 print("Elapsed time: " + str(time_in_sec) + " seconds.")
