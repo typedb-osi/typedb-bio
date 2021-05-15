@@ -85,7 +85,7 @@ def insertInteractions(uri, database, num_int, num_threads, ctn, session):
 	pool = ThreadPool(num_threads)
 	batches = []
 	for q in interactions: 
-		if q['entrez-id'] is not "":
+		if q['entrez-id'] != "":
 			counter = counter + 1
 			graql = f"""match $g isa gene, has entrez-id "{q['entrez-id']}"; $d isa drug, has drug-claim-name "{q['drug-claim-name']}";"""
 			# TODO Insert interaction type as a role

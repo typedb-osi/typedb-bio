@@ -35,11 +35,41 @@ You can also connect programmatically using one of the Grakn clients ([link](htt
 
 ## Installation
 **Prerequesites**: Python >3.6, [Grakn Core 1.8.0](https://grakn.ai/download#core), [Grakn Python Client API](https://dev.grakn.ai/docs/client-api/python), [Grakn Workbase 1.3.4](https://grakn.ai/download#workbase).
+
+Clone this repo:
+
+```bash 
+    git clone https://github.com/vaticle/biograkn-covid.git
+```
+
+Manually download all source datasets and put them in the `Datasets` folder. You can find the links below. 
+
+Set up a virtual environment and install the dependencies:
+
 ```bash
     cd <path/to/biograkn-covid>/
-    python migrator.py
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
 ```
-First, make sure to download all source datasets and put them in the `Datasets` folder. You can find the links below. Then, grab a coffee while the migrator builds the database and schema for you!
+
+Start typedb
+```bash 
+    grakn server
+```
+Start the migrator script
+
+```bash
+    python migrator.py -n 4 # insert using 4 threads
+```
+
+For help with the migrator script command line options:
+
+```bash
+    python migrator.py -h
+```
+
+Now grab a coffee (or two) while the migrator builds the database and schema for you!
 
 ## Examples
 Graql queries can be run either on grakn console, on workbase or through client APIs.  However, we encourage running the queries on Grakn Workbase to have the best visual experience. Please follow this [tutorial](https://www.youtube.com/watch?v=Y9awBeGqTes&t=197s) on how to run queries on Workbase.

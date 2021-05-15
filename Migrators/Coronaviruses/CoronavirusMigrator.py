@@ -24,7 +24,7 @@ def coronavirusMigrator(uri, database):
 		n = 0
 		for row in csvreader: 
 			n = n + 1
-			if n is not 1:
+			if n != 1:
 				raw_file.append(row)
 		import_file = []
 		for i in raw_file:
@@ -72,7 +72,7 @@ def coronavirusMigrator(uri, database):
 		n = 0
 		for row in csvreader: 
 			n = n + 1
-			if n is not 1:
+			if n != 1:
 				raw_file.append(row)
 		import_file = []
 		for i in raw_file:
