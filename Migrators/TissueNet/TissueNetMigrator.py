@@ -8,7 +8,7 @@ def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
 	session = client.session(keyspace=keyspace)
 	batches_pr = []
 
-	if num is not 0:
+	if num != 0:
 		print('  ')
 		print('Opening TissueNet dataset...')
 		print('  ')
@@ -19,6 +19,6 @@ def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
 			n = 0
 			for row in csvreader: 
 				n = n + 1
-				if n is not 1:
+				if n != 1:
 					raw_file.append(row)
 

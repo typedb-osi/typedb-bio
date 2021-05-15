@@ -92,7 +92,7 @@ def insert_authors(data, num_threads, ctn, session):
     batches_pr = []
     list_of_list_of_authors = []
     for d in data:
-        if d['authors'] is not 0:
+        if d['authors'] != 0:
             list_of_list_of_authors = list_of_list_of_authors + author_names(d['authors'])
 
     list_of_list_of_authors = set(list_of_list_of_authors)
@@ -204,7 +204,7 @@ def insert_publications_with_authors(data, num_threads, ctn, session):
     batches = []
     batches_pr = []
     for d in data:
-        if d['authors'] is not 0:
+        if d['authors'] != 0:
             authors = author_names(d['authors'])
             author_graql = ""
             counter = 0

@@ -35,11 +35,41 @@ You can also connect programmatically using one of the Grakn clients ([link](htt
 
 ## Installation
 **Prerequesites**: Python >3.6, [Grakn Core 1.8.0](https://grakn.ai/download#core), [Grakn Python Client API](https://dev.grakn.ai/docs/client-api/python), [Grakn Workbase 1.3.4](https://grakn.ai/download#workbase).
+
+Clone this repo:
+
+```bash 
+    git clone https://github.com/vaticle/biograkn-covid.git
+```
+
+Manually download all source datasets and put them in the `Datasets` folder. You can find the links below. 
+
+Set up a virtual environment and install the dependencies:
+
 ```bash
     cd <path/to/biograkn-covid>/
-    python migrator.py
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
 ```
-First, make sure to download all source datasets and put them in the `Datasets` folder. You can find the links below. Then, grab a coffee while the migrator builds the database and schema for you!
+
+Start typedb
+```bash 
+    grakn server
+```
+Start the migrator script
+
+```bash
+    python migrator.py -n 4 # insert using 4 threads
+```
+
+For help with the migrator script command line options:
+
+```bash
+    python migrator.py -h
+```
+
+Now grab a coffee (or two) while the migrator builds the database and schema for you!
 
 ## Examples
 Graql queries can be run either on grakn console, on workbase or through client APIs.  However, we encourage running the queries on Grakn Workbase to have the best visual experience. Please follow this [tutorial](https://www.youtube.com/watch?v=Y9awBeGqTes&t=197s) on how to run queries on Workbase.
@@ -66,15 +96,22 @@ get; offset 0; limit 10;
 ## Datasets
 
 Currently the datasets we've integrated include:
-1. [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.
-2. [CORD-NER](https://xuanwang91.github.io/2020-03-20-cord19-ner/): The CORD-19 dataset that the White House released has been annotated and made publicly available. It uses various NER methods to recognise named entities on CORD-19 with distant or weak supervision.
-3. [Uniprot](https://www.uniprot.org/uniprot/?query=proteome:UP000005640%20reviewed:yes): We’ve downloaded the reviewed human subset, and ingested genes, transcripts and protein identifiers.
-4. [Coronaviruses](https://github.com/graknlabs/biograkn-covid/tree/master/Dataset/Coronaviruses): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
-5. [DGIdb](http://www.dgidb.org/downloads): We’ve taken the *Interactions TSV* which includes all drug-gene interactions.
-6. [Human Protein Atlas](https://www.proteinatlas.org/about/download): The *Normal Tissue Data* includes the expression profiles for proteins in human tissues.
-7. [Reactome](https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt): This dataset connects pathways and their participating proteins.
-8. [DisGeNet](https://www.disgenet.org/downloads): We’ve taken the *curated gene-disease-associations* dataset, which contains associations from Uniprot, CGI, ClinGen, Genomics England and CTD, PsyGeNET, and Orphanet.
-9. [SemMed](https://skr3.nlm.nih.gov/SemMedDB/dbinfo.html): This is a subset of the SemMed version 4.0 database
+
+* [CORD-NER](https://xuanwang91.github.io/2020-03-20-cord19-ner/): The CORD-19 dataset that the White House released has been annotated and made publicly available. It uses various NER methods to recognise named entities on CORD-19 with distant or weak supervision.
+* [Uniprot](https://www.uniprot.org/uniprot/?query=proteome:UP000005640%20reviewed:yes): We’ve downloaded the reviewed human subset, and ingested genes, transcripts and protein identifiers.
+* [Coronaviruses](https://github.com/graknlabs/biograkn-covid/tree/master/Dataset/Coronaviruses): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
+* [DGIdb](http://www.dgidb.org/downloads): We’ve taken the *Interactions TSV* which includes all drug-gene interactions.
+* [Human Protein Atlas](https://www.proteinatlas.org/about/download): The *Normal Tissue Data* includes the expression profiles for proteins in human tissues.
+* [Reactome](https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt): This dataset connects pathways and their participating proteins.
+* [DisGeNet](https://www.disgenet.org/downloads): We’ve taken the *curated gene-disease-associations* dataset, which contains associations from Uniprot, CGI, ClinGen, Genomics England and CTD, PsyGeNET, and Orphanet.
+* [SemMed](https://skr3.nlm.nih.gov/SemMedDB/dbinfo.html): This is a subset of the SemMed version 4.0 database
+
+In progress:
+
+* [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.    
+    * TODO: write migrator script
+* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/) 
+    * TODO: `./Migrators/TissueNet/TissueNetMigrator.py` incomplete: only migrates a single data file and is not called in `./migrator.py`. 
 
 We plan to add many more datasets!
 

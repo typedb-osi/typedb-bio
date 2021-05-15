@@ -13,7 +13,7 @@ def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
-	if num is not 0:
+	if num != 0:
 		print('  ')
 		print('Opening HPA dataset...')
 		print('  ')
@@ -29,7 +29,7 @@ def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
 			n = 0
 			for row in csvreader: 
 				n = n + 1
-				if n is not 1:
+				if n != 1:
 					d = {}
 					d['ensembl-gene-id'] = row[0]
 					d['gene-symbol'] = row[1]
