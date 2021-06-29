@@ -23,7 +23,7 @@ By examining these specific relationships and their attributes, we are directed 
 
 Our team currently consists of a partnership between [GSK](http://gsk.com/), [Oxford PharmaGenesis](https://www.pharmagenesis.com/) and [Vaticle](https://vaticle.com/)
 
-The schema that models the underlying knowledge graph alongside the descriptive query language, Graql, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows BioGrakn to become an intelligent database of biomedical data for the Covid research field that infers implicit knowledge based on the explicitly stored data. BioGrakn Covid can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
+The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows BioGrakn to become an intelligent database of biomedical data for the Covid research field that infers implicit knowledge based on the explicitly stored data. BioGrakn Covid can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
 **Prerequesites**: Python >3.6, [TypeDB Core 2.2](https://vaticle.com/download#core), [TypeDB Python Client API](https://docs.vaticle.com/docs/client-api/python), [Workbase 1.3.4](https://vaticle.com/download#workbase).
