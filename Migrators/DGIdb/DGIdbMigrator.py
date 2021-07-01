@@ -1,7 +1,7 @@
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.open_file import openFile
@@ -10,7 +10,7 @@ from Migrators.Helpers.get_file import get_file
 import ssl, wget, os
 
 def dgidbMigrator(uri, database, num_dr, num_int, num_threads, ctn):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	insertDrugs(uri, database, num_dr, num_threads, ctn, session)
 	insertInteractions(uri, database, num_int, num_threads, ctn, session)
@@ -44,9 +44,9 @@ def insertDrugs(uri, database, num_dr, num_threads, ctn, session):
 	pool = ThreadPool(num_threads)
 	for d in drugs_list:
 		counter = counter + 1
-		graql = f'''insert $d isa drug, has drug-claim-name "{d['drug-claim-name']}", has drug-name "{d['drug-name']}", has chembl-id "{d['chembl-id']}", has drug-claim-source "{d['drug-claim-source']}";'''
-		batches.append(graql)
-		del graql
+		typeql = f'''insert $d isa drug, has drug-claim-name "{d['drug-claim-name']}", has drug-name "{d['drug-name']}", has chembl-id "{d['chembl-id']}", has drug-claim-source "{d['drug-claim-source']}";'''
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []
@@ -87,14 +87,14 @@ def insertInteractions(uri, database, num_int, num_threads, ctn, session):
 	for q in interactions: 
 		if q['entrez-id'] != "":
 			counter = counter + 1
-			graql = f"""match $g isa gene, has entrez-id "{q['entrez-id']}"; $d isa drug, has drug-claim-name "{q['drug-claim-name']}";"""
+			typeql = f"""match $g isa gene, has entrez-id "{q['entrez-id']}"; $d isa drug, has drug-claim-name "{q['drug-claim-name']}";"""
 			# TODO Insert interaction type as a role
 			if q['interaction-type'] == "":
-				graql = graql + f"insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction;"
+				typeql = typeql + f"insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction;"
 			else: 
-				graql = graql + f"""insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction, has interaction-type "{q['interaction-type']}";"""
-			batches.append(graql)
-			del graql
+				typeql = typeql + f"""insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction, has interaction-type "{q['interaction-type']}";"""
+			batches.append(typeql)
+			del typeql
 			if counter % ctn == 0:
 				batches_pr.append(batches)
 				batches = []

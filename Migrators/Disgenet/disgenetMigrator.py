@@ -1,4 +1,4 @@
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 from inspect import cleandoc
 import ssl, gzip, wget, csv, os, itertools
 
@@ -8,7 +8,7 @@ from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.get_file import get_file
 
 def disgenetMigrator(uri, database, num, num_threads, ctn):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
@@ -46,12 +46,12 @@ def disgenetMigrator(uri, database, num, num_threads, ctn):
 		batches = []
 		for q in disgenet: 
 			counter = counter + 1
-			graql = f"""
+			typeql = f"""
 match $g isa gene, has gene-symbol "{q['gene-symbol']}", has entrez-id "{q['entrez-id']}";
 $d isa disease, has disease-id "{q['disease-id']}", has disease-name "{q['disease-name']}";
 insert $r (associated-gene: $g, associated-disease: $d) isa gene-disease-association, has disgenet-score {q['disgenet-score']};"""
-			batches.append(graql)
-			del graql
+			batches.append(typeql)
+			del typeql
 			if counter % ctn == 0:
 				batches_pr.append(batches)
 				batches = []
@@ -79,9 +79,9 @@ def insertDiseases(disgenet, session, num_threads, ctn):
 	pool = ThreadPool(num_threads)
 	for d in disease_list:
 		counter = counter + 1
-		graql = f'insert $d isa disease, has disease-name "{d[0]}", has disease-id "{d[1]}";'
-		batches.append(graql)
-		del graql
+		typeql = f'insert $d isa disease, has disease-name "{d[0]}", has disease-id "{d[1]}";'
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []

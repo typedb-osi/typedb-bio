@@ -1,8 +1,8 @@
-from grakn.client import *
+from typedb.client import *
 
 
 def insertSchema(uri, database, force=False):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	if database in [db.name() for db in client.databases().all()]:
 		if force:
 			client.databases().get(database).delete()
@@ -13,8 +13,8 @@ def insertSchema(uri, database, force=False):
 	print('.....')
 	print('Inserting schema...')
 	print('.....')
-	with open("Schema/biograkn-covid.gql", "r") as graql_file:
-		schema = graql_file.read()
+	with open("Schema/biograkn-covid.gql", "r") as typeql_file:
+		schema = typeql_file.read()
 	with session.transaction(TransactionType.WRITE) as write_transaction:
 		write_transaction.query().define(schema)
 		write_transaction.commit() 

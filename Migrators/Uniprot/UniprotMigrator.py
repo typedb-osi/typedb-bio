@@ -1,4 +1,4 @@
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 import csv 
 import os
 from inspect import cleandoc
@@ -8,7 +8,7 @@ from functools import partial
 from Migrators.Helpers.batchLoader import batch_job
 
 def uniprotMigrate(uri, database, num, num_threads, ctn):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
@@ -60,36 +60,36 @@ def uniprotMigrate(uri, database, num, num_threads, ctn):
 			if transcripts != None: 
 				variables = []
 				tvariable = 1
-				graql = "match "
+				typeql = "match "
 				for t in transcripts:
 					variables.append(tvariable)
-					graql = graql + "$" + str(tvariable) + " isa transcript, has ensembl-transcript-stable-id '" + t + "'; "
+					typeql = typeql + "$" + str(tvariable) + " isa transcript, has ensembl-transcript-stable-id '" + t + "'; "
 					tvariable = tvariable + 1
 			if gene != None: 
 				try: 
-					graql = graql + "$g isa gene, has gene-symbol '" + gene + "';"
+					typeql = typeql + "$g isa gene, has gene-symbol '" + gene + "';"
 				except Exception: 
-					graql = "match $g isa gene, has gene-symbol '" + gene + "';"
+					typeql = "match $g isa gene, has gene-symbol '" + gene + "';"
 			try: 
-				graql = graql + "$h isa organism, has organism-name '" + q['organism'] + "';"
+				typeql = typeql + "$h isa organism, has organism-name '" + q['organism'] + "';"
 			except Exception:
-				graql = "match $h isa organism, has organism-name '" + q['organism'] + "';"
+				typeql = "match $h isa organism, has organism-name '" + q['organism'] + "';"
 
-			graql = f"""{ graql } insert $a isa protein, has uniprot-id "{q['uniprot-id']}", has uniprot-name
+			typeql = f"""{ typeql } insert $a isa protein, has uniprot-id "{q['uniprot-id']}", has uniprot-name
 "{q['protein-name']}", has function-description "{q['function-description']}", 
 has uniprot-entry-name "{q['uniprot-entry-name']}";
 $r (associated-organism: $h, associating: $a) isa organism-association;"""
 			if gene != None: 
-				graql = graql + "$gpe (encoding-gene: $g, encoded-protein: $a) isa gene-protein-encoding;"
+				typeql = typeql + "$gpe (encoding-gene: $g, encoded-protein: $a) isa gene-protein-encoding;"
 			if transcripts != None: 
 				for v in variables:
-					graql = f"""{ graql } $r{str(v)}(translating-transcript: ${str(v)}, translated-protein: $a) isa translation; """
+					typeql = f"""{ typeql } $r{str(v)}(translating-transcript: ${str(v)}, translated-protein: $a) isa translation; """
 			if gene and transcripts != None:
 				for v in variables: 
-					graql = graql + "$trans" + str(v) + "(transcribing-gene: $g, encoded-transcript: $" + str(v) + ") isa transcription;"
+					typeql = typeql + "$trans" + str(v) + "(transcribing-gene: $g, encoded-transcript: $" + str(v) + ") isa transcription;"
 
-			batches.append(graql)
-			del graql
+			batches.append(typeql)
+			del typeql
 			if counter % ctn == 0:
 				batches_pr.append(batches)
 				batches = []
@@ -153,9 +153,9 @@ def insertGenes(uniprotdb, session, num_threads, ctn):
 	pool = ThreadPool(num_threads)
 	for g in gene_list:
 		counter = counter + 1
-		graql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
-		batches.append(graql)
-		del graql
+		typeql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []
@@ -181,9 +181,9 @@ def insertTranscripts(uniprotdb, session, num_threads, ctn):
 	counter = 0
 	for q in transcript_list: 
 		counter = counter + 1
-		graql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
-		batches.append(graql)
-		del graql
+		typeql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []

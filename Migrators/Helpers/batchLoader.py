@@ -1,4 +1,4 @@
-from grakn.client import TransactionType
+from typedb.client import TransactionType
 
 # toggle to turn query printing on
 global verbose 

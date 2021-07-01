@@ -2,14 +2,14 @@ import csv
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 import wget, ssl, os
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 from zipfile import ZipFile
 from Migrators.Helpers.batchLoader import batch_job
 from Migrators.Helpers.get_file import get_file
 
 
 def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
@@ -63,7 +63,7 @@ def insertGeneTissue(raw_file, session, num_threads, ctn):
 	batches2 = []
 	for g in raw_file:
 		counter = counter + 1
-		graql = f"""
+		typeql = f"""
 		match $g isa gene, has gene-symbol '{g['gene-symbol']}'; 
 		$t isa tissue, has tissue-name '{g['tissue']}';
 		insert
@@ -71,8 +71,8 @@ def insertGeneTissue(raw_file, session, num_threads, ctn):
 		has expression-value '{g['expression-value']}',
 		has expression-value-reliability '{g['expression-value-reliability']}'; 
 		"""
-		batches.append(graql)
-		del graql
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []
@@ -95,13 +95,13 @@ def insertEnsemblId(raw_file, session, num_threads, ctn):
 
 	for g in list_of_tuples: 
 		counter = counter + 1
-		graql = f"""
+		typeql = f"""
 		match $g isa gene, has gene-symbol '{g[1]}'; 
 		insert
 		$g has ensembl-gene-stable-id '{g[0]}'; 
 		"""
-		batches.append(graql)
-		del graql
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []

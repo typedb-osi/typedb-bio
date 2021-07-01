@@ -1,9 +1,9 @@
 import csv
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 
 
 def coronavirusMigrator(uri, database):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	tx = session.transaction(TransactionType.WRITE)
 	print('.....')
@@ -11,9 +11,9 @@ def coronavirusMigrator(uri, database):
 	print('.....')
 
 	# Temporary manual ingestion of locations
-	graql = f"""insert $c isa country, has country-name 'China'; $c2 isa country, has country-name 'Kingdom of Saudi Arabia'; 
+	typeql = f"""insert $c isa country, has country-name 'China'; $c2 isa country, has country-name 'Kingdom of Saudi Arabia'; 
 	$c3 isa country, has country-name 'USA'; $c4 isa country, has country-name 'South Korea'; $o isa organism, has organism-name 'Mouse';"""
-	tx.query().insert(graql)
+	tx.query().insert(typeql)
 	tx.commit()
 	tx.close()
 
@@ -53,14 +53,14 @@ def coronavirusMigrator(uri, database):
 				except Exception: 
 					virus_name = f""" has virus-name "{q['coronavirus-1']}", """
 			print(virus_name)
-			graql = f"""match $c isa country, has country-name "{q['location-discovered']}"; 
+			typeql = f"""match $c isa country, has country-name "{q['location-discovered']}"; 
 			$o isa organism, has organism-name "{q['host']}";
 			insert $v isa virus, has genbank-id "{q['genbank-id']}", {virus_name}
 			has identity-percentage "{q['identity%']}";
 			$r (discovering-location: $c, discovered-virus: $v) isa discovery;
 			$r1 (hosting-organism: $o, hosted-virus: $v) isa organism-virus-hosting;"""
-			print(graql)
-			tx.query().insert(graql)
+			print(typeql)
+			tx.query().insert(typeql)
 		tx.commit()
 		tx.close()
 
@@ -82,13 +82,13 @@ def coronavirusMigrator(uri, database):
 			data['entrez-id'] = i[4].strip()
 			import_file.append(data)
 		for q in import_file: 
-			graql = f"""match $v isa virus, has virus-name "{q['coronavirus']}"; 
+			typeql = f"""match $v isa virus, has virus-name "{q['coronavirus']}"; 
 			$p isa protein, has uniprot-id "{q['uniprot-id']}";
 			$g isa gene, has entrez-id "{q['entrez-id']}";
 			insert $r2 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
 			$r3 (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;"""
-			tx.query().insert(graql)
-			print(graql)
+			tx.query().insert(typeql)
+			print(typeql)
 		tx.commit()
 		tx.close()
 	print('.....')

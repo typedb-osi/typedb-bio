@@ -13,20 +13,22 @@ BioGrakn Covid is an open source project to build a knowledge graph to enable re
 ## Overview
 We're excited to release an open source knowledge graph to speed up the research into Covid-19. Our goal is to provide a way for researchers to easily analyse and query large amounts of data and papers related to the virus.
 
-BioGrakn Covid makes it easy to quickly trace information sources and identify articles and the information therein. This first release includes entities extracted from Covid-19 **papers,** and from additional datasets including, **proteins, genes, disease-gene associations, coronavirus proteins, protein expression, biological pathways, and drugs**.
+BioGrakn Covid makes it easy to quickly trace information sources and identify articles and the information therein. This first release includes entities extracted from **Covid-19 papers,** and from additional datasets including, **proteins, genes, disease-gene associations, coronavirus proteins, protein expression, biological pathways, and drugs**.
 
 For example, by querying for the virus *SARS-CoV-2,* we can find the associated human protein, *proteasome subunit alpha type-2* (PSMA2), a component of the proteasome, implicated in *SARS-CoV-2* replication, and its encoding gene (*PSMA2*). Additionally, we can identify the drug *carfilzomib,* a known inhibitor of the proteasome that could therefore be researched as a potential treatment for patients with Covid-19. To support the plausibility of this association and its implications, we can easily identify papers in the Covid-19 literature where this protein has been mentioned.
 
 ![query_1](Images/query_1.png)
 
-By examining these specific relationships and their attributes, we are directed to the data sources, including publications. This will help researchers to efficiently study the mechanisms of coronaviral infection, the immune response, and help to find targets for the development of treatments or vaccines more efficiently.
+By examining these specific relationships and their attributes, we are directed to the data sources, including publications. This will help researchers to efficiently study the mechanisms of coronaviral infection, the immune response, and help to find targets for the development of treatments or vaccines more efficiently. We can also expand our search to include entities such as publications, organisms, proteins and genes as is shown below:
+
+![query_3](Images/query_3.png)
 
 Our team currently consists of a partnership between [GSK](http://gsk.com/), [Oxford PharmaGenesis](https://www.pharmagenesis.com/) and [Vaticle](https://vaticle.com/)
 
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows BioGrakn to become an intelligent database of biomedical data for the Covid research field that infers implicit knowledge based on the explicitly stored data. BioGrakn Covid can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >3.6, [TypeDB Core 2.2](https://vaticle.com/download#core), [TypeDB Python Client API](https://docs.vaticle.com/docs/client-api/python), [Workbase 1.3.4](https://vaticle.com/download#workbase).
+**Prerequesites**: Python >3.6, [TypeDB Core 2.2.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.1.1](https://docs.vaticle.com/docs/client-api/python), [Workbase 2.1.2](https://vaticle.com/download#workbase).
 
 Clone this repo:
 
@@ -64,23 +66,22 @@ For help with the migrator script command line options:
 Now grab a coffee (or two) while the migrator builds the database and schema for you!
 
 ## Examples
-TypeQL queries can be run either on TypeQL console, on workbase or through client APIs.  However, we encourage running the queries on Workbase to have the best visual experience. Please follow this [tutorial](https://www.youtube.com/watch?v=Y9awBeGqTes&t=197s) on how to run queries on Workbase.
+TypeQL queries can be run either on TypeQL console, on workbase or through client APIs.  However, we encourage running the queries on Workbase to have the best visual experience. 
 
 ```bash
 # Return drugs that are associated to genes, which have been mentioned in the same 
 # paper as the gene which is associated to SARS.
 
 match 
-$v isa virus, has virus-name "SARS"; 
-$g isa gene; 
-$1 ($g, $v) isa gene-virus-association; 
-$2 ($g, $pu) isa mention; 
-$3 ($pu, $g2) isa mention; 
-$g2 isa gene; 
-$g2 != $g; 
-$4 ($g2, $dr); $dr isa drug; 
-offset 0; limit 10;
-
+$virus isa virus, has virus-name "SARS"; 
+$gene isa gene; 
+$1 ($gene, $virus) isa gene-virus-association; 
+$2 ($gene, $pub) isa mention; 
+$3 ($pub, $gene2) isa mention; 
+$gene2 isa gene; 
+not {$gene2 is $gene;};
+$4 ($gene2, $drug); $drug isa drug; 
+offset 0; limit 30;
 ```
 
 ![query_1](Images/query_2.png)

@@ -3,7 +3,7 @@ from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 from timeit import default_timer as timer
 
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 
 from Migrators.Helpers.batchLoader import batch_job
 
@@ -26,7 +26,7 @@ def cord_ner_migrator(uri, database, num_ner, num_threads, ctn):
                           "]")
     
     # The session could time out if we open it BEFORE we load the file
-    client = Grakn.core_client(uri)
+    client = TypeDB.core_client(uri)
     session = client.session(database, SessionType.DATA)
     data = data[:num_ner]
     insert_authors(data, num_threads, ctn, session)
@@ -98,12 +98,12 @@ def insert_authors(data, num_threads, ctn, session):
     list_of_list_of_authors = set(list_of_list_of_authors)
     for l in list_of_list_of_authors:
         l = l.replace('"', "'")
-        graql = f"""
+        typeql = f"""
 		insert
 		$p isa person, has published-name "{l}";
 		"""
-        batches.append(graql)
-        del graql
+        batches.append(typeql)
+        del typeql
         if counter % ctn == 0:
             batches_pr.append(batches)
             batches = []
@@ -133,12 +133,12 @@ def insert_journals(data, num_threads, ctn, session):
             l = l.replace('"', "'").replace(".", "")
         except Exception:
             pass
-        graql = f"""
+        typeql = f"""
 		insert
 		$p isa journal, has journal-name "{l}";
 		"""
-        batches.append(graql)
-        del graql
+        batches.append(typeql)
+        del typeql
         if counter % ctn == 0:
             batches_pr.append(batches)
             batches = []
@@ -171,7 +171,7 @@ def insert_publications_journals(data, num_threads, ctn, session):
         list_of_pubs.append(pub)
 
     for l in list_of_pubs:
-        graql = f"""
+        typeql = f"""
 		match 
 		$j isa journal, has journal-name "{l['journal']}"; 
 		insert
@@ -179,8 +179,8 @@ def insert_publications_journals(data, num_threads, ctn, session):
 		has paper-id "{l['paper-id']}", has publish-time "{l['publish_time']}";
 		(published-publication: $pu, publishing-journal: $j) isa publishing;
 		"""
-        batches.append(graql)
-        del graql
+        batches.append(typeql)
+        del typeql
         if counter % ctn == 0:
             batches_pr.append(batches)
             batches = []
@@ -206,24 +206,24 @@ def insert_publications_with_authors(data, num_threads, ctn, session):
     for d in data:
         if d['authors'] != 0:
             authors = author_names(d['authors'])
-            author_graql = ""
+            author_typeql = ""
             counter = 0
             relations_authors = ""
             for a in authors:
-                author_graql = author_graql + "$p" + str(counter) + ' isa person, has published-name "' + a + '"; '
+                author_typeql = author_typeql + "$p" + str(counter) + ' isa person, has published-name "' + a + '"; '
                 relations_authors = relations_authors + "(authored-publication: $pu, author: $p" + str(
                     counter) + ") isa authorship; "
                 counter = counter + 1
             d['title'] = d['title'].replace('"', "'")
-            graql = f"""
+            typeql = f"""
 			match
 			$pu isa publication, has title "{d['title']}"; 
-			{author_graql}
+			{author_typeql}
 			insert 
 			{relations_authors}
 			"""
-            batches.append(graql)
-            del graql
+            batches.append(typeql)
+            del typeql
         if counter % ctn == 0:
             batches_pr.append(batches)
             batches = []
@@ -258,31 +258,31 @@ def insert_entities_pub(data, num_threads, ctn, session):
             ent['end'] = e['end']
             if ent['type'] != None:
                 if ent['type'] != "gene or protein":
-                    graql = f"""
+                    typeql = f"""
 					match $1 isa {ent['type']}, has {ent['type']}-name "{ent['text']}";
 					$p isa publication, has title "{d['title']}"; 
 					insert 
 					(mentioning: $p, mentioned: $1) isa mention, has start "{e['start']}", has end "{e['end']}";
 					"""
                 else:
-                    graql = f"""
+                    typeql = f"""
 					match $1 isa protein, has uniprot-entry-name "{ent['text']}";
 					$p isa publication, has title "{d['title']}"; 
 					insert 
 					(mentioning: $p, mentioned: $1) isa mention, has start "{e['start']}", has end "{e['end']}";
 					"""
-                    graql2 = f"""
+                    typeql2 = f"""
 					match 
 					$p isa publication, has title "{d['title']}"; 
 					$2 isa gene, has gene-symbol "{ent['text']}";
 					insert 
 					(mentioning: $p, mentioned: $2) isa mention, has start "{e['start']}", has end "{e['end']}";
 					"""
-                    batches.append(graql2)
+                    batches.append(typeql2)
 
                 counter = counter + 1
-                batches.append(graql)
-                del graql
+                batches.append(typeql)
+                del typeql
                 if counter % ctn == 0:
                     batches_pr.append(batches)
                     batches = []

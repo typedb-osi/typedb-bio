@@ -2,7 +2,7 @@ import itertools
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
 import wget
-from grakn.client import Grakn, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType
 import ssl, os
 
 from Migrators.Helpers.batchLoader import batch_job
@@ -11,7 +11,7 @@ from Migrators.Helpers.open_file import openFile
 
 
 def reactomeMigrator(uri, database, num_path, num_threads, ctn):
-	client = Grakn.core_client(uri)
+	client = TypeDB.core_client(uri)
 	session = client.session(database, SessionType.DATA)
 	pathway_associations = filterHomoSapiens(num_path)
 	insertPathways(uri, database, num_threads, ctn, session, pathway_associations)
@@ -33,9 +33,9 @@ def insertPathways(uri, database, num_threads, ctn, session, pathway_association
 	pool = ThreadPool(num_threads)
 	for d in pathway_list:
 		counter = counter + 1
-		graql = f'''insert $p isa pathway, has pathway-name "{d[1]}", has pathway-id "{d[0]}";'''
-		batches.append(graql)
-		del graql
+		typeql = f'''insert $p isa pathway, has pathway-name "{d[1]}", has pathway-id "{d[0]}";'''
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []
@@ -54,9 +54,9 @@ def insertPathwayInteractions(uri, database, num_threads, ctn, session, pathway_
 	pool = ThreadPool(num_threads)
 	for d in pathway_associations:
 		counter = counter + 1
-		graql = f'''match $p isa pathway, has pathway-id "{d['pathway-id']}"; $pr isa protein, has uniprot-id "{d['uniprot-id']}"; insert (participated-pathway: $p, participating-protein: $pr) isa pathway-participation;'''
-		batches.append(graql)
-		del graql
+		typeql = f'''match $p isa pathway, has pathway-id "{d['pathway-id']}"; $pr isa protein, has uniprot-id "{d['uniprot-id']}"; insert (participated-pathway: $p, participating-protein: $pr) isa pathway-participation;'''
+		batches.append(typeql)
+		del typeql
 		if counter % ctn == 0:
 			batches2.append(batches)
 			batches = []
