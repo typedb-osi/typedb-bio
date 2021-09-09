@@ -8,7 +8,6 @@ from typedb.client import TypeDB, SessionType, TransactionType
 from Migrators.Helpers.batchLoader import batch_job
 
 def migrate_semmed(uri, database, num_semmed, num_threads, ctn):
-    
     print("Migrate 'Subject_CORD_NER.csv'")
 
     file_path = "Dataset/SemMed/Subject_CORD_NER.csv"
@@ -23,6 +22,7 @@ def migrate_semmed(uri, database, num_semmed, num_threads, ctn):
     relationship_data = get_relationship_data('Dataset/SemMed/Subject_CORD_NER.csv')[:num_semmed]
 
     print("--------Loading journals---------")
+
     load_in_parallel(migrate_journals, journal_names, num_threads, ctn, uri, database)
     print("--------Loading authors---------")
     load_in_parallel(migrate_authors, author_names, num_threads, ctn, uri, database)
@@ -100,8 +100,7 @@ def migrate_journals(uri, database, journal_names: list, ctn, process_id = 0):
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED".format(process_id))
-                print("Process {} ----- {} journals added".format(process_id, counter))
+                    print("Process {} COMMITED ----- {} journals added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()
@@ -152,8 +151,7 @@ def migrate_authors(uri, database, author_names: list, ctn, process_id = 0):
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED".format(process_id))
-                print("Process {} ----- {} authors added".format(process_id, counter))
+                    print("Process {} COMMITED ----- {} authors added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()
@@ -236,8 +234,7 @@ def migrate_publications(uri, database, publications_list: list, ctn, process_id
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED".format(process_id))
-                print("Process {} ----- {} publications added".format(process_id, counter))
+                    print("Process {} COMMITED ----- {} publications added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()
@@ -283,8 +280,7 @@ def migrate_relationships(uri, database, data: list, ctn, process_id = 0):
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED".format(process_id))
-                print("Process {} ----- {} relations added".format(process_id, counter))
+                    print("Process {} COMMITED ----- {} relations added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()

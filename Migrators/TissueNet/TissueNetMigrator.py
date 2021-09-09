@@ -1,11 +1,11 @@
 import csv
 
-from grakn.client import Grakn
+from typedb.client import TypeDB, SessionType, TransactionType
 
 
-def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
-	client = Grakn(uri=uri)
-	session = client.session(keyspace=keyspace)
+def tissueNetMigrator(uri, database, num, num_threads, ctn):
+	client = TypeDB.core_client(uri)
+	session = client.session(database, SessionType.DATA)
 	batches_pr = []
 
 	if num != 0:
@@ -22,3 +22,7 @@ def tissueNetMigrator(uri, keyspace, num, num_threads, ctn):
 				if n != 1:
 					raw_file.append(row)
 
+	# // TODO this seems unfinished?
+
+	session.close()
+	client.close()

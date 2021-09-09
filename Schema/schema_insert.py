@@ -13,7 +13,7 @@ def insertSchema(uri, database, force=False):
 	print('.....')
 	print('Inserting schema...')
 	print('.....')
-	with open("Schema/biograkn-covid.gql", "r") as typeql_file:
+	with open("Schema/bio-covid-schema.tql", "r") as typeql_file:
 		schema = typeql_file.read()
 	with session.transaction(TransactionType.WRITE) as write_transaction:
 		write_transaction.query().define(schema)
