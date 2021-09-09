@@ -89,27 +89,24 @@ def gene_helper(q):
 # Insert genes from gene-symbol.
 # NB: We only insert the first name, if there are synonyms, we ignore them. 
 def insert_genes(uniprotdb, session, num_threads, batch_size):
-    counter = 0
     gene_list = []
+    batch = []
     batches = []
-    batches2 = []
     for q in uniprotdb:
         if q['gene-symbol'] != "":
             gene_list.append(gene_helper(q))
 
     # gene_list = list(dict.fromkeys(gene_list)) # TO DO: Remove duplicate gene-symbols
 
-    pool = ThreadPool(num_threads)
     for g in gene_list:
-        counter = counter + 1
         typeql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
-        batches.append(typeql)
-        del typeql
-        if counter % batch_size == 0:
-            batches2.append(batches)
-            batches = []
-    batches2.append(batches)
-    pool.map(partial(write_batch, session), batches2)
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
     print('Genes committed!')
@@ -118,8 +115,8 @@ def insert_genes(uniprotdb, session, num_threads, batch_size):
 # Insert transcripts
 def insert_transcripts(uniprotdb, session, num_threads, batch_size):
     transcript_list = []
+    batch = []
     batches = []
-    batches2 = []
     for q in uniprotdb:
         tr = transcript_helper(q)
         if tr != None:
@@ -127,18 +124,15 @@ def insert_transcripts(uniprotdb, session, num_threads, batch_size):
 
     transcript_list = list(dict.fromkeys(transcript_list))  # Remove duplicate transcripts
 
-    pool = ThreadPool(num_threads)
-    counter = 0
     for q in transcript_list:
-        counter = counter + 1
         typeql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
-        batches.append(typeql)
-        del typeql
-        if counter % batch_size == 0:
-            batches2.append(batches)
-            batches = []
-    batches2.append(batches)
-    pool.map(partial(write_batch, session), batches2)
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
     print('Transcripts committed!')
