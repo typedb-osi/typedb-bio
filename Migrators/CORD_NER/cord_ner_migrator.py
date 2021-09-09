@@ -1,39 +1,37 @@
 import json
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
-from timeit import default_timer as timer
 
-from typedb.client import TypeDB, SessionType, TransactionType
-
-from Migrators.Helpers.batchLoader import batch_job
+from Migrators.Helpers.batchLoader import write_batch
 
 
-def cord_ner_migrator(uri, database, num_ner, num_threads, ctn):
+def migrate_cord_ner(session, num_ner, num_threads, batch_size):
     print('.....')
     print('Opening CORD NER file.')
     print('.....')
 
-    # FIRST DOWNLOAD THE CORD-NER-FULL.json FROM THIS WEBSITE: 
+    # FIRST DOWNLOAD THE CORD-NER-FULL.json FROM THIS WEBSITE:
     # https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
-    
-    # AND ADD IT TO THIS DIR: DATASET/CORD_NER/
 
+    # AND ADD IT TO THIS DIR: DATASET/CORD_NER/
 
     # TODO: Implement a JSON streamer
     with open('Dataset/CORD_NER/CORD-NER-full.json', "r") as f:
         data = json.loads("[" +
                           f.read().replace("}\n{", "},\n{") +
                           "]")
-    
+
     # The session could time out if we open it BEFORE we load the file
-    client = TypeDB.core_client(uri)
-    session = client.session(database, SessionType.DATA)
     data = data[:num_ner]
-    insert_authors(data, num_threads, ctn, session)
-    insert_journals(data, num_threads, ctn, session)
-    insert_publications_journals(data, num_threads, ctn, session)
-    #>insert_publications_with_authors(data, num_threads, 1, session)  ## hangs with a large author list
-    insert_entities_pub(data, num_threads, ctn, session) # fails with logic error
+    insert_authors(session, data, num_threads, batch_size)
+    insert_journals(session, data, num_threads, batch_size)
+    insert_publications_journals(session, data, num_threads, batch_size)
+    insert_publications_with_authors(session, data, num_threads, batch_size)
+    insert_entities_pub(session, data, num_threads, batch_size)  # fails with logic error # TODO check
+    print('.....')
+    print('Finished migrating CORD NER.')
+    print('.....')
+
 
 # Input: a string of authors
 # Return: List of authors
@@ -69,9 +67,9 @@ def author_names(author_string):
             ind = rest_name.find(';')
 
         # if author_string.find("',") != -1:
-        # 	ind = rest_name.find("',") + 1
+        #     ind = rest_name.find("',") + 1
         # if author_string.find(';') != -1:
-        # 	ind = rest_name.find(';')
+        #     ind = rest_name.find(';')
 
         if ind == -1:
             author_list.append(rest_name.replace("'", "").replace('"', ""))
@@ -85,11 +83,9 @@ def author_names(author_string):
     return author_list
 
 
-def insert_authors(data, num_threads, ctn, session):
-    counter = 0
-    pool = ThreadPool(num_threads)
+def insert_authors(session, data, num_threads, batch_size):
+    batch = []
     batches = []
-    batches_pr = []
     list_of_list_of_authors = []
     for d in data:
         if d['authors'] != 0:
@@ -99,19 +95,16 @@ def insert_authors(data, num_threads, ctn, session):
     for l in list_of_list_of_authors:
         l = l.replace('"', "'")
         typeql = f"""
-		insert
-		$p isa person, has published-name "{l}";
-		"""
-        batches.append(typeql)
-        del typeql
-        if counter % ctn == 0:
-            batches_pr.append(batches)
-            batches = []
-    if counter % ctn == 0:
-        batches_pr.append(batches)
-        batches = []
-    batches_pr.append(batches)
-    pool.map(partial(batch_job, session), batches_pr)
+        insert
+        $p isa person, has published-name "{l}";
+        """
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
     print('.....')
@@ -119,11 +112,9 @@ def insert_authors(data, num_threads, ctn, session):
     print('.....')
 
 
-def insert_journals(data, num_threads, ctn, session):
-    counter = 0
-    pool = ThreadPool(num_threads)
+def insert_journals(session, data, num_threads, batch_size):
+    batch = []
     batches = []
-    batches_pr = []
     list_of_journals = []
     for d in data:
         list_of_journals.append(d['journal'])
@@ -134,32 +125,26 @@ def insert_journals(data, num_threads, ctn, session):
         except Exception:
             pass
         typeql = f"""
-		insert
-		$p isa journal, has journal-name "{l}";
-		"""
-        batches.append(typeql)
-        del typeql
-        if counter % ctn == 0:
-            batches_pr.append(batches)
-            batches = []
-    if counter % ctn == 0:
-        batches_pr.append(batches)
-        batches = []
-    batches_pr.append(batches)
-    pool.map(partial(batch_job, session), batches_pr)
+        insert
+        $p isa journal, has journal-name "{l}";
+        """
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
-    print(len(list_of_journals))
     print('.....')
     print('Finished inserting journals.')
     print('.....')
 
 
-def insert_publications_journals(data, num_threads, ctn, session):
-    counter = 0
-    pool = ThreadPool(num_threads)
+def insert_publications_journal(session, data, num_threads, batch_size):
+    batch = []
     batches = []
-    batches_pr = []
     list_of_pubs = []
     for d in data:
         pub = {}
@@ -172,37 +157,30 @@ def insert_publications_journals(data, num_threads, ctn, session):
 
     for l in list_of_pubs:
         typeql = f"""
-		match 
-		$j isa journal, has journal-name "{l['journal']}"; 
-		insert
-		$pu isa publication, has title "{l['title']}", has doi "{l['doi']}", 
-		has paper-id "{l['paper-id']}", has publish-time "{l['publish_time']}";
-		(published-publication: $pu, publishing-journal: $j) isa publishing;
-		"""
-        batches.append(typeql)
-        del typeql
-        if counter % ctn == 0:
-            batches_pr.append(batches)
-            batches = []
-    if counter % ctn == 0:
-        batches_pr.append(batches)
-        batches = []
-    batches_pr.append(batches)
-    pool.map(partial(batch_job, session), batches_pr)
+        match 
+        $j isa journal, has journal-name "{l['journal']}"; 
+        insert
+        $pu isa publication, has title "{l['title']}", has doi "{l['doi']}", 
+        has paper-id "{l['paper-id']}", has publish-time "{l['publish_time']}";
+        (published-publication: $pu, publishing-journal: $j) isa publishing;
+        """
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
-    print(len(list_of_pubs))
     print('.....')
     print('Finished inserting publications and connecting them with journals.')
     print('.....')
 
 
-def insert_publications_with_authors(data, num_threads, ctn, session):
-    start = timer()
-    counter = 0
-    pool = ThreadPool(num_threads)
+def insert_publications_with_authors(session, data, num_threads, batch_size):
     batches = []
-    batches_pr = []
+    batch = []
     for d in data:
         if d['authors'] != 0:
             authors = author_names(d['authors'])
@@ -216,38 +194,29 @@ def insert_publications_with_authors(data, num_threads, ctn, session):
                 counter = counter + 1
             d['title'] = d['title'].replace('"', "'")
             typeql = f"""
-			match
-			$pu isa publication, has title "{d['title']}"; 
-			{author_typeql}
-			insert 
-			{relations_authors}
-			"""
-            batches.append(typeql)
-            del typeql
-        if counter % ctn == 0:
-            batches_pr.append(batches)
-            batches = []
-    if counter % ctn == 0:
-        batches_pr.append(batches)
-        batches = []
-    batches_pr.append(batches)
-    pool.map(partial(batch_job, session), batches_pr)
+            match
+            $pu isa publication, has title "{d['title']}"; 
+            {author_typeql}
+            insert 
+            {relations_authors}
+            """
+            batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
-    end = timer()
-    time_in_sec = end - start
-    print("Elapsed time: " + str(time_in_sec) + " seconds.")
     print('.....')
     print('Finished inserting journals <> pub <> authors.')
     print('.....')
 
 
-def insert_entities_pub(data, num_threads, ctn, session):
-    start = timer()
-    counter = 0
-    pool = ThreadPool(num_threads)
+def insert_entities_pub(session, data, num_threads, batch_size):
     batches = []
-    batches_pr = []
+    batch = []
     for d in data:
         d['title'] = d['title'].replace('"', "'")
         for e in d['entities']:
@@ -259,43 +228,36 @@ def insert_entities_pub(data, num_threads, ctn, session):
             if ent['type'] != None:
                 if ent['type'] != "gene or protein":
                     typeql = f"""
-					match $1 isa {ent['type']}, has {ent['type']}-name "{ent['text']}";
-					$p isa publication, has title "{d['title']}"; 
-					insert 
-					(mentioning: $p, mentioned: $1) isa mention, has start "{e['start']}", has end "{e['end']}";
-					"""
+                    match $1 isa {ent['type']}, has {ent['type']}-name "{ent['text']}";
+                    $p isa publication, has title "{d['title']}"; 
+                    insert 
+                    (mentioning: $p, mentioned: $1) isa mention, has start "{e['start']}", has end "{e['end']}";
+                    """
                 else:
                     typeql = f"""
-					match $1 isa protein, has uniprot-entry-name "{ent['text']}";
-					$p isa publication, has title "{d['title']}"; 
-					insert 
-					(mentioning: $p, mentioned: $1) isa mention, has start "{e['start']}", has end "{e['end']}";
-					"""
+                    match $1 isa protein, has uniprot-entry-name "{ent['text']}";
+                    $p isa publication, has title "{d['title']}"; 
+                    insert 
+                    (mentioning: $p, mentioned: $1) isa mention, has start "{e['start']}", has end "{e['end']}";
+                    """
                     typeql2 = f"""
-					match 
-					$p isa publication, has title "{d['title']}"; 
-					$2 isa gene, has gene-symbol "{ent['text']}";
-					insert 
-					(mentioning: $p, mentioned: $2) isa mention, has start "{e['start']}", has end "{e['end']}";
-					"""
-                    batches.append(typeql2)
+                    match 
+                    $p isa publication, has title "{d['title']}"; 
+                    $2 isa gene, has gene-symbol "{ent['text']}";
+                    insert 
+                    (mentioning: $p, mentioned: $2) isa mention, has start "{e['start']}", has end "{e['end']}";
+                    """
+                    batch.append(typeql2)
 
-                counter = counter + 1
-                batches.append(typeql)
-                del typeql
-                if counter % ctn == 0:
-                    batches_pr.append(batches)
-                    batches = []
-        if counter % ctn == 0:
-            batches_pr.append(batches)
-            batches = []
-    batches_pr.append(batches)
-    pool.map(partial(batch_job, session), batches_pr)
+                batch.append(typeql)
+                if len(batch) == batch_size:
+                    batches.append(batch)
+                    batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
     pool.close()
     pool.join()
-    end = timer()
-    time_in_sec = end - start
-    print("Elapsed time: " + str(time_in_sec) + " seconds.")
     print('.....')
     print('Finished inserting.')
     print('.....')
@@ -309,10 +271,10 @@ def classify_type(type):
     if type == "TISSUE":
         return "tissue"
     # if type == "CHEMICAL":
-    # 	return "chemical"
+    #     return "chemical"
     if type == "GENE_OR_GENOME":
         return "gene or protein"
     if type == "DISEASE_OR_SYNDROME":
         return "disease"
 # if type == "CELL_FUNCTION":
-# 	return "cell-function"
+#     return "cell-function"

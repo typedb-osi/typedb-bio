@@ -1,125 +1,128 @@
 import csv
+import os
 from functools import partial
 from multiprocessing.dummy import Pool as ThreadPool
-import wget, ssl, os
-from typedb.client import TypeDB, SessionType, TransactionType
 from zipfile import ZipFile
-from Migrators.Helpers.batchLoader import batch_job
+
+from typedb.client import TransactionType
+
+from Migrators.Helpers.batchLoader import write_batch
 from Migrators.Helpers.get_file import get_file
 
 
-def proteinAtlasMigrator(uri, database, num, num_threads, ctn):
-	client = TypeDB.core_client(uri)
-	session = client.session(database, SessionType.DATA)
-	batches_pr = []
+def migrate_protein_atlas(session, num, num_threads, batch_size):
+    if num == 0: return;
 
-	if num != 0:
-		print('  ')
-		print('Opening HPA dataset...')
-		print('  ')
+    print('  ')
+    print('Opening HPA dataset...')
+    print('  ')
 
-		get_file('https://www.proteinatlas.org/download/normal_tissue.tsv.zip', 'Dataset/HumanProteinAtlas/')	
+    tissue, raw_data = get_tissue_data(num)
+    insert_tissue(tissue, session)
+    insert_ensemble_id(raw_data, num, session, num_threads, batch_size)
+    insert_gene_tissue(raw_data, num, session, num_threads, batch_size)
 
-		with ZipFile('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip', 'r') as f:
-			f.extractall('Dataset/HumanProteinAtlas')
-
-		with open('Dataset/HumanProteinAtlas/normal_tissue.tsv', 'rt', encoding='utf-8') as csvfile:
-			csvreader = csv.reader(csvfile, delimiter='	')
-			raw_file = []
-			n = 0
-			for row in csvreader: 
-				n = n + 1
-				if n != 1:
-					d = {}
-					d['ensembl-gene-id'] = row[0]
-					d['gene-symbol'] = row[1]
-					d['tissue'] = row[2]
-					d['expression-value'] = row[4]
-					d['expression-value-reliability'] = row[5]
-					raw_file.append(d)
-			os.remove('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip')
-			os.remove('Dataset/HumanProteinAtlas/normal_tissue.tsv')
-
-		tissue = []
-		for r in raw_file[:num]:
-			tissue.append(r['tissue'])
-		tissue = (list(set(tissue)))
-
-		insertTissue(tissue, session, num_threads)
-		insertEnsemblId(raw_file, session, num_threads, ctn)
-		insertGeneTissue(raw_file, session, num_threads, ctn)
-
-def insertTissue(tissue, session, num_threads):
-	tx = session.transaction(TransactionType.WRITE)
-	for t in tissue: 
-		q = 'insert $t isa tissue, has tissue-name "' + t + '";'
-		a = tx.query().insert(q)
-	tx.commit()
-
-def insertGeneTissue(raw_file, session, num_threads, ctn):
-	pool = ThreadPool(num_threads)
-	counter = 0
-	batches = []
-	batches2 = []
-	for g in raw_file:
-		counter = counter + 1
-		typeql = f"""
-		match $g isa gene, has gene-symbol '{g['gene-symbol']}'; 
-		$t isa tissue, has tissue-name '{g['tissue']}';
-		insert
-		(expressing-gene: $g, expressed-tissue: $t) isa expression, 
-		has expression-value '{g['expression-value']}',
-		has expression-value-reliability '{g['expression-value-reliability']}'; 
-		"""
-		batches.append(typeql)
-		del typeql
-		if counter % ctn == 0:
-			batches2.append(batches)
-			batches = []
-	batches2.append(batches)
-	pool.map(partial(batch_job, session), batches2)
-	pool.close()
-	pool.join()
-	print('Genes <> Tissues committed!')
+    print('.....')
+    print('Finished migrating HPA.')
+    print('.....')
 
 
-def insertEnsemblId(raw_file, session, num_threads, ctn):
-	list_of_tuples = []
-	for r in raw_file:
-		list_of_tuples.append((r['ensembl-gene-id'], r['gene-symbol']))
-	list_of_tuples = [t for t in (set(tuple(i) for i in list_of_tuples))]
-	pool = ThreadPool(num_threads)
-	counter = 0
-	batches = []
-	batches2 = []
+def get_tissue_data(num):
+    print('  Downloading protein atlas data')
+    get_file('https://www.proteinatlas.org/download/normal_tissue.tsv.zip', 'Dataset/HumanProteinAtlas/')
+    print('  Finished downloading')
 
-	for g in list_of_tuples: 
-		counter = counter + 1
-		typeql = f"""
-		match $g isa gene, has gene-symbol '{g[1]}'; 
-		insert
-		$g has ensembl-gene-stable-id '{g[0]}'; 
-		"""
-		batches.append(typeql)
-		del typeql
-		if counter % ctn == 0:
-			batches2.append(batches)
-			batches = []
-	batches2.append(batches)
-	pool.map(partial(batch_job, session), batches2)
-	pool.close()
-	pool.join()
-	print('EnsemblIDs committed!')
+    with ZipFile('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip', 'r') as f:
+        f.extractall('Dataset/HumanProteinAtlas')
 
+    with open('Dataset/HumanProteinAtlas/normal_tissue.tsv', 'rt', encoding='utf-8') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter='\t')
+        raw_file = []
+        n = 0
+        for row in csvreader:
+            n = n + 1
+            if n != 1:
+                d = {}
+                d['ensembl-gene-id'] = row[0]
+                d['gene-symbol'] = row[1]
+                d['tissue'] = row[2]
+                d['expression-value'] = row[4]
+                d['expression-value-reliability'] = row[5]
+                raw_file.append(d)
+        os.remove('Dataset/HumanProteinAtlas/normal_tissue.tsv.zip')
+        os.remove('Dataset/HumanProteinAtlas/normal_tissue.tsv')
 
-
-
-
+    tissue = []
+    for r in raw_file[:num]:
+        tissue.append(r['tissue'])
+    tissue = (list(set(tissue)))
+    return (tissue, raw_file)
 
 
+def insert_tissue(tissue, session):
+    print('  Starting with tissue.')
+    with session.transaction(TransactionType.WRITE) as tx:
+        for t in tissue:
+            q = 'insert $t isa tissue, has tissue-name "' + t + '";'
+            tx.query().insert(q)
+        tx.commit()
+    print(f'  Finished tissue. ({len(tissue)} entries)')
 
 
+def insert_ensemble_id(raw_file, num, session, num_threads, batch_size):
+    list_of_tuples = []
+    for r in raw_file:
+        list_of_tuples.append((r['ensembl-gene-id'], r['gene-symbol']))
+    list_of_tuples = [t for t in (set(tuple(i) for i in list_of_tuples))]
+    batch = []
+    batches = []
+    total = 0
+    print('  Starting ensemble id.')
+    for g in list_of_tuples:
+        typeql = f"""
+        match $g isa gene, has gene-symbol '{g[1]}'; 
+        insert
+        $g has ensembl-gene-stable-id '{g[0]}'; 
+        """
+        batch.append(typeql)
+        total += 1
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+        if total == num:
+            break
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
+    pool.close()
+    pool.join()
+    print(f'  Finished ensemble id! ({total} entries)')
 
 
-
-
+def insert_gene_tissue(raw_file, num, session, num_threads, batch_size):
+    batches = []
+    batch = []
+    total = 0
+    print('  Starting expression.')
+    for g in raw_file:
+        typeql = f"""
+        match $g isa gene, has gene-symbol '{g['gene-symbol']}'; 
+        $t isa tissue, has tissue-name '{g['tissue']}';
+        insert
+        (expressing-gene: $g, expressed-tissue: $t) isa expression, 
+        has expression-value '{g['expression-value']}',
+        has expression-value-reliability '{g['expression-value-reliability']}'; 
+        """
+        batch.append(typeql)
+        total += 1
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+        if total == num:
+            break
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
+    pool.close()
+    pool.join()
+    print(f'  Finished Genes <> Tissues expression. ({total} entries)')
