@@ -142,7 +142,7 @@ def insert_journals(session, data, num_threads, batch_size):
     print('.....')
 
 
-def insert_publications_journal(session, data, num_threads, batch_size):
+def insert_publications_journals(session, data, num_threads, batch_size):
     batch = []
     batches = []
     list_of_pubs = []
