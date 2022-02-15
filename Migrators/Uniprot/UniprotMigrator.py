@@ -18,7 +18,7 @@ def migrate_uniprot(session, num, num_threads, batch_size):
             tx.query().insert(org)
             tx.commit()
 
-        uniprotdb = get_uniprotdb(num_threads)
+        uniprotdb = get_uniprotdb(num)
         insert_genes(uniprotdb, session, num_threads, batch_size)
         insert_transcripts(uniprotdb, session, num_threads, batch_size)
         insert_proteins(uniprotdb, session, num_threads, batch_size)
