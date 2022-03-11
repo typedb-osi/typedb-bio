@@ -1,4 +1,4 @@
-# TypeDB Data - Bio Covid
+# TypeDB Bio (Covid) Data
 
 **[Overview](#overview)** | **[Installation](#installation)** | **[Datasets](#Datasets)** |
  **[Examples](#examples)** | **[How You Can Help](#How-You-Can-Help)**
