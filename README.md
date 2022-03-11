@@ -1,4 +1,4 @@
-# TypeDB Bio (Covid) Data
+# TypeDB Bio (Covid) Knowledge Graph
 
 **[Overview](#overview)** | **[Installation](#installation)** | **[Datasets](#Datasets)** |
  **[Examples](#examples)** | **[How You Can Help](#How-You-Can-Help)**
