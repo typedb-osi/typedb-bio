@@ -1,7 +1,6 @@
 certifi==2020.12.5
 chardet==4.0.0
-typedb-client==2.2.0
-typedb-protocol==2.2.0
+typedb-client==2.9.0
 idna==2.10
 numpy==1.20.1
 pandas==1.2.2
