@@ -27,6 +27,8 @@ Our team currently consists of a partnership between [GSK](http://gsk.com/), [Ox
 
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows Bio Covid to become an intelligent database of biomedical data for the Covid research field that infers implicit knowledge based on the explicitly stored data. TypeDB Data - Bio Covid can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
+To learn more about TypeDB Knowledge graphs, have a look at [this article](https://blog.vaticle.com/what-is-a-knowledge-graph-5234363bf7f5).
+
 ## Installation
 **Prerequesites**: Python >3.6, [TypeDB Core 2.10.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.9.0](https://docs.vaticle.com/docs/client-api/python), 
 
