@@ -59,8 +59,8 @@ if __name__ == "__main__":
         migrate_disgenet(session, NUM_DIS, args.num_threads, args.commit_batch)  # > FAILS WITH TOO MANY OPEN FILES #
         migrate_dgibd(session, NUM_DR, NUM_INT, args.num_threads, args.commit_batch)
         migrate_protein_atlas(session, NUM_PA, args.num_threads, args.commit_batch)
-        # migrate_cord_ner(session, NUM_NER, args.num_threads, args.commit_batch)  # DOWNLOAD THE CORD-NER-FULL.json (ADD TO DATASET/CORD_NER): https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
         migrate_semmed(session, uri, NUM_SEM, args.num_threads, args.commit_batch)
+    migrate_cord_ner(client, args.database, SessionType.DATA, NUM_NER, args.num_threads, args.commit_batch)  # DOWNLOAD THE CORD-NER-FULL.json (ADD TO DATASET/CORD_NER): https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
 # add tissueNet?
 # add CORD-19?
 end = timer()

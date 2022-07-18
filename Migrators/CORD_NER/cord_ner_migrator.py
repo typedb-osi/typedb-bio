@@ -5,7 +5,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from Migrators.Helpers.batchLoader import write_batch
 
 
-def migrate_cord_ner(session, num_ner, num_threads, batch_size):
+def migrate_cord_ner(client, database, session_type, num_ner, num_threads, batch_size):
     print('.....')
     print('Opening CORD NER file.')
     print('.....')
@@ -23,11 +23,12 @@ def migrate_cord_ner(session, num_ner, num_threads, batch_size):
 
     # The session could time out if we open it BEFORE we load the file
     data = data[:num_ner]
-    insert_authors(session, data, num_threads, batch_size)
-    insert_journals(session, data, num_threads, batch_size)
-    insert_publications_journals(session, data, num_threads, batch_size)
-    insert_publications_with_authors(session, data, num_threads, batch_size)
-    insert_entities_pub(session, data, num_threads, batch_size)  # fails with logic error # TODO check
+    with client.session(database, session_type) as session:
+        insert_authors(session, data, num_threads, batch_size)
+        insert_journals(session, data, num_threads, batch_size)
+        insert_publications_journals(session, data, num_threads, batch_size)
+        insert_publications_with_authors(session, data, num_threads, batch_size)
+        insert_entities_pub(session, data, num_threads, batch_size)  # fails with logic error # TODO check
     print('.....')
     print('Finished migrating CORD NER.')
     print('.....')
