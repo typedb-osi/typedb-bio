@@ -1,7 +1,7 @@
 # TypeDB Bio: Biomedical Knowledge Graph
 
 **[Overview](#overview)** | **[Installation](#installation)** | **[Datasets](#datasets)** |
- **[Examples](#examples)** | **[How You Can Help](#how-you-can-help)**
+ **[Examples](#examples)** | **[How You Can Help](#how-you-can-help)** | **[Further Learning](#further-learning)**
 
 [![Discord](https://img.shields.io/discord/665254494820368395?color=7389D8&label=chat&logo=discord&logoColor=ffffff)](https://vaticle.com/discord)
 [![Discussion Forum](https://img.shields.io/discourse/https/forum.vaticle.com/topics.svg)](https://forum.vaticle.com)
@@ -115,9 +115,12 @@ If you wish to get in touch, please talk to us on the #typedb-bio channel on our
 - Kim Wager ([LinkedIn](https://www.linkedin.com/in/kimwager/))
 - Tomás Sabat ([LinkedIn](https://www.linkedin.com/in/tom%C3%A1s-sabat-83265841/))
 
-## **Further Learning**
-- [What is a Knowledge Graph?](https://blog.vaticle.com/what-is-a-knowledge-graph-5234363bf7f5)
+## **Further Learning**
 - [TypeDB for Life Sciences](https://vaticle.com/use-cases/life-sciences)
+- [Predicting Novel Disease Targets at AstraZeneca](https://www.youtube.com/watch?v=-N2NNVVPULM)
 - [Accelerating Drug Discovery with a TypeDB Knowledge Graph](https://blog.vaticle.com/biograkn-accelerating-biomedical-knowledge-discovery-with-a-grakn-knowledge-graph-84706768d7d4)
 - [Presentation of TypeDB Bio at Orbit 2021](https://www.youtube.com/watch?v=e-3BITuDgu8)
-
+- [Drug Discovery Knowledge Graphs](https://blog.vaticle.com/drug-discovery-knowledge-graphs-46db4212777c)
+- [Using a Knowledge Graph for Precision Medicine](https://blog.vaticle.com/precision-medicine-knowledge-graph-eea957d60c08)
+- [Drug Repurposing with a TypeDB Knowledge Graph for Bioinformatics](https://blog.vaticle.com/drug-repositioning-with-a-grakn-ai-knowledge-graph-for-bioinformatics-4701591f38c1)
+- [What is a Knowledge Graph?](https://blog.vaticle.com/what-is-a-knowledge-graph-5234363bf7f5)
