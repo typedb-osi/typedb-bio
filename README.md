@@ -1,96 +1,82 @@
-# TypeDB Bio (Covid) Knowledge Graph
+# TypeDB Bio: Biomedical Knowledge Graph
 
-**[Overview](#overview)** | **[Installation](#installation)** | **[Datasets](#Datasets)** |
- **[Examples](#examples)** | **[How You Can Help](#How-You-Can-Help)**
+**[Overview](#overview)** | **[Installation](#installation)** | **[Datasets](#datasets)** |
+ **[Examples](#examples)** | **[How You Can Help](#how-you-can-help)**
 
 [![Discord](https://img.shields.io/discord/665254494820368395?color=7389D8&label=chat&logo=discord&logoColor=ffffff)](https://vaticle.com/discord)
 [![Discussion Forum](https://img.shields.io/discourse/https/forum.vaticle.com/topics.svg)](https://forum.vaticle.com)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typedb-796de3.svg)](https://stackoverflow.com/questions/tagged/typedb)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typeql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/typeql)
 
-Bio Covid is an open source project to build a knowledge graph to enable research in COVID-19 and related disease areas.
-
 ## Overview
-We're excited to release an open source knowledge graph to speed up the research into Covid-19. Our goal is to provide a way for researchers to easily analyse and query large amounts of data and papers related to the virus.
+TypeDB Bio is an open source biomedical knowledge graph to enable research in areas such as drug discovery, precision medicine and drug repurposing. It provides biomedical researchers an intuitive way to query interconnected and heterogeneous biomedical data in one single place. 
 
-Bio Covid makes it easy to quickly trace information sources and identify articles and the information therein. This first release includes entities extracted from **Covid-19 papers,** and from additional datasets including, **proteins, genes, disease-gene associations, coronavirus proteins, protein expression, biological pathways, and drugs**.
+For example, by querying for the virus *SARS-CoV-2,* we can find the associated human protein, *proteasome subunit alpha type-2* (PSMA2), a component of the proteasome, implicated in *SARS-CoV-2* replication, and its encoding gene (*PSMA2*). Additionally, we can identify the drug *carfilzomib,* a known inhibitor of the proteasome that could therefore be researched as a potential treatment for patients with Covid-19. 
 
-For example, by querying for the virus *SARS-CoV-2,* we can find the associated human protein, *proteasome subunit alpha type-2* (PSMA2), a component of the proteasome, implicated in *SARS-CoV-2* replication, and its encoding gene (*PSMA2*). Additionally, we can identify the drug *carfilzomib,* a known inhibitor of the proteasome that could therefore be researched as a potential treatment for patients with Covid-19. To support the plausibility of this association and its implications, we can easily identify papers in the Covid-19 literature where this protein has been mentioned.
+<img width="962" alt="image" src="https://user-images.githubusercontent.com/20223184/179493757-039db277-22ac-4bf4-b79e-f32a44481f7d.png">
 
-![query_1](Images/query_1.png)
+By examining these specific relationships and their attributes, we can further investigate any connected biological components and better understand their inter-relations. This helps researchers to efficiently study the mechanisms of protein interactions, infections, the immune response, and help to find targets for the development of treatments or drugs more efficiently. We can also expand our search to include contextual information as is shown below:
 
-By examining these specific relationships and their attributes, we are directed to the data sources, including publications. This will help researchers to efficiently study the mechanisms of coronaviral infection, the immune response, and help to find targets for the development of treatments or vaccines more efficiently. We can also expand our search to include entities such as publications, organisms, proteins and genes as is shown below:
+<img width="832" alt="image" src="https://user-images.githubusercontent.com/20223184/179494158-1ac3acf4-fc56-49bf-8614-e8bc600246c6.png">
 
-![query_3](Images/query_3.png)
+The team behind TypeDB Bio consists of a partnership between [GSK](http://gsk.com/), [Oxford PharmaGenesis](https://www.pharmagenesis.com/) and [Vaticle](https://vaticle.com/)
 
-Our team currently consists of a partnership between [GSK](http://gsk.com/), [Oxford PharmaGenesis](https://www.pharmagenesis.com/) and [Vaticle](https://vaticle.com/)
-
-The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows Bio Covid to become an intelligent database of biomedical data for the Covid research field that infers implicit knowledge based on the explicitly stored data. TypeDB Data - Bio Covid can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
-
-To learn more about TypeDB Knowledge graphs, have a look at [this article](https://blog.vaticle.com/what-is-a-knowledge-graph-5234363bf7f5).
+The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows TypeDB Bio to become an intelligent database of biomedical data in the biomedical field that infers implicit knowledge based on the explicitly stored data. TypeDB Bio can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >3.6, [TypeDB Core 2.10.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.9.0](https://docs.vaticle.com/docs/client-api/python), 
-
-**Note**: we have deprecated TypeDB Workbase, which produced the images above,
-and replaced it with the brand-new [TypeDB Studio ](https://github.com/vaticle/typedb-studio/releases) which has 
-the same features, plus much much more!
+**Prerequesites**: Python >3.6, [TypeDB Core 2.10.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.9.0](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
 
 Clone this repo:
 
 ```bash 
-    git clone https://github.com/vaticle/typedb-data-bio-covid.git
+git clone https://github.com/vaticle/typedb-bio.git
 ```
 
-Manually download all source datasets and put them in the `Datasets` folder. You can find the links below. 
+Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `dataset/CORD_NER`
 
 Set up a virtual environment and install the dependencies:
 
 ```bash
-    cd <path/to/typedb-data-bio-covid>/
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
+cd <path/to/typedb-bio>/
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 Start typedb
 ```bash 
-    typedb server
+typedb server
 ```
 Start the migrator script
 
 ```bash
-    python migrator.py -n 4 # insert using 4 threads
+python migrator.py -n 4 # insert using 4 threads
 ```
 
 For help with the migrator script command line options:
 
 ```bash
-    python migrator.py -h
+python migrator.py -h
 ```
 
 Now grab a coffee (or two) while the migrator builds the database and schema for you!
 
 ## Examples
-TypeQL queries can be run either on TypeQL console, on workbase or through client APIs.  However, we encourage running the queries on Workbase to have the best visual experience. 
+TypeQL queries can be run either in the [TypeDB console](https://docs.vaticle.com/docs/console/console), in [TypeDB Studio](https://docs.vaticle.com/docs/studio/overview) or through [client APIs](https://docs.vaticle.com/docs/client-api/overview).  However, we encourage running the queries on TypeDB Studio to have the best visual experience. 
 
 ```bash
-# Return drugs that are associated to genes, which have been mentioned in the same 
-# paper as the gene which is associated to SARS.
+# What are the drugs that interact with the genes associated to the virus Sars?
 
 match 
 $virus isa virus, has virus-name "SARS"; 
 $gene isa gene; 
-$1 ($gene, $virus) isa gene-virus-association; 
-$2 ($gene, $pub) isa mention; 
-$3 ($pub, $gene2) isa mention; 
-$gene2 isa gene; 
-not {$gene2 is $gene;};
-$4 ($gene2, $drug); $drug isa drug; 
-offset 0; limit 30;
+$drug isa drug; 
+$rel1 ($gene, $virus) isa gene-virus-association; 
+$rel2 ($gene, $drug) isa drug-gene-interaction; 
+offset 0; limit 20;
 ```
 
-![query_1](Images/query_2.png)
+<img width="600" alt="image" src="https://user-images.githubusercontent.com/20223184/179508451-efc2b0f7-280d-4639-8582-46a9ab8882e4.png">
 
 ## Datasets
 
@@ -98,7 +84,7 @@ Currently the datasets we've integrated include:
 
 * [CORD-NER](https://xuanwang91.github.io/2020-03-20-cord19-ner/): The CORD-19 dataset that the White House released has been annotated and made publicly available. It uses various NER methods to recognise named entities on CORD-19 with distant or weak supervision.
 * [Uniprot](https://www.uniprot.org/uniprot/?query=proteome:UP000005640%20reviewed:yes): We’ve downloaded the reviewed human subset, and ingested genes, transcripts and protein identifiers.
-* [Coronaviruses](https://github.com/vaticle/typedb-data-bio-covid/tree/master/Dataset/Coronaviruses): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
+* [Coronaviruses](https://github.com/vaticle/typedb-bio/tree/master/Dataset/Coronaviruses): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
 * [DGIdb](http://www.dgidb.org/downloads): We’ve taken the *Interactions TSV* which includes all drug-gene interactions.
 * [Human Protein Atlas](https://www.proteinatlas.org/about/download): The *Normal Tissue Data* includes the expression profiles for proteins in human tissues.
 * [Reactome](https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt): This dataset connects pathways and their participating proteins.
@@ -123,8 +109,15 @@ This is an on-going project and we need your help! If you want to contribute, yo
 - Create a website
 - Write tutorials and articles for researchers to get started
 
-If you wish to get in touch, please talk to us on the #typedb-data-bio-covid channel on our Discord ([link here](https://www.vaticle.com/discord)).
+If you wish to get in touch, please talk to us on the #typedb-bio channel on our Discord ([link here](https://www.vaticle.com/discord)).
 
 - Konrad Myśliwiec ([LinkedIn](https://www.linkedin.com/in/konrad-my%C5%9Bliwiec-764ba9163/))
 - Kim Wager ([LinkedIn](https://www.linkedin.com/in/kimwager/))
 - Tomás Sabat ([LinkedIn](https://www.linkedin.com/in/tom%C3%A1s-sabat-83265841/))
+
+## **Further Learning**
+- [What is a Knowledge Graph?](https://blog.vaticle.com/what-is-a-knowledge-graph-5234363bf7f5)
+- [TypeDB for Life Sciences](https://vaticle.com/use-cases/life-sciences)
+- [Accelerating Drug Discovery with a TypeDB Knowledge Graph](https://blog.vaticle.com/biograkn-accelerating-biomedical-knowledge-discovery-with-a-grakn-knowledge-graph-84706768d7d4)
+- [Presentation of TypeDB Bio at Orbit 2021](https://www.youtube.com/watch?v=e-3BITuDgu8)
+
