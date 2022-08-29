@@ -8,6 +8,7 @@ from Migrators.DGIdb.DGIdbMigrator import migrate_dgibd
 from Migrators.Reactome.reactomeMigrator import migrate_reactome
 from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import migrate_protein_atlas
 from Migrators.SemMed.semmed_migrator import migrate_semmed
+from Migrators.TissueNet.tissueNetMigrator import migrate_tissuenet
 from timeit import default_timer as timer
 import argparse
 
@@ -60,6 +61,7 @@ if __name__ == "__main__":
         migrate_dgibd(session, NUM_DR, NUM_INT, args.num_threads, args.commit_batch)
         migrate_protein_atlas(session, NUM_PA, args.num_threads, args.commit_batch)
         migrate_semmed(session, uri, NUM_SEM, args.num_threads, args.commit_batch)
+        migrate_tissuenet(session, args.num_threads, args.commit_batch)
     migrate_cord_ner(client, args.database, SessionType.DATA, NUM_NER, args.num_threads, args.commit_batch)  # DOWNLOAD THE CORD-NER-FULL.json (ADD TO DATASET/CORD_NER): https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303
 # add tissueNet?
 # add CORD-19?
