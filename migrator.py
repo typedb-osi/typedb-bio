@@ -8,7 +8,7 @@ from Migrators.DGIdb.DGIdbMigrator import migrate_dgibd
 from Migrators.Reactome.reactomeMigrator import migrate_reactome
 from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import migrate_protein_atlas
 from Migrators.SemMed.semmed_migrator import migrate_semmed
-from Migrators.TissueNet.tissueNetMigrator import migrate_tissuenet
+from Migrators.TissueNet.TissueNetMigrator import migrate_tissuenet
 from timeit import default_timer as timer
 import argparse
 
