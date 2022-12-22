@@ -60,7 +60,7 @@ insert $r (associated-gene: $g, associated-disease: $d) isa gene-disease-associa
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f' gene-disease associations inserted! ({total} entries)')
@@ -86,7 +86,7 @@ def insert_diseases(disgenet, session, num_threads, batch_size):
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f' Diseases inserted! ({total} entries)')

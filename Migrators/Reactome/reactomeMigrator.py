@@ -42,7 +42,7 @@ def insert_pathways(session, num_threads, batch_size, pathway_associations):
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f'  Reactome Pathways inserted! ({total} entries)')
@@ -62,7 +62,7 @@ def insert_pathway_interactions(session, num_threads, batch_size, pathway_associ
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f' Reactome pathway interactions inserted! ({total} entries)')

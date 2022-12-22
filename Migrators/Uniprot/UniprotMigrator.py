@@ -106,7 +106,7 @@ def insert_genes(uniprotdb, session, num_threads, batch_size):
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print('Genes committed!')
@@ -132,7 +132,7 @@ def insert_transcripts(uniprotdb, session, num_threads, batch_size):
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print('Transcripts committed!')
@@ -188,6 +188,6 @@ def get_batched_protein_queries(uniprotdb, batch_size):
 def insert_proteins(uniprotdb, session, num_threads, batch_size):
     batched_protein_queries = get_batched_protein_queries(uniprotdb, batch_size)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batched_protein_queries)
+    pool.imap_unordered(partial(write_batch, session), batched_protein_queries, 1000)
     pool.close()
     pool.join()

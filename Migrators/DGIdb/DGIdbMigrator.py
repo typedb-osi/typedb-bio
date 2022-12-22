@@ -52,7 +52,7 @@ def insert_drugs(session, num_dr, num_threads, batch_size):
             batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f'  Drugs inserted! ({total} entries)')
@@ -97,7 +97,7 @@ def insert_interactions(session, num_int, num_threads, batch_size):
                 batch = []
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f'  Finished drug-gene interactions. ({total} entries) ')

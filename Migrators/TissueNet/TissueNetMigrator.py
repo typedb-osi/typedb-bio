@@ -56,7 +56,7 @@ def migrate_tissuenet(session, num_threads, batch_size):
         print(batches)
         
         pool = ThreadPool(num_threads)
-        pool.map(partial(write_batch, session), batches)
+        pool.imap_unordered(partial(write_batch, session), batches, 1000)
         pool.join()
         pool.close()
         print(f'  Tissues inserted! ({total} entries)')

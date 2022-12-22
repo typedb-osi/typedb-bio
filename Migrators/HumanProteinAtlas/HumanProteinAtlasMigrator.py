@@ -93,7 +93,7 @@ def insert_ensemble_id(raw_file, num, session, num_threads, batch_size):
             break
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f'  Finished ensemble id! ({total} entries)')
@@ -122,7 +122,7 @@ def insert_gene_tissue(raw_file, num, session, num_threads, batch_size):
             break
     batches.append(batch)
     pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
+    pool.imap_unordered(partial(write_batch, session), batches, 1000)
     pool.close()
     pool.join()
     print(f'  Finished Genes <> Tissues expression. ({total} entries)')
