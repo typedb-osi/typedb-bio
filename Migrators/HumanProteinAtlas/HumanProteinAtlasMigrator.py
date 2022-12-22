@@ -86,7 +86,7 @@ def insert_ensemble_id(raw_file, num, session, num_threads, batch_size):
         """
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
         if total == num:
@@ -115,7 +115,7 @@ def insert_gene_tissue(raw_file, num, session, num_threads, batch_size):
         """
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
         if total == num:

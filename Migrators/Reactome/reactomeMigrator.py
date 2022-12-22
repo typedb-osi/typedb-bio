@@ -37,7 +37,7 @@ def insert_pathways(session, num_threads, batch_size, pathway_associations):
         typeql = f'''insert $p isa pathway, has pathway-name "{d[1]}", has pathway-id "{d[0]}";'''
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -57,7 +57,7 @@ def insert_pathway_interactions(session, num_threads, batch_size, pathway_associ
         typeql = f'''match $p isa pathway, has pathway-id "{d['pathway-id']}"; $pr isa protein, has uniprot-id "{d['uniprot-id']}"; insert (participated-pathway: $p, participating-protein: $pr) isa pathway-participation;'''
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)

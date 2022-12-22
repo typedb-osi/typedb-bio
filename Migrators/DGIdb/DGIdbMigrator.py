@@ -47,7 +47,7 @@ def insert_drugs(session, num_dr, num_threads, batch_size):
         typeql = f'''insert $d isa drug, has drug-claim-name "{d['drug-claim-name']}", has drug-name "{d['drug-name']}", has chembl-id "{d['chembl-id']}", has drug-claim-source "{d['drug-claim-source']}";'''
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -92,7 +92,7 @@ def insert_interactions(session, num_int, num_threads, batch_size):
                 typeql = typeql + f"""insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction, has interaction-type "{q['interaction-type']}";"""
             batch.append(typeql)
             total += 1
-            if len(batch) == batch_size:
+            if len(batch) >= batch_size:
                 batches.append(batch)
                 batch = []
     batches.append(batch)

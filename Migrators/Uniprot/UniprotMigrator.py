@@ -101,7 +101,7 @@ def insert_genes(uniprotdb, session, num_threads, batch_size):
     for g in gene_list:
         typeql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
         batch.append(typeql)
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -127,7 +127,7 @@ def insert_transcripts(uniprotdb, session, num_threads, batch_size):
     for q in transcript_list:
         typeql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
         batch.append(typeql)
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -179,7 +179,7 @@ def get_batched_protein_queries(uniprotdb, batch_size):
 
         batch.append(typeql)
         del typeql
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     return batches

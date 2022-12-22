@@ -100,7 +100,7 @@ def insert_authors(session, data, num_threads, batch_size):
         $p isa person, has published-name "{l}";
         """
         batch.append(typeql)
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -130,7 +130,7 @@ def insert_journals(session, data, num_threads, batch_size):
         $p isa journal, has journal-name "{l}";
         """
         batch.append(typeql)
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -166,7 +166,7 @@ def insert_publications_journals(session, data, num_threads, batch_size):
         (published-publication: $pu, publishing-journal: $j) isa publishing;
         """
         batch.append(typeql)
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -202,7 +202,7 @@ def insert_publications_with_authors(session, data, num_threads, batch_size):
             {relations_authors}
             """
             batch.append(typeql)
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -251,7 +251,7 @@ def insert_entities_pub(session, data, num_threads, batch_size):
                     batch.append(typeql2)
 
                 batch.append(typeql)
-                if len(batch) == batch_size:
+                if len(batch) >= batch_size:
                     batches.append(batch)
                     batch = []
     batches.append(batch)

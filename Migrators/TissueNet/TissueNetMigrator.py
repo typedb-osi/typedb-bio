@@ -50,7 +50,7 @@ def migrate_tissuenet(session, num_threads, batch_size):
             typeql = f'''insert $t isa tissue, has tissue-name "{tissue}";'''
             batch.append(typeql)
             total += 1
-            if len(batch) == batch_size:
+            if len(batch) >= batch_size:
                 batches.append(batch)
                 batch = []
         print(batches)

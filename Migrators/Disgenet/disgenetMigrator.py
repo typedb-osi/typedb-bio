@@ -55,7 +55,7 @@ $d isa disease, has disease-id "{q['disease-id']}", has disease-name "{q['diseas
 insert $r (associated-gene: $g, associated-disease: $d) isa gene-disease-association, has disgenet-score {q['disgenet-score']};"""
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
@@ -81,7 +81,7 @@ def insert_diseases(disgenet, session, num_threads, batch_size):
         typeql = f'insert $d isa disease, has disease-name "{d[0]}", has disease-id "{d[1]}";'
         batch.append(typeql)
         total += 1
-        if len(batch) == batch_size:
+        if len(batch) >= batch_size:
             batches.append(batch)
             batch = []
     batches.append(batch)
