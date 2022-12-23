@@ -1,11 +1,9 @@
 import os
 import ssl
-from functools import partial
-from multiprocessing.dummy import Pool as ThreadPool
 
 import wget
 
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
 from Migrators.Helpers.open_file import openFile
 
@@ -51,10 +49,7 @@ def insert_drugs(session, num_dr, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f'  Drugs inserted! ({total} entries)')
 
 
@@ -96,8 +91,5 @@ def insert_interactions(session, num_int, num_threads, batch_size):
                 batches.append(batch)
                 batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f'  Finished drug-gene interactions. ({total} entries) ')

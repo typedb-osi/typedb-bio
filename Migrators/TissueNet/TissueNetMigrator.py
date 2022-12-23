@@ -1,8 +1,6 @@
 import csv
 from typedb.client import TypeDB, SessionType, TransactionType
-from functools import partial
-from multiprocessing.dummy import Pool as ThreadPool
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 import glob
 
 def openFileVariant(path, tissue_name):
@@ -55,10 +53,7 @@ def migrate_tissuenet(session, num_threads, batch_size):
                 batch = []
         print(batches)
         
-        pool = ThreadPool(num_threads)
-        pool.imap_unordered(partial(write_batch, session), batches, 1000)
-        pool.join()
-        pool.close()
+        write_batches(session, batches, num_threads)
         print(f'  Tissues inserted! ({total} entries)')
 
         #session.close()

@@ -1,8 +1,6 @@
 import json
-from functools import partial
-from multiprocessing.dummy import Pool as ThreadPool
 
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 
 
 def migrate_cord_ner(client, database, session_type, num_ner, num_threads, batch_size):
@@ -104,10 +102,7 @@ def insert_authors(session, data, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('.....')
     print('Finished inserting authors.')
     print('.....')
@@ -134,10 +129,7 @@ def insert_journals(session, data, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('.....')
     print('Finished inserting journals.')
     print('.....')
@@ -170,10 +162,7 @@ def insert_publications_journals(session, data, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('.....')
     print('Finished inserting publications and connecting them with journals.')
     print('.....')
@@ -206,10 +195,7 @@ def insert_publications_with_authors(session, data, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('.....')
     print('Finished inserting journals <> pub <> authors.')
     print('.....')
@@ -255,10 +241,7 @@ def insert_entities_pub(session, data, num_threads, batch_size):
                     batches.append(batch)
                     batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('.....')
     print('Finished inserting.')
     print('.....')

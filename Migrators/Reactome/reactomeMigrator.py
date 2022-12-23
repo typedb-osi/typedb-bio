@@ -1,10 +1,8 @@
 import itertools
-from functools import partial
-from multiprocessing.dummy import Pool as ThreadPool
 import wget
 import ssl, os
 
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.open_file import openFile
 
 
@@ -41,10 +39,7 @@ def insert_pathways(session, num_threads, batch_size, pathway_associations):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f'  Reactome Pathways inserted! ({total} entries)')
 
 
@@ -61,10 +56,7 @@ def insert_pathway_interactions(session, num_threads, batch_size, pathway_associ
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f' Reactome pathway interactions inserted! ({total} entries)')
 
 

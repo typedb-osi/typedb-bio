@@ -1,12 +1,10 @@
 import csv
 import os
-from functools import partial
-from multiprocessing.dummy import Pool as ThreadPool
 from zipfile import ZipFile
 
 from typedb.client import TransactionType
 
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
 
 
@@ -92,10 +90,7 @@ def insert_ensemble_id(raw_file, num, session, num_threads, batch_size):
         if total == num:
             break
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f'  Finished ensemble id! ({total} entries)')
 
 
@@ -121,8 +116,5 @@ def insert_gene_tissue(raw_file, num, session, num_threads, batch_size):
         if total == num:
             break
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f'  Finished Genes <> Tissues expression. ({total} entries)')

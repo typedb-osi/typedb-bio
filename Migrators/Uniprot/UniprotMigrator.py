@@ -2,9 +2,8 @@ from typedb.client import TransactionType
 import csv
 import re
 
-from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 
 
 def migrate_uniprot(session, num, num_threads, batch_size):
@@ -105,10 +104,7 @@ def insert_genes(uniprotdb, session, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('Genes committed!')
 
 
@@ -131,10 +127,7 @@ def insert_transcripts(uniprotdb, session, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print('Transcripts committed!')
 
 
@@ -186,8 +179,4 @@ def get_batched_protein_queries(uniprotdb, batch_size):
 
 
 def insert_proteins(uniprotdb, session, num_threads, batch_size):
-    batched_protein_queries = get_batched_protein_queries(uniprotdb, batch_size)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batched_protein_queries, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, get_batched_protein_queries(uniprotdb, batch_size), num_threads)

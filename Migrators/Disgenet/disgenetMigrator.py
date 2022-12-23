@@ -1,8 +1,6 @@
 import gzip, csv, os, itertools
 
-from multiprocessing.dummy import Pool as ThreadPool
-from functools import partial
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
 
 
@@ -59,10 +57,7 @@ insert $r (associated-gene: $g, associated-disease: $d) isa gene-disease-associa
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f' gene-disease associations inserted! ({total} entries)')
 
 
@@ -85,8 +80,5 @@ def insert_diseases(disgenet, session, num_threads, batch_size):
             batches.append(batch)
             batch = []
     batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.imap_unordered(partial(write_batch, session), batches, 1000)
-    pool.close()
-    pool.join()
+    write_batches(session, batches, num_threads)
     print(f' Diseases inserted! ({total} entries)')
