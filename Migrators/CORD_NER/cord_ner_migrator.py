@@ -83,8 +83,7 @@ def author_names(author_string):
 
 
 def insert_authors(session, data, num_threads, batch_size):
-    batch = []
-    batches = []
+    queries = []
     list_of_list_of_authors = []
     for d in data:
         if d['authors'] != 0:
@@ -97,20 +96,15 @@ def insert_authors(session, data, num_threads, batch_size):
         insert
         $p isa person, has published-name "{l}";
         """
-        batch.append(typeql)
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+        queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('.....')
     print('Finished inserting authors.')
     print('.....')
 
 
 def insert_journals(session, data, num_threads, batch_size):
-    batch = []
-    batches = []
+    queries = []
     list_of_journals = []
     for d in data:
         list_of_journals.append(d['journal'])
@@ -124,20 +118,15 @@ def insert_journals(session, data, num_threads, batch_size):
         insert
         $p isa journal, has journal-name "{l}";
         """
-        batch.append(typeql)
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+        queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('.....')
     print('Finished inserting journals.')
     print('.....')
 
 
 def insert_publications_journals(session, data, num_threads, batch_size):
-    batch = []
-    batches = []
+    queries = []
     list_of_pubs = []
     for d in data:
         pub = {}
@@ -157,20 +146,15 @@ def insert_publications_journals(session, data, num_threads, batch_size):
         has paper-id "{l['paper-id']}", has publish-time "{l['publish_time']}";
         (published-publication: $pu, publishing-journal: $j) isa publishing;
         """
-        batch.append(typeql)
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+        queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('.....')
     print('Finished inserting publications and connecting them with journals.')
     print('.....')
 
 
 def insert_publications_with_authors(session, data, num_threads, batch_size):
-    batches = []
-    batch = []
+    queries = []
     for d in data:
         if d['authors'] != 0:
             authors = author_names(d['authors'])
@@ -190,20 +174,15 @@ def insert_publications_with_authors(session, data, num_threads, batch_size):
             insert 
             {relations_authors}
             """
-            batch.append(typeql)
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+            queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('.....')
     print('Finished inserting journals <> pub <> authors.')
     print('.....')
 
 
 def insert_entities_pub(session, data, num_threads, batch_size):
-    batches = []
-    batch = []
+    queries = []
     for d in data:
         d['title'] = d['title'].replace('"', "'")
         for e in d['entities']:
@@ -234,14 +213,10 @@ def insert_entities_pub(session, data, num_threads, batch_size):
                     insert 
                     (mentioning: $p, mentioned: $2) isa mention, has start "{e['start']}", has end "{e['end']}";
                     """
-                    batch.append(typeql2)
+                    queries.append(typeql2)
 
-                batch.append(typeql)
-                if len(batch) >= batch_size:
-                    batches.append(batch)
-                    batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+                queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('.....')
     print('Finished inserting.')
     print('.....')

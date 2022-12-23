@@ -89,8 +89,7 @@ def gene_helper(q):
 # NB: We only insert the first name, if there are synonyms, we ignore them. 
 def insert_genes(uniprotdb, session, num_threads, batch_size):
     gene_list = []
-    batch = []
-    batches = []
+    queries = []
     for q in uniprotdb:
         if q['gene-symbol'] != "":
             gene_list.append(gene_helper(q))
@@ -99,20 +98,14 @@ def insert_genes(uniprotdb, session, num_threads, batch_size):
 
     for g in gene_list:
         typeql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
-        batch.append(typeql)
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+        queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('Genes committed!')
 
 
 # Insert transcripts
 def insert_transcripts(uniprotdb, session, num_threads, batch_size):
     transcript_list = []
-    batch = []
-    batches = []
     for q in uniprotdb:
         tr = transcript_helper(q)
         if tr != None:
@@ -120,20 +113,16 @@ def insert_transcripts(uniprotdb, session, num_threads, batch_size):
 
     transcript_list = list(dict.fromkeys(transcript_list))  # Remove duplicate transcripts
 
+    queries = []
     for q in transcript_list:
         typeql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
-        batch.append(typeql)
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+        queries.append(typeql)
+    write_batches(session, queries, batch_size, num_threads)
     print('Transcripts committed!')
 
 
-def get_batched_protein_queries(uniprotdb, batch_size):
-    batches = []
-    batch = []
+def get_protein_queries(uniprotdb):
+    queries = []
     for q in uniprotdb:
         transcripts = transcript_helper(q)
         gene = gene_helper(q)[0]
@@ -170,13 +159,10 @@ def get_batched_protein_queries(uniprotdb, batch_size):
                 typeql = typeql + "$trans" + str(v) + "(transcribing-gene: $g, encoded-transcript: $" + str(
                     v) + ") isa transcription;"
 
-        batch.append(typeql)
+        queries.append(typeql)
         del typeql
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    return batches
+    return queries
 
 
 def insert_proteins(uniprotdb, session, num_threads, batch_size):
-    write_batches(session, get_batched_protein_queries(uniprotdb, batch_size), num_threads)
+    write_batches(session, get_protein_queries(uniprotdb), batch_size, num_threads)

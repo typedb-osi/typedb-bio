@@ -38,18 +38,13 @@ def insert_drugs(session, num_dr, num_threads, batch_size):
     os.remove('Dataset/DGIdb/drugs.tsv')
     drugs_list = drugs
     print('  Starting with drugs.')
-    batch = []
-    batches = []
+    queries = []
     total = 0
     for d in drugs_list:
         typeql = f'''insert $d isa drug, has drug-claim-name "{d['drug-claim-name']}", has drug-name "{d['drug-name']}", has chembl-id "{d['chembl-id']}", has drug-claim-source "{d['drug-claim-source']}";'''
-        batch.append(typeql)
+        queries.append(typeql)
         total += 1
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+    write_batches(session, queries, batch_size, num_threads)
     print(f'  Drugs inserted! ({total} entries)')
 
 
@@ -74,8 +69,7 @@ def insert_interactions(session, num_int, num_threads, batch_size):
         interactions.append(data)
     os.remove('Dataset/DGIdb/interactions.tsv')
     print('  Starting with drug-gene interactions.')
-    batches = []
-    batch = []
+    queries = []
     total = 0
     for q in interactions:
         if q['entrez-id'] != "":
@@ -85,11 +79,7 @@ def insert_interactions(session, num_int, num_threads, batch_size):
                 typeql = typeql + f"insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction;"
             else:
                 typeql = typeql + f"""insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction, has interaction-type "{q['interaction-type']}";"""
-            batch.append(typeql)
+            queries.append(typeql)
             total += 1
-            if len(batch) >= batch_size:
-                batches.append(batch)
-                batch = []
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+    write_batches(session, queries, batch_size, num_threads)
     print(f'  Finished drug-gene interactions. ({total} entries) ')

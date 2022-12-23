@@ -72,8 +72,7 @@ def insert_ensemble_id(raw_file, num, session, num_threads, batch_size):
     for r in raw_file:
         list_of_tuples.append((r['ensembl-gene-id'], r['gene-symbol']))
     list_of_tuples = [t for t in (set(tuple(i) for i in list_of_tuples))]
-    batch = []
-    batches = []
+    queries = []
     total = 0
     print('  Starting ensemble id.')
     for g in list_of_tuples:
@@ -82,21 +81,16 @@ def insert_ensemble_id(raw_file, num, session, num_threads, batch_size):
         insert
         $g has ensembl-gene-stable-id '{g[0]}'; 
         """
-        batch.append(typeql)
+        queries.append(typeql)
         total += 1
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-        if total == num:
+        if total >= num:
             break
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+    write_batches(session, queries, batch_size, num_threads)
     print(f'  Finished ensemble id! ({total} entries)')
 
 
 def insert_gene_tissue(raw_file, num, session, num_threads, batch_size):
-    batches = []
-    batch = []
+    queries = []
     total = 0
     print('  Starting expression.')
     for g in raw_file:
@@ -108,13 +102,9 @@ def insert_gene_tissue(raw_file, num, session, num_threads, batch_size):
         has expression-value '{g['expression-value']}',
         has expression-value-reliability '{g['expression-value-reliability']}'; 
         """
-        batch.append(typeql)
+        queries.append(typeql)
         total += 1
-        if len(batch) >= batch_size:
-            batches.append(batch)
-            batch = []
-        if total == num:
+        if total >= num:
             break
-    batches.append(batch)
-    write_batches(session, batches, num_threads)
+    write_batches(session, queries, batch_size, num_threads)
     print(f'  Finished Genes <> Tissues expression. ({total} entries)')

@@ -41,19 +41,14 @@ def migrate_tissuenet(session, num_threads, batch_size):
     print('Inserting Tissues to bio-covid')
     
     if len(tissue_staging): 
-        batch = []
-        batches = []
+        queries = []
         total = 0 
         for tissue in tissue_staging:
             typeql = f'''insert $t isa tissue, has tissue-name "{tissue}";'''
-            batch.append(typeql)
+            queries.append(typeql)
             total += 1
-            if len(batch) >= batch_size:
-                batches.append(batch)
-                batch = []
-        print(batches)
         
-        write_batches(session, batches, num_threads)
+        write_batches(session, queries, batch_size, num_threads)
         print(f'  Tissues inserted! ({total} entries)')
 
         #session.close()
