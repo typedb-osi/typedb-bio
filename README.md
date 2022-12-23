@@ -32,7 +32,7 @@ Clone this repo:
 git clone https://github.com/vaticle/typedb-bio.git
 ```
 
-Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `dataset/CORD_NER`
+Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `Dataset/CORD_NER`
 
 Set up a virtual environment and install the dependencies:
 
