@@ -17,16 +17,16 @@ def migrator_parser():
     parser = argparse.ArgumentParser(
         description='Define bio_covid database and insert data by calling separate migrate scripts.')
     parser.add_argument("-n", "--num_threads", type=int,
-                        help="Number of threads to enable multi-threading (default: 8)", default=8)
-    parser.add_argument("-c", "--commit_batch", help="Sets the number of queries made per commit (default: 50)",
-                        default=50)
-    parser.add_argument("-d", "--database", help="Database name (default: bio-covid)", default="bio_covid")
+                        help="Number of threads to enable multi-threading (default: %(default)s)", default=8)
+    parser.add_argument("-c", "--commit_batch", type=int,
+                        help="Sets the number of queries made per commit (default: %(default)s)", default=50)
+    parser.add_argument("-d", "--database", help="Database name (default: %(default)s)", default="bio_covid")
     parser.add_argument("-f", "--force",
-                        help="Force overwrite the database even if a database by this name already exists (default: False)",
-                        default=False)
-    parser.add_argument("-a", "--address", help="Server host address (default: localhost)", default="localhost")
-    parser.add_argument("-p", "--port", help="Server port (default: 1729)", default="1729")
-    parser.add_argument("-v", "--verbose", help="Verbosity (default: False)", default=False)
+                        help="Force overwrite the database even if a database by this name already exists",
+                        action='store_true')
+    parser.add_argument("-a", "--address", help="Server host address (default: %(default)s)", default="localhost")
+    parser.add_argument("-p", "--port", help="Server port (default: %(default)s)", default="1729")
+    parser.add_argument("-v", "--verbose", help="Use verbose output", action='store_true')
     return parser
 
 

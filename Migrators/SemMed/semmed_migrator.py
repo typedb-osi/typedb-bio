@@ -99,7 +99,7 @@ def migrate_journals(uri, database, journal_names: list, batch_size, process_id=
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED ----- {} journals added".format(process_id, counter))
+                    # print("Process {} COMMITED ----- {} journals added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()
@@ -151,7 +151,7 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED ----- {} authors added".format(process_id, counter))
+                    # print("Process {} COMMITED ----- {} authors added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()
@@ -240,7 +240,7 @@ def migrate_publications(uri, database, publications_list: list, batch_size, pro
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED ----- {} publications added".format(process_id, counter))
+                    # print("Process {} COMMITED ----- {} publications added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()
@@ -292,7 +292,7 @@ def migrate_relationships(uri, database, data: list, batch_size, process_id=0):
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    print("Process {} COMMITED ----- {} relations added".format(process_id, counter))
+                    # print("Process {} COMMITED ----- {} relations added".format(process_id, counter))
                 counter = counter + 1
             transaction.commit()
             transaction.close()

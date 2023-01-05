@@ -1,10 +1,8 @@
 import itertools
-from functools import partial
-from multiprocessing.dummy import Pool as ThreadPool
 import wget
 import ssl, os
 
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.open_file import openFile
 
 
@@ -30,41 +28,25 @@ def insert_pathways(session, num_threads, batch_size, pathway_associations):
     pathway_list.sort()
     pathway_list = list(pathway_list for pathway_list, _ in itertools.groupby(pathway_list))  # Remove duplicates
 
-    batch = []
-    batches = []
+    queries = []
     total = 0
     for d in pathway_list:
         typeql = f'''insert $p isa pathway, has pathway-name "{d[1]}", has pathway-id "{d[0]}";'''
-        batch.append(typeql)
+        queries.append(typeql)
         total += 1
-        if len(batch) == batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
-    pool.close()
-    pool.join()
+    write_batches(session, queries, batch_size, num_threads)
     print(f'  Reactome Pathways inserted! ({total} entries)')
 
 
 def insert_pathway_interactions(session, num_threads, batch_size, pathway_associations):
     print('  Starting with reactome pathway interactions.')
-    batch = []
-    batches = []
+    queries = []
     total = 0
     for d in pathway_associations:
         typeql = f'''match $p isa pathway, has pathway-id "{d['pathway-id']}"; $pr isa protein, has uniprot-id "{d['uniprot-id']}"; insert (participated-pathway: $p, participating-protein: $pr) isa pathway-participation;'''
-        batch.append(typeql)
+        queries.append(typeql)
         total += 1
-        if len(batch) == batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
-    pool.close()
-    pool.join()
+    write_batches(session, queries, batch_size, num_threads)
     print(f' Reactome pathway interactions inserted! ({total} entries)')
 
 
