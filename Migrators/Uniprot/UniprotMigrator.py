@@ -2,8 +2,9 @@ from typedb.client import TransactionType
 import csv
 import re
 
+from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
-from Migrators.Helpers.batchLoader import write_batches
+from Migrators.Helpers.batchLoader import write_batch
 
 
 def migrate_uniprot(session, num, num_threads, batch_size):
@@ -89,7 +90,8 @@ def gene_helper(q):
 # NB: We only insert the first name, if there are synonyms, we ignore them. 
 def insert_genes(uniprotdb, session, num_threads, batch_size):
     gene_list = []
-    queries = []
+    batch = []
+    batches = []
     for q in uniprotdb:
         if q['gene-symbol'] != "":
             gene_list.append(gene_helper(q))
@@ -98,14 +100,23 @@ def insert_genes(uniprotdb, session, num_threads, batch_size):
 
     for g in gene_list:
         typeql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
-        queries.append(typeql)
-    write_batches(session, queries, batch_size, num_threads)
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
+    pool.close()
+    pool.join()
     print('Genes committed!')
 
 
 # Insert transcripts
 def insert_transcripts(uniprotdb, session, num_threads, batch_size):
     transcript_list = []
+    batch = []
+    batches = []
     for q in uniprotdb:
         tr = transcript_helper(q)
         if tr != None:
@@ -113,16 +124,23 @@ def insert_transcripts(uniprotdb, session, num_threads, batch_size):
 
     transcript_list = list(dict.fromkeys(transcript_list))  # Remove duplicate transcripts
 
-    queries = []
     for q in transcript_list:
         typeql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
-        queries.append(typeql)
-    write_batches(session, queries, batch_size, num_threads)
+        batch.append(typeql)
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    batches.append(batch)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batches)
+    pool.close()
+    pool.join()
     print('Transcripts committed!')
 
 
-def get_protein_queries(uniprotdb):
-    queries = []
+def get_batched_protein_queries(uniprotdb, batch_size):
+    batches = []
+    batch = []
     for q in uniprotdb:
         transcripts = transcript_helper(q)
         gene = gene_helper(q)[0]
@@ -159,10 +177,17 @@ def get_protein_queries(uniprotdb):
                 typeql = typeql + "$trans" + str(v) + "(transcribing-gene: $g, encoded-transcript: $" + str(
                     v) + ") isa transcription;"
 
-        queries.append(typeql)
+        batch.append(typeql)
         del typeql
-    return queries
+        if len(batch) == batch_size:
+            batches.append(batch)
+            batch = []
+    return batches
 
 
 def insert_proteins(uniprotdb, session, num_threads, batch_size):
-    write_batches(session, get_protein_queries(uniprotdb), batch_size, num_threads)
+    batched_protein_queries = get_batched_protein_queries(uniprotdb, batch_size)
+    pool = ThreadPool(num_threads)
+    pool.map(partial(write_batch, session), batched_protein_queries)
+    pool.close()
+    pool.join()

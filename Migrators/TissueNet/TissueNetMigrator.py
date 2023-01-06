@@ -1,9 +1,12 @@
 import csv
+from zipfile import ZipFile
 from typedb.client import TypeDB, SessionType, TransactionType
 from Migrators.Helpers.batchLoader import write_batches
+from Migrators.Helpers.get_file import get_file
 import glob
 
 def openFileVariant(path, tissue_name):
+
     with open(path, 'rt', encoding='utf-8') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='\t')
         raw_file = []
@@ -16,8 +19,17 @@ def openFileVariant(path, tissue_name):
         return raw_file
 
 def migrate_tissuenet(session, num_threads, batch_size):
+
+    print("Downloading HPA - Protein dataset from TissueNet")
+    url = "https://netbio.bgu.ac.il/tissuenet2-interactomes/TissueNet2.0/HPA-Protein.zip"
+    get_file(url, 'Dataset/TissueNet/HPA-Protein')
+    print("\n Finished downloading dataset")
+
+    with ZipFile('Dataset/TissueNet/HPA-Protein/HPA-Protein.zip', 'r') as f:
+        f.extractall('Dataset/TissueNet/HPA-Protein/')
+
     print('  ')
-    print('Reading in the tissue nodes already present in bio-covid')
+    print('Reading in the tissue nodes already present in typedb-bio')
     print('  ')
     
     existing_tissues = set()
@@ -34,11 +46,11 @@ def migrate_tissuenet(session, num_threads, batch_size):
     for filepath in glob.iglob(path_to_data):
         tissue = filepath.split("/")[-1].split(".")[0]
         candidate_tissues.add(tissue)
-        
-    print('Finalising Tissues to be uploaded to bio-covid')
+
+    print('Finalising Tissues to be uploaded to typedb-bio')
     tissue_staging = candidate_tissues.difference(existing_tissues)
     
-    print('Inserting Tissues to bio-covid')
+    print('Inserting Tissues to typedb-bio')
     
     if len(tissue_staging): 
         queries = []
@@ -51,13 +63,13 @@ def migrate_tissuenet(session, num_threads, batch_size):
         write_batches(session, queries, batch_size, num_threads)
         print(f'  Tissues inserted! ({total} entries)')
 
-        #session.close()
     else:
         print("There were no tissues to upload!!")
-        #session.close()
 
 def migrate_tissuenet_ppi(session, num_threads, batch_size):
-    
+
+    # TODO: Protein interactions in tissues
+
     path_to_data = "Dataset/TissueNet/HPA-protein/*.tsv"
     file_contents = []
     for filepath in glob.iglob(path_to_data):
@@ -71,8 +83,3 @@ def migrate_tissuenet_ppi(session, num_threads, batch_size):
             ENSP2 = file_row[1]
             #tissue = file_row[-1]
             print(ENSP2)
-
-    # // TODO this seems unfinished?
-
-    #session.close()
-    #client.close()
