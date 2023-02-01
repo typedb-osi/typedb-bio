@@ -49,17 +49,17 @@ if __name__ == "__main__":
     uri = args.address + ":" + args.port
     client = TypeDB.core_client(uri)
 
-    initialise_database(client, args.database, args.force)
+    # initialise_database(client, args.database, args.force)
 
     with client.session(args.database, SessionType.DATA) as session:
-        migrate_uniprot(session, NUM_PROTEINS, args.num_threads, args.commit_batch)
-        migrate_coronavirus(session)
-        migrate_reactome(session, NUM_PATH, args.num_threads, args.commit_batch)
-        migrate_disgenet(session, NUM_DIS, args.num_threads, args.commit_batch)
-        migrate_dgibd(session, NUM_DR, NUM_INT, args.num_threads, args.commit_batch)
-        migrate_protein_atlas(session, NUM_PA, args.num_threads, args.commit_batch)
+        # migrate_uniprot(session, NUM_PROTEINS, args.num_threads, args.commit_batch)
+        # migrate_coronavirus(session)
+        # migrate_reactome(session, NUM_PATH, args.num_threads, args.commit_batch)
+        # migrate_disgenet(session, NUM_DIS, args.num_threads, args.commit_batch)
+        # migrate_dgibd(session, NUM_DR, NUM_INT, args.num_threads, args.commit_batch)
+        # migrate_protein_atlas(session, NUM_PA, args.num_threads, args.commit_batch)
         migrate_semmed(session, uri, NUM_SEM, args.num_threads, args.commit_batch)
-        migrate_tissuenet(session, args.num_threads, args.commit_batch) ## TODO: add protein interaction relations in tissues
+        # migrate_tissuenet(session, args.num_threads, args.commit_batch) ## TODO: add protein interaction relations in tissues
 end = timer()
 time_in_sec = end - start
 print("Elapsed time: " + str(time_in_sec) + " seconds.")
