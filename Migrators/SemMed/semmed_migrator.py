@@ -4,13 +4,15 @@ import pandas as pd
 import untangle
 from typedb.client import TypeDB, SessionType, TransactionType
 
+from Migrators.Helpers.read_csv import readCSV
+
 
 def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
     print("Migrate 'Subject_CORD_NER.csv'")
 
     file_path = "Dataset/SemMed/Subject_CORD_NER.csv"
-    raw_file = openFile(file_path, 1)[:num_semmed]
-    pmids_set = list(set([tupple[3] for tupple in raw_file]))  # get set of pmids
+    rows = readCSV(file_path, num_semmed, separator=';')
+    pmids_set = list(set([tupple[3] for tupple in rows]))  # get set of pmids
 
     ###Fetch articles metadata from pubmed
     xml_articles_data = fetch_articles_metadata(pmids_set)
@@ -32,8 +34,8 @@ def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
     print("Migrate 'Object_CORD_NER.csv'")
 
     file_path = "Dataset/SemMed/Object_CORD_NER.csv"
-    raw_file = openFile(file_path, 1)[:num_semmed]
-    pmids_set = list(set([tupple[3] for tupple in raw_file]))  # get set of pmids
+    rows = readCSV(file_path, num_semmed, separator=';')
+    pmids_set = list(set([tupple[3] for tupple in rows]))  # get set of pmids
 
     ###Fetch articles metadata from pubmed
     xml_articles_data = fetch_articles_metadata(pmids_set)
@@ -398,15 +400,3 @@ def relationship_mapper(relationship: str):
 
     return mapping
 
-
-def openFile(filePath, num):
-    if num != 0:
-        with open(filePath) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=';')
-            raw_file = []
-            n = 0
-            for row in csvreader:
-                n = n + 1
-                if n != 1:
-                    raw_file.append(row)
-    return raw_file

@@ -3,7 +3,7 @@ import wget
 import ssl, os
 
 from Migrators.Helpers.batchLoader import write_batches
-from Migrators.Helpers.open_file import openFile
+from Migrators.Helpers.read_csv import readCSV
 
 
 def migrate_reactome(session, num_path, num_threads, batch_size):
@@ -57,15 +57,15 @@ def filter_homo_sapiens(num_path):
     wget.download(url, 'Dataset/Reactome/')
     print("\nFinished downloading reactome dataset")
     file = 'Dataset/Reactome/UniProt2Reactome_All_Levels.txt'
-    raw_file = openFile(file, num_path)
+    rows = readCSV(file, num_path)
     pathway_associations = []
-    for i in raw_file[:num_path]:
-        if i[5] == "Homo sapiens":
+    for row in rows[:num_path]:
+        if row[5] == "Homo sapiens":
             data = {}
-            data['uniprot-id'] = i[0].strip('"')
-            data['pathway-id'] = i[1].strip('"')
-            data['pathway-name'] = i[3]
-            data['organism'] = i[5]
+            data['uniprot-id'] = row[0].strip('"')
+            data['pathway-id'] = row[1].strip('"')
+            data['pathway-name'] = row[3]
+            data['organism'] = row[5]
             pathway_associations.append(data)
     os.remove('Dataset/Reactome/UniProt2Reactome_All_Levels.txt')
     return pathway_associations
