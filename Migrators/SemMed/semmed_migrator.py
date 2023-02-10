@@ -1,5 +1,8 @@
 import csv
 import multiprocessing
+import threading
+from multiprocessing.pool import ThreadPool
+
 import pandas as pd
 import untangle
 from typedb.client import TypeDB, SessionType, TransactionType
@@ -144,10 +147,10 @@ def migrate_authors(uri, database, batch_size, author_names: list, process_id=0)
             for author_name in author_names:
                 ##Check if journal already in Knowledge Base
                 try:
-                    match_query = 'match $a isa person, has published-name "{}";'.format(author_name)
+                    match_query = 'match $a isa person, has published-name "{}";'.format(escape_string(author_name))
                     next(transaction.query().match(match_query))
                 except StopIteration:
-                    insert_query = 'insert $a isa person, has published-name "{}";'.format(author_name)
+                    insert_query = 'insert $a isa person, has published-name "{}";'.format(escape_string(author_name))
                     transaction.query().insert(insert_query)
                 if counter % batch_size == 0:
                     transaction.commit()
@@ -158,6 +161,8 @@ def migrate_authors(uri, database, batch_size, author_names: list, process_id=0)
             transaction.commit()
             transaction.close()
 
+def escape_string(str):
+    return str.replace("\\", "\\\\")
 
 def get_publication_data(xml_response):
     '''
@@ -334,7 +339,7 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
     '''
     # start_time = datetime.datetime.now()
     chunk_size = int(len(data) / num_threads)
-    proc_args = []
+    args = []
     for i in range(num_threads):
 
         if i == num_threads - 1:
@@ -342,10 +347,10 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
 
         else:
             chunk = data[i * chunk_size:(i + 1) * chunk_size]
-        proc_args.append((uri, session.database().name(), batch_size, i, chunk))
+        args.append((uri, session.database().name(), batch_size, chunk, i))
 
-    with multiprocessing.Pool(num_threads) as pool:
-        pool.map(function, proc_args)
+    with ThreadPool(num_threads) as pool:
+        pool.starmap(function, args)
 
     # end_time = datetime.datetime.now()
     # print("-------------\nTime taken: {}".format(end_time - start_time))
