@@ -79,7 +79,7 @@ def get_journal_names(xml_response):
     return list(journals_set)
 
 
-def migrate_journals(uri, database, journal_names: list, batch_size, process_id=0):
+def migrate_journals(uri, database, batch_size, journal_names, process_id=0):
     '''
     Migrate journals to TypeDB \n
     journal_names - list of journal names (strings) \n
@@ -131,7 +131,7 @@ def get_authors_names(xml_response):
     return list(authors_set)
 
 
-def migrate_authors(uri, database, author_names: list, batch_size, process_id=0):
+def migrate_authors(uri, database, batch_size, author_names: list, process_id=0):
     '''
     Migrate authors to TypeDB\n
     author_names - list of author names (strings)\n
@@ -210,7 +210,7 @@ def get_publication_data(xml_response):
     return list(publications)
 
 
-def migrate_publications(uri, database, publications_list: list, batch_size, process_id=0):
+def migrate_publications(uri, database, batch_size, publications_list: list, process_id=0):
     '''
     Migrate publiations to TypeDB\n
     publications_list - list of dictionaries with publication data\n
@@ -266,7 +266,7 @@ def get_relationship_data(data_path):
     return data_df.to_numpy().tolist()
 
 
-def migrate_relationships(uri, database, data: list, batch_size, process_id=0):
+def migrate_relationships(uri, database, batch_size, data: list, process_id=0):
     '''
     Migrate relations to TypeDB\n
     data - table in a form of list of lists \n
@@ -336,6 +336,8 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
     chunk_size = int(len(data) / num_threads)
     processes = []
 
+    chunks = []
+
     for i in range(num_threads):
 
         if i == num_threads - 1:
@@ -343,14 +345,10 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
 
         else:
             chunk = data[i * chunk_size:(i + 1) * chunk_size]
+        chunks.append((i, chunk))
 
-        process = multiprocessing.Process(target=function, args=(uri, session.database().name(), chunk, batch_size, i))
-
-        process.start()
-        processes.append(process)
-
-    for process in processes:
-        process.join()
+    with multiprocessing.Pool(num_threads) as pool:
+        pool.map(lambda args: function(uri, session.database().name(), batch_size, *args), chunks)
 
     # end_time = datetime.datetime.now()
     # print("-------------\nTime taken: {}".format(end_time - start_time))
@@ -399,4 +397,3 @@ def relationship_mapper(relationship: str):
     mapping = mapper.get(relationship, {})
 
     return mapping
-
