@@ -334,10 +334,7 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
     '''
     # start_time = datetime.datetime.now()
     chunk_size = int(len(data) / num_threads)
-    processes = []
-
-    chunks = []
-
+    proc_args = []
     for i in range(num_threads):
 
         if i == num_threads - 1:
@@ -345,10 +342,10 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
 
         else:
             chunk = data[i * chunk_size:(i + 1) * chunk_size]
-        chunks.append((i, chunk))
+        proc_args.append((uri, session.database().name(), batch_size, i, chunk))
 
     with multiprocessing.Pool(num_threads) as pool:
-        pool.map(lambda args: function(uri, session.database().name(), batch_size, *args), chunks)
+        pool.map(function, proc_args)
 
     # end_time = datetime.datetime.now()
     # print("-------------\nTime taken: {}".format(end_time - start_time))
