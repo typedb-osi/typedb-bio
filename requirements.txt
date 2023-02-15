@@ -26,4 +26,4 @@ untangle==1.2.1
 urllib3==1.26.14
 virtualenv==20.19.0
 wget==3.2
-xmltodict==0.13.0
+xmltodict~=0.13.0
