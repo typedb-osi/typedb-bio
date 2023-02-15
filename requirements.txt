@@ -22,7 +22,7 @@ six==1.16.0
 tqdm==4.64.1
 typedb-client==2.14.3
 typedb-protocol==2.14.1
-untangle==1.2.1
+untangle==1.1.1
 urllib3==1.26.14
 virtualenv==20.19.0
 wget==3.2
