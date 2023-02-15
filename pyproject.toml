@@ -1,0 +1,62 @@
+[tool.black]
+line-length = 80
+target-version = ['py36', 'py37', 'py38', 'py39', 'py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+)/
+'''
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "silent"
+allow_redefinition = true
+
+[tool.pydocstyle]
+ignore = [
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in __init__
+    "D203", # 1 blank line required before class docstring
+    "D213", # Multi-line docstring summary should start at the second line
+]
+
+[tool.pylint.main]
+ignore = ["setup.py"]
+
+[tool.pylint."messages control"]
+disable = [
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+    "import-error",
+    "fixme",
+    "redefined-outer-name"
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.basic]
+good-names = ["db", "op", "d", "f", "i", "j", "k", "r", "m", "t"]
+
+[tool.pylint.classes]
+max-args = 8
+min-public-methods = 1
+
+[tool.pylint.design]
+max-args = 8
+min-public-methods = 1
+max-attributes = 10
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
