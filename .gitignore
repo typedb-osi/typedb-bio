@@ -1,5 +1,7 @@
 # Intellij directory
-.idea/
+.idea
 
 # VS Code directory
-.vscode/
+.vscode
+
+__pycache__
