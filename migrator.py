@@ -10,9 +10,10 @@ from typedb.client import SessionType, TypeDB
 # from Migrators.Disgenet.disgenetMigrator import migrate_disgenet
 # from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import migrate_protein_atlas
 # from Migrators.Reactome.reactomeMigrator import migrate_reactome
-# from Migrators.SemMed.semmed_migrator import migrate_semmed
+from Migrators.SemMed.semmed_migrator import migrate_semmed
+
 # from Migrators.TissueNet.TissueNetMigrator import migrate_tissuenet
-from Migrators.Uniprot.UniprotMigrator import migrate_uniprot
+# from Migrators.Uniprot.UniprotMigrator import migrate_uniprot
 from Schema.initialise import initialise_database
 
 
@@ -67,7 +68,8 @@ NUM_INT = 10000000  # Total drug-gene interactions to migrate (42k total)
 NUM_PATH = 10000000  # Total pathway associations to migrate
 NUM_TN = 10000000  # Total TissueNet being migrated
 NUM_PA = 10000000  # Total Tissues <> Genes to migrate
-NUM_SEM = 10000000  # Total number of rows from Semmed to migrate
+# NUM_SEM = 10000000  # Total number of rows from Semmed to migrate
+NUM_SEM = 1000
 
 start = timer()
 if __name__ == "__main__":
@@ -78,16 +80,17 @@ if __name__ == "__main__":
     # when we want to see less detail
     verbose = args.verbose
 
-    with TypeDB.core_client(args.address + ":" + args.port) as client:
+    uri = args.address + ":" + args.port
+    with TypeDB.core_client(uri) as client:
         initialise_database(client, args.database, args.force)
         with client.session(args.database, SessionType.DATA) as session:
-            migrate_uniprot(session, NUM_PROTEINS, args.num_threads, args.commit_batch)
+            # migrate_uniprot(session, NUM_PROTEINS, args.num_threads, args.commit_batch)
             # migrate_coronavirus(session)
             # migrate_reactome(session, NUM_PATH, args.num_threads, args.commit_batch)
             # migrate_disgenet(session, NUM_DIS, args.num_threads, args.commit_batch)
             # migrate_dgibd(session, NUM_DR, NUM_INT, args.num_threads, args.commit_batch)
             # migrate_protein_atlas(session, NUM_PA, args.num_threads, args.commit_batch)
-            # migrate_semmed(session, uri, NUM_SEM, args.num_threads, args.commit_batch)
+            migrate_semmed(session, uri, NUM_SEM, args.num_threads, args.commit_batch)
 
             # TODO: add protein interaction relations in tissues
             # migrate_tissuenet(session, args.num_threads, args.commit_batch)
