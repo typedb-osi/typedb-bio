@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import re
 import unicodedata
@@ -7,7 +8,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import requests
-import untangle
 from tqdm import tqdm
 from typedb.client import SessionType, TransactionType, TypeDB
 
@@ -74,10 +74,10 @@ def load_data_from_file(file_path, num_semmed):
     df = pd.read_csv(file_path, sep=";")[:num_semmed]
     pmids = df["P_PMID"].unique().astype(str)
     # Fetch articles metadata from pubmed
-    xml_articles_data, failed_articles = fetch_articles_metadata(pmids)
-    journal_names = get_journal_names(xml_articles_data)
-    author_names = get_authors_names(xml_articles_data)
-    publications_list = get_publication_data(xml_articles_data)
+    json_articles_data, failed_articles = fetch_articles_metadata(pmids)
+    journal_names = get_journal_names(json_articles_data)
+    author_names = get_authors_names(json_articles_data)
+    publications_list = get_publication_data(json_articles_data)
     relationship_data = get_relationship_data(file_path)[:num_semmed]
     return author_names, journal_names, publications_list, relationship_data
 
@@ -119,33 +119,17 @@ def load_dataset_in_parallel(
     )
 
 
-def get_journal_names(xml_objects):
+def get_journal_names(json_objects):
     """Get journal names from xml objects.
 
-    :param xml_objects:
+    :param json_objects:
     :return: A list of journal names
     """
     journals_set = set()
 
-    # xml_object = untangle.parse(xml_response)
-    for xml_object in xml_objects:
-        for document in xml_object:
-            is_published_in_journal = False
-
-            journal_name = ""
-            for item in document.Item:
-                if item["Name"] == "PubTypeList":
-                    try:
-                        pubtypes = item.Item
-                    except:
-                        continue
-                    for pubtype in pubtypes:
-                        if pubtype.cdata == "Journal Article":
-                            is_published_in_journal = True
-                if item["Name"] == "FullJournalName":
-                    journal_name = item.cdata
-            if is_published_in_journal:
-                journals_set.add(journal_name)
+    for document in json_objects:
+        if "Journal Article" in document["pubtype"]:
+            journals_set.add(document["fulljournalname"])
 
     return list(journals_set)
 
@@ -163,13 +147,13 @@ def migrate_journals(uri, database, journal_names: list, batch_size, process_id=
             for journal_name in journal_names:
                 # Check if journal already in Knowledge Base
                 try:
-                    match_query = 'match $j isa journal, has journal-name "{}";'.format(
-                        journal_name
+                    match_query = (
+                        f'match $j isa journal, has journal-name "{journal_name}";'
                     )
                     next(transaction.query().match(match_query))
                 except StopIteration:
-                    insert_query = 'insert $j isa journal, has journal-name "{}";'.format(
-                        journal_name
+                    insert_query = (
+                        f'insert $j isa journal, has journal-name "{journal_name}";'
                     )
                     transaction.query().insert(insert_query)
                 if counter % batch_size == 0:
@@ -182,28 +166,18 @@ def migrate_journals(uri, database, journal_names: list, batch_size, process_id=
             transaction.close()
 
 
-def get_authors_names(xml_response):
+def get_authors_names(json_objects):
     """Retrieve unique author names from PubMed API's xml response in a form of list of strings\n.
 
-    xml_response - xml object returned from PubMed API
-    :param xml_response: The xml response from PubMed API
+    :param json_objects: The xml response from PubMed API
     :return: List of author names
     """
 
     authors_set = set()
 
-    # xml_object = untangle.parse(xml_response)
-    for xml_object in xml_response:
-        for document in xml_object:
-
-            for item in document.Item:
-                if item["Name"] == "AuthorList":
-                    try:
-                        authors = item.Item
-                    except:
-                        continue
-                    for author in authors:
-                        authors_set.add(author.cdata)
+    for document in json_objects:
+        for author in document["authors"]:
+            authors_set.add(author["name"])
 
     return list(authors_set)
 
@@ -234,15 +208,13 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
                 ##Check if journal already in Knowledge Base
                 author_name = clean_string(author_name)
                 try:
-                    match_query = 'match $a isa person, has published-name "{}";'.format(
-                        author_name
+                    match_query = (
+                        f'match $a isa person, has published-name "{author_name}";'
                     )
                     next(transaction.query().match(match_query))
                 except StopIteration:
                     insert_query = (
-                        'insert $a isa person, has published-name "{}";'.format(
-                            author_name
-                        )
+                        f'insert $a isa person, has published-name "{author_name}";'
                     )
                     transaction.query().insert(insert_query)
                 if counter % batch_size == 0:
@@ -255,52 +227,40 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
             transaction.close()
 
 
-def get_publication_data(xml_response):
+def get_publication_data(json_objects):
     """Retrieve publication data from PubMed API's xml response in a form of list of dictionaries\n.
 
-    :param xml_response: The xml response from PubMed API
+    :param json_objects: The xml response from PubMed API
     :return: The list of dictionaries with publication data
     """
     publications = []
     pmid_set = set()
-    for xml_object in xml_response:
-        for document in xml_object:
-
+    for document in json_objects:
+        if document["uid"] not in pmid_set:
             publication = {}
-            publication["paper-id"] = document.Id.cdata
-            publication["pmid"] = document.Id.cdata
-            publication["doi"] = ""
-            publication["authors"] = []
-            publication["issn"] = ""
-            publication["volume"] = ""
-            publication["journal-name"] = ""
-            publication["publish-time"] = ""
-            authors_list = []
+            publication["paper-id"] = publication["pmid"] = document["uid"]
 
-            for item in document.Item:
-                if item["Name"] == "Title":
-                    publication["title"] = item.cdata.replace('"', "'")
-                elif item["Name"] == "PubDate":
-                    publication["publish-time"] = item.cdata
-                elif item["Name"] == "Volume":
-                    publication["volume"] = item.cdata
-                elif item["Name"] == "ISSN":
-                    publication["issn"] = item.cdata
-                elif item["Name"] == "FullJournalName":
-                    publication["journal-name"] = item.cdata.replace('"', "'")
-                elif item["Name"] == "DOI":
-                    publication["doi"] = item.cdata
-                elif item["Name"] == "AuthorList":
-                    try:
-                        authors = item.Item
-                    except:
-                        continue
-                    for author in authors:
-                        authors_list.append(author.cdata)
-                    publication["authors"] = authors_list
-                if publication["paper-id"] not in pmid_set:
-                    publications.append(publication)
-                    pmid_set.add(publication["paper-id"])
+            for article_id in document["articleids"]:
+                if article_id["idtype"] == "doi":
+                    publication["doi"] = article_id["value"]
+
+            publication["authors"] = []
+            for author in document["authors"]:
+                publication["authors"].append(author["name"])
+
+            publication["issn"] = document["issn"]
+            publication["volume"] = document["volume"]
+
+            publication["journal-name"] = ""
+            if "Journal Article" in document["pubtype"]:
+                publication["journal-name"] = document["fulljournalname"]
+
+            publication["publish-time"] = document["pubdate"]
+
+            publication["title"] = document["title"].replace('"', "'")
+
+            publications.append(publication)
+            pmid_set.add(publication["paper-id"])
 
     return list(publications)
 
@@ -326,24 +286,20 @@ def migrate_publications(
                 authors = publication_dict["authors"]  # list of authors - list of strings
                 ##Check if publication already in Knowledge Base
                 try:
-                    match_query = 'match $p isa publication, has paper-id "{}";'.format(
-                        publication_dict["paper-id"]
-                    )
+                    match_query = f'match $p isa publication, has paper-id "{publication_dict["paper-id"]}";'
                     next(transaction.query().match(match_query))
                 except StopIteration:
-                    match_query = 'match $j isa journal, has journal-name "{}"; '.format(
-                        publication_dict["journal-name"]
-                    )
+                    match_query = f'match $j isa journal, has journal-name "{publication_dict["journal-name"]}"; '
                     match_query = match_query + create_authorship_query(authors)[0]
-                    insert_query = 'insert $p isa publication, has paper-id "{}", has title "{}", has doi "{}", has publish-time "{}", has volume "{}", has issn "{}", has pmid "{}"; '.format(
-                        publication_dict["paper-id"],
-                        publication_dict["title"],
-                        publication_dict["doi"],
-                        publication_dict["publish-time"],
-                        publication_dict["volume"],
-                        publication_dict["issn"],
-                        publication_dict["pmid"],
+                    insert_query = (
+                        f'insert $p isa publication, has paper-id "{publication_dict["paper-id"]}", '
+                        f'has title "{publication_dict["title"]}", has doi "{publication_dict["doi"]}", '
+                        f'has publish-time "{publication_dict["publish-time"]}", '
+                        f'has volume "{publication_dict["volume"]}", '
+                        f'has issn "{publication_dict["issn"]}", '
+                        f'has pmid "{publication_dict["pmid"]}";'
                     )
+
                     insert_query = insert_query + create_authorship_query(authors)[1]
                     insert_query = (
                         insert_query
@@ -370,12 +326,12 @@ def create_authorship_query(authors_list):
     match_query = ""
     insert_query = ""
     for counter, author in enumerate(authors_list):
-        match_query = match_query + '$pe{} isa person, has published-name "{}"; '.format(
-            counter, author
+        match_query = (
+            match_query + f'$pe{counter} isa person, has published-name "{author}"; '
         )
         insert_query = (
             insert_query
-            + "(author: $pe{}, authored-publication: $p) isa authorship; ".format(counter)
+            + f"(author: $pe{counter}, authored-publication: $p) isa authorship; "
         )
 
     return [match_query, insert_query]
@@ -429,14 +385,16 @@ def migrate_relationships(
                 pmid = clean_string(data_entity[0])
                 sentence_text = clean_string(data_entity[4])
 
-                match_query = 'match $p isa publication, has paper-id "{}"; $g1 isa gene, has gene-symbol "{}"; $g2 isa gene, has gene-symbol "{}"; '.format(
-                    pmid, subject_name, object_name
+                match_query = (
+                    f'match $p isa publication, has paper-id "{pmid}"; '
+                    f'$g1 isa gene, has gene-symbol "{subject_name}"; '
+                    f'$g2 isa gene, has gene-symbol "{object_name}"; '
                 )
-                insert_query = 'insert $r ({}: $g1, {}: $g2) isa {}, has sentence-text "{}"; $m (mentioned-genes-relation: $r, mentioning: $p) isa mention, has source "SemMed";'.format(
-                    relation["active-role"],
-                    relation["passive-role"],
-                    relation["relation-name"],
-                    sentence_text,
+                insert_query = (
+                    f'insert $r ({relation["active-role"]}: $g1, '
+                    f'{relation["passive-role"]}: $g2) isa {relation["relation-name"]}, '
+                    f'has sentence-text "{sentence_text}"; '
+                    f'$m (mentioned-genes-relation: $r, mentioning: $p) isa mention, has source "SemMed";'
                 )
                 transaction.query().insert(match_query + insert_query)
                 if counter % batch_size == 0:
@@ -463,11 +421,9 @@ def __fetch_article_metadata_backend(pm_ids):
     :return:
     """
 
-    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id={}&retmode=xml".format(
-        pm_ids
-    )
+    url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id={pm_ids}&retmode=json"
     response = requests.get(url)
-    data = response if response.status_code == 200 else None
+    data = response.json() if response.status_code == 200 else None
     return data, response.status_code
 
 
@@ -476,10 +432,10 @@ def check_in_local_cache_folder(pm_id):
 
     pm_id - PubMed ID in a form of string
     """
-    file_path = ".cache/{}.txt".format(pm_id)
+    file_path = f".cache/{pm_id}.json"
     if os.path.exists(file_path):
         with open(file_path, "r") as file:
-            data = file.read()
+            data = json.load(file)
             return data, 200
     else:
         return None, 404
@@ -490,42 +446,32 @@ def fetch_article_metadata(pmids, batch_size=100):
     failed_data = []
     for i in tqdm(range(0, len(pmids), batch_size)):
         pm_ids = set(pmids[i : i + batch_size])
-        for pm_id in pmids[i : i + batch_size]:
+        uncached_pm_ids = []
+        for pm_id in pm_ids:
             data, status_code = check_in_local_cache_folder(pm_id)
             if status_code == 200 and data is not None:
-                successful_data.extend(untangle.parse(data))
-                pm_ids.remove(pm_id)
-                continue
-        if len(pm_ids) > 0:
-            data, status_code = __fetch_article_metadata_backend(",".join(list(pm_ids)))
-            if status_code == 200 and data is not None:
-                try:
-                    parsed_data = untangle.parse(data.text)
-                    successful_data.extend(parsed_data.eSummaryResult.DocSum)
-                    for pm_data in parsed_data.eSummaryResult.DocSum:
-                        pm_id = pm_data.Id.cdata
-                        with open(".cache/{}.txt".format(pm_id), "w") as file:
-                            file.write(data.text)
-                except KeyError:
-                    print(
-                        "Failed to fetch data for pmids: {}".format(
-                            ",".join(pmids[i : i + batch_size])
-                        )
-                    )
-                    failed_data.extend(pmids[i : i + batch_size])
+                successful_data.append(data)
             else:
-                print(
-                    "Failed to fetch data for pmids: {}".format(
-                        ",".join(pmids[i : i + batch_size])
-                    )
-                )
-                failed_data.append(pmids[i : i + batch_size])
+                uncached_pm_ids.append(pm_id)
+        if len(uncached_pm_ids) > 0:
+            data, status_code = __fetch_article_metadata_backend(
+                ",".join(uncached_pm_ids)
+            )
+            if status_code == 200 and data is not None:
+                for uid in data["result"]:
+                    if uid != "uids":
+                        successful_data.append(data["result"][uid])
+                        with open(f".cache/{uid}.json", "w") as file:
+                            file.write(json.dumps(data["result"][uid], indent=4))
+            else:
+                print(f'Failed to fetch data for pm_ids: {",".join(uncached_pm_ids)}')
+                failed_data.extend(uncached_pm_ids)
     return successful_data, failed_data
 
 
 def fetch_articles_metadata(pmids, batch_factor=400):
     """
-    function - function name to run in paralell\n
+    function - function name to run in parallel\n
     data - data to load by function running in parallel
     """
     create_cache_folder()
@@ -544,24 +490,6 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
     data - data to load by function running in parallel
     """
     # start_time = datetime.datetime.now()
-    # chunk_size = int(len(data) / num_threads)
-    # processes = []
-    #
-    # for i in range(num_threads):
-    #
-    #     if i == num_threads - 1:
-    #         chunk = data[i * chunk_size:]
-    #
-    #     else:
-    #         chunk = data[i * chunk_size:(i + 1) * chunk_size]
-    #
-    #     process = multiprocessing.Process(target=function, args=(uri, session.database().name(), chunk, batch_size, i))
-    #
-    #     process.start()
-    #     processes.append(process)
-    #
-    # for process in processes:
-    #     process.join()
 
     joblib.Parallel(n_jobs=num_threads)(
         joblib.delayed(function)(uri, session.database().name(), chunk, batch_size, i)

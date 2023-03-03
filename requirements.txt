@@ -10,7 +10,7 @@ distlib==0.3.6
 distributed==2023.2.0
 filelock==3.9.0
 fsspec==2023.1.0
-grpcio==1.52.0
+grpcio==1.50.0
 HeapDict==1.0.1
 identify==2.5.18
 idna==3.4
@@ -41,7 +41,6 @@ tornado==6.2
 tqdm==4.64.1
 typedb-client==2.14.3
 typedb-protocol==2.14.1
-untangle==1.1.1
 urllib3==1.26.14
 virtualenv==20.19.0
 wget==3.2
