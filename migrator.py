@@ -10,7 +10,7 @@ from typedb.client import SessionType, TypeDB
 # from Migrators.Disgenet.disgenetMigrator import migrate_disgenet
 # from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import migrate_protein_atlas
 # from Migrators.Reactome.reactomeMigrator import migrate_reactome
-from Migrators.SemMed.semmed_migrator import migrate_semmed
+from Migrators.semmed.migrator import migrate_semmed
 
 # from Migrators.TissueNet.TissueNetMigrator import migrate_tissuenet
 # from Migrators.Uniprot.UniprotMigrator import migrate_uniprot
@@ -25,7 +25,7 @@ def migrator_parser():
     )
     parser.add_argument(
         "-n",
-        "--num_threads",
+        "--n_jobs",
         type=int,
         help="Number of threads to enable multi-threading (default: 8)",
         default=8,
@@ -84,16 +84,16 @@ if __name__ == "__main__":
     with TypeDB.core_client(uri) as client:
         initialise_database(client, args.database, args.force)
         with client.session(args.database, SessionType.DATA) as session:
-            # migrate_uniprot(session, NUM_PROTEINS, args.num_threads, args.commit_batch)
+            # migrate_uniprot(session, NUM_PROTEINS, args.n_jobs, args.commit_batch)
             # migrate_coronavirus(session)
-            # migrate_reactome(session, NUM_PATH, args.num_threads, args.commit_batch)
-            # migrate_disgenet(session, NUM_DIS, args.num_threads, args.commit_batch)
-            # migrate_dgibd(session, NUM_DR, NUM_INT, args.num_threads, args.commit_batch)
-            # migrate_protein_atlas(session, NUM_PA, args.num_threads, args.commit_batch)
-            migrate_semmed(session, uri, NUM_SEM, args.num_threads, args.commit_batch)
+            # migrate_reactome(session, NUM_PATH, args.n_jobs, args.commit_batch)
+            # migrate_disgenet(session, NUM_DIS, args.n_jobs, args.commit_batch)
+            # migrate_dgibd(session, NUM_DR, NUM_INT, args.n_jobs, args.commit_batch)
+            # migrate_protein_atlas(session, NUM_PA, args.n_jobs, args.commit_batch)
+            migrate_semmed(session, uri, NUM_SEM, args.n_jobs, args.commit_batch)
 
             # TODO: add protein interaction relations in tissues
-            # migrate_tissuenet(session, args.num_threads, args.commit_batch)
+            # migrate_tissuenet(session, args.n_jobs, args.commit_batch)
 end = timer()
 time_in_sec = end - start
 print("Elapsed time: " + str(time_in_sec) + " seconds.")
