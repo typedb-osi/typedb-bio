@@ -25,7 +25,7 @@ def _fetch_metadata_from_api(pm_ids: list[str]) -> tuple[dict, int]:
 
 
 def _read_metadata_from_cache(pm_id: str) -> tuple[dict | None, int]:
-    """Read an article's metadata from the cache.
+    """Read a publication's metadata from the cache.
 
     :param pm_id: The PubMed ID of the article
     :type pm_id: str
@@ -39,7 +39,7 @@ def _read_metadata_from_cache(pm_id: str) -> tuple[dict | None, int]:
 
 
 def _fetch_metadata_from_cache(pm_ids: list[str]) -> tuple[list[dict], list[str]]:
-    """Fetch article metadata from the cache.
+    """Fetch publication metadata from the cache.
 
     :param pm_ids: A list of PubMed IDs
     :type pm_ids: list[str]
@@ -57,8 +57,8 @@ def _fetch_metadata_from_cache(pm_ids: list[str]) -> tuple[list[dict], list[str]
     return publications, uncached_ids
 
 
-def _fetch_article_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
-    """Fetch article metadata from the cache and the NCBI E-utilities API.
+def _fetch_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
+    """Fetch publication metadata from the cache and the NCBI E-utilities API.
 
     :param pm_ids: A list of PubMed IDs
     :type pm_ids: list[str]
@@ -87,10 +87,10 @@ def _fetch_article_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
     return publications, failed_ids
 
 
-def fetch_articles_metadata(
+def fetch_metadata(
     pm_ids: list[str], batch_size: int, retries: int
 ) -> tuple[list[dict], list[str]]:
-    """Fetch article metadata from the cache and the NCBI E-utilities API with retries.
+    """Fetch publication metadata from the cache and the NCBI API with retries.
 
     :param pm_ids: A list of PubMed IDs
     :type pm_ids: list[str]
@@ -102,10 +102,10 @@ def fetch_articles_metadata(
         a list of PubMed IDs for which the metadata could not be fetched
     """
     Path(".cache").mkdir(parents=True, exist_ok=True)
-    publications, failed_ids = _fetch_article_metadata(pm_ids, batch_size)
+    publications, failed_ids = _fetch_metadata(pm_ids, batch_size)
 
     for _ in range(retries):
-        additional_pubs, failed_ids = _fetch_article_metadata(failed_ids, batch_size)
+        additional_pubs, failed_ids = _fetch_metadata(failed_ids, batch_size)
         publications.extend(additional_pubs)
 
     return publications, failed_ids

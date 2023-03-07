@@ -8,7 +8,7 @@ import typedb.api.connection.session
 from typedb.client import SessionType, TransactionType, TypeDB
 
 from Migrators.Helpers.utils import clean_string
-from Migrators.semmed.fetch import fetch_articles_metadata
+from Migrators.semmed.fetch import fetch_metadata
 from Migrators.semmed.mapper import relationship_mapper
 from Migrators.semmed.parse import (
     get_author_names,
@@ -34,7 +34,7 @@ def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
         journal_names,
         publications_list,
         relationship_data,
-    ) = load_data_from_file(file_path, num_semmed)
+    ) = _get_data(file_path, num_semmed)
 
     load_dataset_in_parallel(
         author_names,
@@ -55,7 +55,7 @@ def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
         journal_names,
         publications_list,
         relationship_data,
-    ) = load_data_from_file(file_path, num_semmed)
+    ) = _get_data(file_path, num_semmed)
 
     load_dataset_in_parallel(
         author_names,
@@ -69,16 +69,17 @@ def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
     )
 
 
-def load_data_from_file(file_path, num_semmed):
+def _get_data(file_path, num_semmed):
     """Load data from file. This func is used to load data from the file and return the data in a list.
 
     :param file_path: The path to the file
     :param num_semmed: The number of SemMed data to import
     :return: A list of data
     """
-    data_df = pd.read_csv(
+    relationships = pd.read_csv(
         file_path,
         sep=";",
+        dtype=str,
         usecols=[
             "P_PMID",
             "P_PREDICATE",
@@ -87,15 +88,26 @@ def load_data_from_file(file_path, num_semmed):
             "S_SENTENCE",
         ],
     )
-    data_df = data_df.drop_duplicates(subset=["P_PMID"])[:num_semmed]
-    pmids = data_df["P_PMID"].astype(str)
+    relationships = relationships.rename(
+        columns={
+            "P_PMID": "pmid",
+            "P_PREDICATE": "predicate",
+            "P_SUBJECT_NAME": "subject",
+            "P_OBJECT_NAME": "object",
+            "S_SENTENCE": "sentence",
+        }
+    )
+    relationships = relationships.drop_duplicates(subset=["pmid"])[:num_semmed]
+    relationships = relationships.apply(np.vectorize(clean_string))
+
     # Fetch articles metadata from pubmed
-    publications, failed_ids = fetch_articles_metadata(pmids, batch_size=400, retries=1)
+    publications, failed_ids = fetch_metadata(
+        relationships["pmid"], batch_size=400, retries=1
+    )
     journal_names = get_journal_names(publications)
     author_names = get_author_names(publications)
-    publications_list = get_publication_data(publications)
-    relationship_data = data_df.values.tolist()
-    return author_names, journal_names, publications_list, relationship_data
+    parsed_publications = get_publication_data(publications)
+    return author_names, journal_names, parsed_publications, relationships
 
 
 def load_dataset_in_parallel(
@@ -120,19 +132,17 @@ def load_dataset_in_parallel(
     :param uri: semmed uri
     """
 
-    # load_in_parallel = partial()
+    # _load_data = partial()
     print("--------Loading journals---------")
-    load_in_parallel(
-        session, uri, migrate_journals, journal_names, num_threads, batch_size
-    )
+    _load_data(session, uri, migrate_journals, journal_names, num_threads, batch_size)
     print("--------Loading authors---------")
-    load_in_parallel(session, uri, migrate_authors, author_names, num_threads, batch_size)
+    _load_data(session, uri, migrate_authors, author_names, num_threads, batch_size)
     print("--------Loading publications--------")
-    load_in_parallel(
+    _load_data(
         session, uri, migrate_publications, publications_list, num_threads, batch_size
     )
     print("--------Loading relations----------")
-    load_in_parallel(
+    _load_data(
         session, uri, migrate_relationships, relationship_data, num_threads, batch_size
     )
 
@@ -266,26 +276,20 @@ def migrate_relationships(
     with TypeDB.core_client(uri) as client:
         with client.session(database, SessionType.DATA) as session:
             transaction = session.transaction(TransactionType.WRITE)
-            for counter, data_entity in enumerate(data, start=1):
-                predicate_name = clean_string(data_entity[1])
-                subject_name = clean_string(data_entity[2])
-                object_name = clean_string(data_entity[3])
-                relation = relationship_mapper(
-                    predicate_name
-                )  # add handler for situation when there is no relation implemented in a mapper
-                pmid = clean_string(data_entity[0])
-                sentence_text = clean_string(data_entity[4])
+            for counter, row in enumerate(data.itertuples(), start=1):
+                # Add handler for situation when there is no relation implemented in a mapper
+                relation = relationship_mapper(row.predicate)
 
                 match_query = (
-                    f'match $p isa publication, has paper-id "{pmid}"; '
-                    f'$g1 isa gene, has gene-symbol "{subject_name}"; '
-                    f'$g2 isa gene, has gene-symbol "{object_name}"; '
+                    f'match $p isa publication, has paper-id "{row.pmid}"; '
+                    f'$g1 isa gene, has gene-symbol "{row.subject}"; '
+                    f'$g2 isa gene, has gene-symbol "{row.object}"; '
                 )
                 insert_query = (
                     f'insert $r ({relation["active-role"]}: $g1, '
                     f'{relation["passive-role"]}: $g2) '
                     f'isa {relation["relation-name"]}, '
-                    f'has sentence-text "{sentence_text}"; '
+                    f'has sentence-text "{row.sentence}"; '
                     "$m (mentioned-genes-relation: $r, mentioning: $p) "
                     'isa mention, has source "semmed";'
                 )
@@ -300,7 +304,7 @@ def migrate_relationships(
             transaction.close()
 
 
-def load_in_parallel(
+def _load_data(
     session: typedb.api.connection.session.TypeDBSession,
     uri: str,
     func: Callable,
@@ -308,7 +312,7 @@ def load_in_parallel(
     n_jobs: int,
     batch_size: int,
 ):
-    """Run the function `func` to load `data` to TypeDB in parallel.
+    """Load `data` to TypeDB using `func` and `n_jobs` in parallel.
 
     :param session: The TypeDB session
     :type session: typedb.api.connection.session.TypeDBSession
