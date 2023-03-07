@@ -19,17 +19,17 @@ from Migrators.semmed.parse import (
 
 
 def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
-    """Import semmed data into the database.
+    """Import SemMed data into the database.
 
     :param session: The session
     :param uri: The semmed uri
-    :param num_semmed: The number of semmed data to import
+    :param num_semmed: The number of SemMed data to import
     :param num_threads: The number of threads to use for importing
     :param batch_size: The batch size for adding into the database.
     """
     print("Migrate 'Subject_CORD_NER.csv'")
 
-    file_path = "Dataset/semmed/Subject_CORD_NER.csv"
+    file_path = "Dataset/SemMed/Subject_CORD_NER.csv"
     (
         author_names,
         journal_names,
@@ -50,7 +50,7 @@ def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
 
     print("Migrate 'Object_CORD_NER.csv'")
 
-    file_path = "Dataset/semmed/Object_CORD_NER.csv"
+    file_path = "Dataset/SemMed/Object_CORD_NER.csv"
     (
         author_names,
         journal_names,
@@ -74,7 +74,7 @@ def load_data_from_file(file_path, num_semmed):
     """Load data from file. This func is used to load data from the file and return the data in a list.
 
     :param file_path: The path to the file
-    :param num_semmed: The number of semmed data to import
+    :param num_semmed: The number of SemMed data to import
     :return: A list of data
     """
     df = pd.read_csv(file_path, sep=";")[:num_semmed]
