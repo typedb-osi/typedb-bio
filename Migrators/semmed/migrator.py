@@ -189,38 +189,27 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
             transaction.close()
 
 
-def migrate_publications(
-    uri, database, publications: list[dict], batch_size, process_id=0
-):
-    """Migrate publiations to TypeDB.
+def migrate_publications(uri, database, publications: list, batch_size, process_id=0):
+    """Migrate publiations to TypeDB\n.
 
-    publications_list - list of dictionaries with publication data\n
+    publications - list of dictionaries with publication data\n
     process_id - process id while running on multiple cores, by process_id = 0
-    :param uri: The uri of the TypeDB server
-    :param database: The name of the database
-    :param publications: List of dictionaries with publication data
-    :param batch_size: The batch size for commiting
-    :param process_id: The process id while running on multiple cores, by default 0
     """
     with TypeDB.core_client(uri) as client:
         with client.session(database, SessionType.DATA) as session:
             transaction = session.transaction(TransactionType.WRITE)
-            for counter, publication in enumerate(publications, start=1):
+            for counter, publication in enumerate(publications):
                 authors = publication["authors"]  # list of authors - list of strings
                 ##Check if publication already in Knowledge Base
                 match_query = (
-                    "match $p isa publication, "
-                    f'has paper-id "{publication["paper-id"]}";'
+                    f'match $p isa publication, has paper-id "{publication["paper-id"]}";'
                 )
                 if len(list(transaction.query().match(match_query))) == 0:
-                    match_query = (
-                        f"match $j isa journal, "
-                        f'has journal-name "{publication["journal-name"]}"; '
-                    )
+                    match_query = f'match $j isa journal, has journal-name "{publication["journal-name"]}"; '
                     match_query += create_authorship_query(authors)[0]
                     insert_query = (
                         "insert $p isa publication, "
-                        f'has paper-id "{publication["paper-id"]}" '
+                        f'has paper-id "{publication["paper-id"]}", '
                         f'has title "{publication["title"]}", '
                         f'has doi "{publication["doi"]}", '
                         f'has publish-time "{publication["publish-time"]}", '
@@ -228,13 +217,9 @@ def migrate_publications(
                         f'has issn "{publication["issn"]}", '
                         f'has pmid "{publication["pmid"]}"; '
                     )
-
                     insert_query += create_authorship_query(authors)[1]
-                    insert_query += (
-                        "(publishing-journal: $j, "
-                        "published-publication: $p) isa publishing;"
-                    )
-
+                    insert_query += "(publishing-journal: $j, published-publication: $p) isa publishing;"
+                    # print(match_query+insert_query)
                     transaction.query().insert(match_query + insert_query)
                 if counter % batch_size == 0:
                     transaction.commit()
@@ -246,17 +231,12 @@ def migrate_publications(
 
 
 def create_authorship_query(authors_list):
-    """Create authorship query for inserting authors and authorship relations\n.
-
-    :param authors_list:
-    :return:
-    """
     match_query = ""
     insert_query = ""
     for counter, author in enumerate(authors_list):
-        match_query += f"$pe{counter} isa person, " f'has published-name "{author}"; '
+        match_query += f'$pe{counter} isa person, has published-name "{author}"; '
         insert_query += (
-            f"(author: $pe{counter}, " "authored-publication: $p) isa authorship; "
+            f"(author: $pe{counter}, authored-publication: $p) isa authorship; "
         )
 
     return [match_query, insert_query]
