@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """Define functions for parsing article metadata."""
-import os
-
-import pandas as pd
 
 
 def get_journal_names(publications: list[dict]) -> list[str]:
@@ -65,27 +62,3 @@ def get_publication_data(publications: list[dict]):
             parsed_publications[pub["paper-id"]] = pub
 
     return list(parsed_publications.values())
-
-
-def get_relationship_data(dataset_path: str | os.PathLike) -> list[list]:
-    """Return unique relations in a form of list of lists.
-
-    :param dataset_path: The path to the file with relations
-    :type dataset_path: str | os.PathLike
-    :return: The P_PMID, P_PREDICATE, P_SUBJECT_NAME, P_OBJECT_NAME, and S_SENTENCE
-        columns from the dataset as a list of lists
-    :rtype: list[list]
-    """
-    data_df = pd.read_csv(
-        dataset_path,
-        sep=";",
-        usecols=[
-            "P_PMID",
-            "P_PREDICATE",
-            "P_SUBJECT_NAME",
-            "P_OBJECT_NAME",
-            "S_SENTENCE",
-        ],
-    )
-    data_df = data_df.drop_duplicates()
-    return data_df.values.tolist()

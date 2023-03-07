@@ -14,7 +14,6 @@ from Migrators.semmed.parse import (
     get_author_names,
     get_journal_names,
     get_publication_data,
-    get_relationship_data,
 )
 
 
@@ -77,16 +76,25 @@ def load_data_from_file(file_path, num_semmed):
     :param num_semmed: The number of SemMed data to import
     :return: A list of data
     """
-    df = pd.read_csv(file_path, sep=";")[:num_semmed]
-    pmids = df["P_PMID"].unique().astype(str)
-    # Fetch articles metadata from pubmed
-    json_articles_data, failed_articles = fetch_articles_metadata(
-        pmids, batch_size=400, retries=1
+    data_df = pd.read_csv(
+        file_path,
+        sep=";",
+        usecols=[
+            "P_PMID",
+            "P_PREDICATE",
+            "P_SUBJECT_NAME",
+            "P_OBJECT_NAME",
+            "S_SENTENCE",
+        ],
     )
-    journal_names = get_journal_names(json_articles_data)
-    author_names = get_author_names(json_articles_data)
-    publications_list = get_publication_data(json_articles_data)
-    relationship_data = get_relationship_data(file_path)[:num_semmed]
+    data_df = data_df.drop_duplicates(subset=["P_PMID"])[:num_semmed]
+    pmids = data_df["P_PMID"].astype(str)
+    # Fetch articles metadata from pubmed
+    publications, failed_ids = fetch_articles_metadata(pmids, batch_size=400, retries=1)
+    journal_names = get_journal_names(publications)
+    author_names = get_author_names(publications)
+    publications_list = get_publication_data(publications)
+    relationship_data = data_df.values.tolist()
     return author_names, journal_names, publications_list, relationship_data
 
 
