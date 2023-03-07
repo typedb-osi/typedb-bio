@@ -3,8 +3,12 @@
 import json
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import requests
 from tqdm import tqdm
+
+from Migrators.Helpers.utils import clean_string
 
 
 def _fetch_metadata_from_api(pm_ids: list[str]) -> tuple[dict, int]:
@@ -87,7 +91,7 @@ def _fetch_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
     return publications, failed_ids
 
 
-def fetch_metadata(
+def _fetch_metadata_with_retries(
     pm_ids: list[str], batch_size: int, retries: int
 ) -> tuple[list[dict], list[str]]:
     """Fetch publication metadata from the cache and the NCBI API with retries.
@@ -109,3 +113,44 @@ def fetch_metadata(
         publications.extend(additional_pubs)
 
     return publications, failed_ids
+
+
+def _get_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict]]:
+    """Get SemMed data for the given file path.
+
+    :param file_path: The file path
+    :type file_path: str
+    :param num_semmed: The number of publications to import
+    :type num_semmed: int
+    :return: A tuple of a dataframe of relations and a list of publications
+    :rtype: tuple[pd.DataFrame, list[dict]]
+    """
+    relations = pd.read_csv(
+        file_path,
+        sep=";",
+        dtype=str,
+        usecols=[
+            "P_PMID",
+            "P_PREDICATE",
+            "P_SUBJECT_NAME",
+            "P_OBJECT_NAME",
+            "S_SENTENCE",
+        ],
+    )
+    relations = relations.rename(
+        columns={
+            "P_PMID": "pmid",
+            "P_PREDICATE": "predicate",
+            "P_SUBJECT_NAME": "subject",
+            "P_OBJECT_NAME": "object",
+            "S_SENTENCE": "sentence",
+        }
+    )
+    relations = relations.drop_duplicates(subset=["pmid"])[:num_semmed]
+    relations = relations.apply(np.vectorize(clean_string))
+
+    publications, _ = _fetch_metadata_with_retries(
+        relations["pmid"], batch_size=400, retries=1
+    )
+
+    return relations, publications

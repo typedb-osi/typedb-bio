@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
+from functools import partial
 from typing import Any, Callable
 
 import joblib
 import numpy as np
-import pandas as pd
 import typedb.api.connection.session
 from typedb.client import SessionType, TransactionType, TypeDB
 
 from Migrators.Helpers.utils import clean_string
-from Migrators.semmed.fetch import fetch_metadata
+from Migrators.semmed.fetch import _get_data
 from Migrators.semmed.mapper import relationship_mapper
 from Migrators.semmed.parse import (
     get_author_names,
@@ -17,137 +17,70 @@ from Migrators.semmed.parse import (
 )
 
 
-def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
+def migrate_semmed(session, uri, num_semmed, n_jobs, batch_size):
     """Import SemMed data into the database.
 
     :param session: The session
     :param uri: The semmed uri
     :param num_semmed: The number of SemMed data to import
-    :param num_threads: The number of threads to use for importing
+    :param n_jobs: The number of threads to use for importing
     :param batch_size: The batch size for adding into the database.
     """
-    print("Migrate 'Subject_CORD_NER.csv'")
 
-    file_path = "Dataset/SemMed/Subject_CORD_NER.csv"
-    (
-        author_names,
-        journal_names,
-        publications_list,
-        relationship_data,
-    ) = _get_data(file_path, num_semmed)
-
-    load_dataset_in_parallel(
-        author_names,
-        batch_size,
-        journal_names,
-        num_threads,
-        publications_list,
-        relationship_data,
-        session,
-        uri,
+    __load_dataset = partial(
+        _migrate_dataset,
+        num_semmed=num_semmed,
+        session=session,
+        uri=uri,
+        batch_size=batch_size,
+        n_jobs=n_jobs,
     )
 
-    print("Migrate 'Object_CORD_NER.csv'")
-
-    file_path = "Dataset/SemMed/Object_CORD_NER.csv"
-    (
-        author_names,
-        journal_names,
-        publications_list,
-        relationship_data,
-    ) = _get_data(file_path, num_semmed)
-
-    load_dataset_in_parallel(
-        author_names,
-        batch_size,
-        journal_names,
-        num_threads,
-        publications_list,
-        relationship_data,
-        session,
-        uri,
-    )
+    __load_dataset(file_path="Dataset/SemMed/Subject_CORD_NER.csv")
+    __load_dataset(file_path="Dataset/SemMed/Object_CORD_NER.csv")
 
 
-def _get_data(file_path, num_semmed):
-    """Load data from file. This func is used to load data from the file and return the data in a list.
-
-    :param file_path: The path to the file
-    :param num_semmed: The number of SemMed data to import
-    :return: A list of data
-    """
-    relationships = pd.read_csv(
-        file_path,
-        sep=";",
-        dtype=str,
-        usecols=[
-            "P_PMID",
-            "P_PREDICATE",
-            "P_SUBJECT_NAME",
-            "P_OBJECT_NAME",
-            "S_SENTENCE",
-        ],
-    )
-    relationships = relationships.rename(
-        columns={
-            "P_PMID": "pmid",
-            "P_PREDICATE": "predicate",
-            "P_SUBJECT_NAME": "subject",
-            "P_OBJECT_NAME": "object",
-            "S_SENTENCE": "sentence",
-        }
-    )
-    relationships = relationships.drop_duplicates(subset=["pmid"])[:num_semmed]
-    relationships = relationships.apply(np.vectorize(clean_string))
-
-    # Fetch articles metadata from pubmed
-    publications, failed_ids = fetch_metadata(
-        relationships["pmid"], batch_size=400, retries=1
-    )
-    journal_names = get_journal_names(publications)
-    author_names = get_author_names(publications)
-    parsed_publications = get_publication_data(publications)
-    return author_names, journal_names, parsed_publications, relationships
-
-
-def load_dataset_in_parallel(
-    author_names,
-    batch_size,
-    journal_names,
-    num_threads,
-    publications_list,
-    relationship_data,
+def _migrate_dataset(
+    file_path,
+    num_semmed,
     session,
     uri,
+    batch_size,
+    n_jobs,
 ):
     """Load dataset in parallel.
 
     :param author_names: The list of author names
     :param batch_size: The number of data to be added into the database at once
     :param journal_names: The list of journal names
-    :param num_threads:  The number of threads to use for importing
+    :param n_jobs:  The number of threads to use for importing
     :param publications_list: The list of publications
     :param relationship_data: The list of relationship data
     :param session: Database session
     :param uri: semmed uri
     """
 
-    # _load_data = partial()
+    print(f"Migrate {file_path}")
+    relations, publications = _get_data(file_path, num_semmed)
+
+    __load_data = partial(
+        _load_data, session=session, uri=uri, batch_size=batch_size, n_jobs=n_jobs
+    )
+
     print("--------Loading journals---------")
-    _load_data(session, uri, migrate_journals, journal_names, num_threads, batch_size)
+    __load_data(func=_load_journals, data=get_journal_names(publications))
+
     print("--------Loading authors---------")
-    _load_data(session, uri, migrate_authors, author_names, num_threads, batch_size)
+    __load_data(func=_load_authors, data=get_author_names(publications))
+
     print("--------Loading publications--------")
-    _load_data(
-        session, uri, migrate_publications, publications_list, num_threads, batch_size
-    )
+    __load_data(func=_load_publications, data=get_publication_data(publications))
+
     print("--------Loading relations----------")
-    _load_data(
-        session, uri, migrate_relationships, relationship_data, num_threads, batch_size
-    )
+    __load_data(func=_load_relations, data=relations)
 
 
-def migrate_journals(uri, database, journal_names: list, batch_size, process_id=0):
+def _load_journals(uri, database, journal_names: list, batch_size):
     """Migrate journals to TypeDB.
 
     journal_names - list of journal names (strings) \n
@@ -170,12 +103,11 @@ def migrate_journals(uri, database, journal_names: list, batch_size, process_id=
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    # print("Process {} COMMITED ----- {} journals added".format(process_id, counter))
             transaction.commit()
             transaction.close()
 
 
-def migrate_authors(uri, database, author_names: list, batch_size, process_id=0):
+def _load_authors(uri, database, author_names: list, batch_size):
     """Migrate authors to TypeDB\n.
 
     :param uri: The uri of the TypeDB server
@@ -202,12 +134,11 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    # print("Process {} COMMITED ----- {} authors added".format(process_id, counter))
             transaction.commit()
             transaction.close()
 
 
-def migrate_publications(uri, database, publications: list, batch_size, process_id=0):
+def _load_publications(uri, database, publications: list, batch_size):
     """Migrate publiations to TypeDB\n.
 
     publications - list of dictionaries with publication data\n
@@ -224,7 +155,7 @@ def migrate_publications(uri, database, publications: list, batch_size, process_
                 )
                 if len(list(transaction.query().match(match_query))) == 0:
                     match_query = f'match $j isa journal, has journal-name "{publication["journal-name"]}"; '
-                    match_query += create_authorship_query(authors)[0]
+                    match_query += _create_authorship_query(authors)[0]
                     insert_query = (
                         "insert $p isa publication, "
                         f'has paper-id "{publication["paper-id"]}", '
@@ -235,20 +166,18 @@ def migrate_publications(uri, database, publications: list, batch_size, process_
                         f'has issn "{publication["issn"]}", '
                         f'has pmid "{publication["pmid"]}"; '
                     )
-                    insert_query += create_authorship_query(authors)[1]
+                    insert_query += _create_authorship_query(authors)[1]
                     insert_query += "(publishing-journal: $j, published-publication: $p) isa publishing;"
-                    # print(match_query+insert_query)
                     transaction.query().insert(match_query + insert_query)
                 if counter % batch_size == 0:
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    # print("Process {} COMMITED ----- {} publications added".format(process_id, counter))
             transaction.commit()
             transaction.close()
 
 
-def create_authorship_query(authors_list):
+def _create_authorship_query(authors_list):
     match_query = ""
     insert_query = ""
     for counter, author in enumerate(authors_list):
@@ -260,9 +189,7 @@ def create_authorship_query(authors_list):
     return [match_query, insert_query]
 
 
-def migrate_relationships(
-    uri, database, data, batch_size, process_id: object = 0
-) -> None:
+def _load_relations(uri, database, data, batch_size) -> None:
     """Migrate relations to TypeDB\n.
 
     data - table in a form of list of lists \n
@@ -299,7 +226,6 @@ def migrate_relationships(
                     transaction.commit()
                     transaction.close()
                     transaction = session.transaction(TransactionType.WRITE)
-                    # print("Process {} COMMITED ----- {} relations added".format(process_id, counter))
             transaction.commit()
             transaction.close()
 
@@ -328,6 +254,6 @@ def _load_data(
     :type batch_size: int
     """
     joblib.Parallel(n_jobs=n_jobs)(
-        joblib.delayed(func)(uri, session.database().name(), chunk, batch_size, i)
-        for i, chunk in enumerate(np.array_split(data, n_jobs))
+        joblib.delayed(func)(uri, session.database().name(), chunk, batch_size)
+        for chunk in np.array_split(data, n_jobs)
     )
