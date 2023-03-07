@@ -148,14 +148,12 @@ def _load_publications(uri, database, publications: list, batch_size):
         with client.session(database, SessionType.DATA) as session:
             transaction = session.transaction(TransactionType.WRITE)
             for counter, publication in enumerate(publications):
-                authors = publication["authors"]  # list of authors - list of strings
                 ##Check if publication already in Knowledge Base
                 match_query = (
                     f'match $p isa publication, has paper-id "{publication["paper-id"]}";'
                 )
                 if len(list(transaction.query().match(match_query))) == 0:
                     match_query = f'match $j isa journal, has journal-name "{publication["journal-name"]}"; '
-                    match_query += _create_authorship_query(authors)[0]
                     insert_query = (
                         "insert $p isa publication, "
                         f'has paper-id "{publication["paper-id"]}", '
@@ -166,7 +164,11 @@ def _load_publications(uri, database, publications: list, batch_size):
                         f'has issn "{publication["issn"]}", '
                         f'has pmid "{publication["pmid"]}"; '
                     )
-                    insert_query += _create_authorship_query(authors)[1]
+                    for i, author in enumerate(publication["authors"]):
+                        match_query += f'$pe{i} isa person, has published-name "{author}"; '
+                        insert_query += (
+                            f"(author: $pe{i}, authored-publication: $p) isa authorship; "
+                        )
                     insert_query += "(publishing-journal: $j, published-publication: $p) isa publishing;"
                     transaction.query().insert(match_query + insert_query)
                 if counter % batch_size == 0:
@@ -180,10 +182,10 @@ def _load_publications(uri, database, publications: list, batch_size):
 def _create_authorship_query(authors_list):
     match_query = ""
     insert_query = ""
-    for counter, author in enumerate(authors_list):
-        match_query += f'$pe{counter} isa person, has published-name "{author}"; '
+    for i, author in enumerate(authors_list):
+        match_query += f'$pe{i} isa person, has published-name "{author}"; '
         insert_query += (
-            f"(author: $pe{counter}, authored-publication: $p) isa authorship; "
+            f"(author: $pe{i}, authored-publication: $p) isa authorship; "
         )
 
     return [match_query, insert_query]
