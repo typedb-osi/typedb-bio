@@ -107,6 +107,6 @@ def _load_data(
     :type batch_size: int
     """
     joblib.Parallel(n_jobs=n_jobs)(
-        joblib.delayed(func)(uri, session.database().name(), chunk, batch_size)
-        for chunk in np.array_split(data, n_jobs)
+        joblib.delayed(func)(data_chunk, session.database().name(), uri, batch_size)
+        for data_chunk in np.array_split(data, n_jobs)
     )

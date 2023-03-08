@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Define functions for parsing article metadata."""
+from Migrators.Helpers.utils import clean_string
 
 
 def get_journal_names(publications: list[dict]) -> list[str]:
@@ -11,7 +12,11 @@ def get_journal_names(publications: list[dict]) -> list[str]:
     :rtype: list[str]
     """
     return list(
-        {p["fulljournalname"] for p in publications if "Journal Article" in p["pubtype"]}
+        {
+            clean_string(p["fulljournalname"])
+            for p in publications
+            if "Journal Article" in p["pubtype"]
+        }
     )
 
 
@@ -23,7 +28,9 @@ def get_author_names(publications: list[dict]) -> list[str]:
     :return: List of author names
     :rtype: list[str]
     """
-    return list({author["name"] for p in publications for author in p["authors"]})
+    return list(
+        {clean_string(author["name"]) for p in publications for author in p["authors"]}
+    )
 
 
 def get_publication_data(publications: list[dict]):
@@ -38,22 +45,22 @@ def get_publication_data(publications: list[dict]):
     for publication in publications:
         if publication["uid"] not in parsed_publications:
             pub = {}
-            pub["paper-id"] = pub["pmid"] = publication["uid"]
+            pub["paper-id"] = pub["pmid"] = clean_string(publication["uid"])
 
             for article_id in publication["articleids"]:
                 if article_id["idtype"] == "doi":
                     pub["doi"] = article_id["value"]
 
-            pub["authors"] = []
+            pub["authors"] = []  # type: ignore
             for author in publication["authors"]:
-                pub["authors"].append(author["name"])
+                pub["authors"].append(clean_string(author["name"]))  # type: ignore
 
             pub["issn"] = publication["issn"]
             pub["volume"] = publication["volume"]
 
             pub["journal-name"] = ""
             if "Journal Article" in publication["pubtype"]:
-                pub["journal-name"] = publication["fulljournalname"]
+                pub["journal-name"] = clean_string(publication["fulljournalname"])
 
             pub["publish-time"] = publication["pubdate"]
 
