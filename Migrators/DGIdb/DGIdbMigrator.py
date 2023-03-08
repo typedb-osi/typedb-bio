@@ -5,7 +5,7 @@ import wget
 
 from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
-from Migrators.Helpers.open_file import openFile
+from Migrators.Helpers.read_csv import readCSV
 
 
 def migrate_dgibd(session, num_dr, num_int, num_threads, batch_size):
@@ -26,14 +26,14 @@ def insert_drugs(session, num_dr, num_threads, batch_size):
     print('  Finished downloading')
     file = 'Dataset/DGIdb/drugs.tsv'
 
-    raw_file = openFile(file, num_dr)
+    rows = readCSV(file, num_dr)
     drugs = []
-    for i in raw_file[:num_dr]:
+    for row in rows[:num_dr]:
         data = {}
-        data['drug-claim-name'] = i[0].strip('"')
-        data['drug-name'] = i[1].strip('"')
-        data['chembl-id'] = i[2]
-        data['drug-claim-source'] = i[3]
+        data['drug-claim-name'] = row[0].strip('"')
+        data['drug-name'] = row[1].strip('"')
+        data['chembl-id'] = row[2]
+        data['drug-claim-source'] = row[3]
         drugs.append(data)
     os.remove('Dataset/DGIdb/drugs.tsv')
     drugs_list = drugs
@@ -55,17 +55,17 @@ def insert_interactions(session, num_int, num_threads, batch_size):
     wget.download(url, 'Dataset/DGIdb/')
     print('  Finished downloading')
     file = 'Dataset/DGIdb/interactions.tsv'
-    raw_file = openFile(file, num_int)
+    rows = readCSV(file, num_int)
 
     interactions = []
-    for i in raw_file[:num_int]:
+    for row in rows[:num_int]:
         data = {}
-        data['gene-name'] = i[0]
-        data['entrez-id'] = i[2]
-        data['interaction-type'] = i[4]
-        data['drug-claim-name'] = i[5]
-        data['drug-name'] = i[7]
-        data['chembl-id'] = i[8]
+        data['gene-name'] = row[0]
+        data['entrez-id'] = row[2]
+        data['interaction-type'] = row[4]
+        data['drug-claim-name'] = row[5]
+        data['drug-name'] = row[7]
+        data['chembl-id'] = row[8]
         interactions.append(data)
     os.remove('Dataset/DGIdb/interactions.tsv')
     print('  Starting with drug-gene interactions.')
