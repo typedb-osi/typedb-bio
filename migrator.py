@@ -10,7 +10,7 @@ from typedb.client import SessionType, TypeDB
 # from Migrators.Disgenet.disgenetMigrator import migrate_disgenet
 # from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import migrate_protein_atlas
 # from Migrators.Reactome.reactomeMigrator import migrate_reactome
-from Migrators.semmed.pipeline import migrate_semmed
+from Migrators.SemMed.pipeline import migrate_semmed
 
 # from Migrators.TissueNet.TissueNetMigrator import migrate_tissuenet
 # from Migrators.Uniprot.UniprotMigrator import migrate_uniprot

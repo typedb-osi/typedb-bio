@@ -7,14 +7,14 @@ import joblib
 import numpy as np
 import typedb.api.connection.session
 
-from Migrators.semmed.fetch import fetch_data
-from Migrators.semmed.load import (
+from Migrators.SemMed.fetch import fetch_data
+from Migrators.SemMed.load import (
     load_authors,
     load_journals,
     load_publications,
     load_relations,
 )
-from Migrators.semmed.parse import (
+from Migrators.SemMed.parse import (
     get_author_names,
     get_journal_names,
     get_publication_data,

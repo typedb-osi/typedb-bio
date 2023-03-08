@@ -5,7 +5,7 @@ from typedb.api.connection.session import SessionType
 from typedb.api.connection.transaction import TransactionType
 from typedb.client import TypeDB
 
-from Migrators.semmed.mapper import relationship_mapper
+from Migrators.SemMed.mapper import relationship_mapper
 
 
 def load_journals(
@@ -158,7 +158,7 @@ def load_relations(data: pd.DataFrame, database: str, uri: str, batch_size: int)
                     f'isa {relation["relation-name"]}, '
                     f'has sentence-text "{row.sentence}"; '
                     "$m (mentioned-genes-relation: $r, mentioning: $p) "
-                    'isa mention, has source "semmed";'
+                    'isa mention, has source "SemMed";'
                 )
 
                 transaction.query().insert(match_query + insert_query)
