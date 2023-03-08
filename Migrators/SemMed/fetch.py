@@ -128,13 +128,17 @@ def _fetch_metadata_with_retries(
     return publications, failed_ids
 
 
-def fetch_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict]]:
+def fetch_data(
+    file_path: str, num_semmed: int, cache_dir: Path
+) -> tuple[pd.DataFrame, list[dict]]:
     """Fetch SemMed data for the given file path.
 
     :param file_path: The path to the file specifying the SemMed data
     :type file_path: str
     :param num_semmed: The number of publications to import
     :type num_semmed: int
+    :param cache_dir: The path to the cache directory
+    :type cache_dir: Path
     :return: A tuple of a dataframe of relations and a list of publications
     :rtype: tuple[pd.DataFrame, list[dict]]
     """
@@ -162,8 +166,6 @@ def fetch_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict
     relations = relations.drop_duplicates(subset=["pmid"])[:num_semmed]
     relations = relations.apply(np.vectorize(clean_string))
 
-    cache_dir = Path(".cache/SemMed")
-    cache_dir.mkdir(parents=True, exist_ok=True)
     publications, failed_ids = _fetch_metadata_with_retries(
         relations["pmid"], batch_size=400, retries=1, cache_dir=cache_dir
     )

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Define the pipeline for migrating SemMed data to TypeDB."""
+import os
 from functools import partial
+from pathlib import Path
 from typing import Any, Callable
 
 import joblib
@@ -27,6 +29,7 @@ def migrate_semmed(
     num_semmed: int,
     n_jobs: int,
     batch_size: int,
+    cache_dir: str | os.PathLike = ".cache/SemMed",
 ) -> None:
     """Migrate SemMed data to TypeDB.
 
@@ -40,7 +43,11 @@ def migrate_semmed(
     :type n_jobs: int
     :param batch_size: The batch size for committing
     :type batch_size: int
+    :param cache_dir: The directory to store the cache files
+    :type cache_dir: str | os.PathLike
     """
+    _cache_dir = Path(cache_dir)
+    _cache_dir.mkdir(parents=True, exist_ok=True)
     __load_dataset = partial(
         _migrate_dataset,
         session=session,
@@ -48,6 +55,7 @@ def migrate_semmed(
         num_semmed=num_semmed,
         n_jobs=n_jobs,
         batch_size=batch_size,
+        cache_dir=_cache_dir,
     )
 
     __load_dataset(file_path="Dataset/SemMed/Subject_CORD_NER.csv")
@@ -61,6 +69,7 @@ def _migrate_dataset(
     num_semmed: int,
     n_jobs: int,
     batch_size: int,
+    cache_dir: Path,
 ) -> None:
     """Migrate different components of SemMed data to TypeDB.
 
@@ -76,9 +85,11 @@ def _migrate_dataset(
     :type n_jobs: int
     :param batch_size: The batch size for committing
     :type batch_size: int
+    :param cache_dir: The directory to store the cache files
+    :type cache_dir: Path
     """
     print(f"Migrate {file_path}")
-    relations, publications = fetch_data(file_path, num_semmed)
+    relations, publications = fetch_data(file_path, num_semmed, cache_dir)
 
     __load_data = partial(
         _load_data, session=session, uri=uri, batch_size=batch_size, n_jobs=n_jobs
