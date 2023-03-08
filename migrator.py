@@ -67,8 +67,7 @@ NUM_INT = 10000000  # Total drug-gene interactions to migrate (42k total)
 NUM_PATH = 10000000  # Total pathway associations to migrate
 NUM_TN = 10000000  # Total TissueNet being migrated
 NUM_PA = 10000000  # Total Tissues <> Genes to migrate
-# NUM_SEM = 10000000  # Total number of rows from SemMed to migrate
-NUM_SEM = 10
+NUM_SEM = 10000000  # Total number of rows from SemMed to migrate
 
 start = timer()
 if __name__ == "__main__":
