@@ -28,13 +28,15 @@ def _fetch_metadata_from_api(pm_ids: list[str]) -> tuple[dict, int]:
     return data, response.status_code
 
 
-def _read_metadata_from_cache(pm_id: str) -> tuple[dict | None, int]:
+def _read_metadata_from_cache(pm_id: str, cache_dir: Path) -> tuple[dict | None, int]:
     """Read a publication's metadata from the cache.
 
     :param pm_id: The PubMed ID of the article
     :type pm_id: str
+    :param cache_dir: The path to the cache directory
+    :type cache_dir: Path
     """
-    file_path = Path(f".cache/{pm_id}.json")
+    file_path = cache_dir / f"{pm_id}.json"
     if file_path.exists():
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
@@ -42,18 +44,22 @@ def _read_metadata_from_cache(pm_id: str) -> tuple[dict | None, int]:
     return None, 404
 
 
-def _fetch_metadata_from_cache(pm_ids: list[str]) -> tuple[list[dict], list[str]]:
+def _fetch_metadata_from_cache(
+    pm_ids: list[str], cache_dir: Path
+) -> tuple[list[dict], list[str]]:
     """Fetch publication metadata from the cache.
 
     :param pm_ids: A list of PubMed IDs
     :type pm_ids: list[str]
+    :param cache_dir: The path to the cache directory
+    :type cache_dir: Path
     :return: A tuple of a list of json-encoded responses and
         a list of PubMed IDs that were not found in the cache
     :rtype: tuple
     """
     publications, uncached_ids = [], []
     for pm_id in pm_ids:
-        data, status_code = _read_metadata_from_cache(pm_id)
+        data, status_code = _read_metadata_from_cache(pm_id, cache_dir)
         if status_code == 200 and data is not None:
             publications.append(data)
         else:
@@ -61,13 +67,17 @@ def _fetch_metadata_from_cache(pm_ids: list[str]) -> tuple[list[dict], list[str]
     return publications, uncached_ids
 
 
-def _fetch_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
+def _fetch_metadata(
+    pm_ids: list[str], batch_size: int, cache_dir: Path
+) -> tuple[list[dict], list[str]]:
     """Fetch publication metadata from the cache and the NCBI E-utilities API.
 
     :param pm_ids: A list of PubMed IDs
     :type pm_ids: list[str]
     :param batch_size: The number of PubMed IDs to fetch at a time
     :type batch_size: int
+    :param cache_dir: The path to the cache directory
+    :type cache_dir: Path
     :return: A tuple of a list of json-encoded responses and
         a list of PubMed IDs for which the metadata could not be fetched
     """
@@ -75,7 +85,7 @@ def _fetch_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
     failed_ids: list[str] = []
     for i in tqdm(range(0, len(pm_ids), batch_size)):
         publications, uncached_pm_ids = _fetch_metadata_from_cache(
-            pm_ids[i : i + batch_size]
+            pm_ids[i : i + batch_size], cache_dir
         )
         if len(uncached_pm_ids) > 0:
             data, status_code = _fetch_metadata_from_api(uncached_pm_ids)
@@ -83,7 +93,9 @@ def _fetch_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
                 for uid in data["result"]:
                     if uid != "uids":
                         publications.append(data["result"][uid])
-                        with open(f".cache/{uid}.json", "w", encoding="utf-8") as file:
+                        with open(
+                            cache_dir / f"{uid}.json", "w", encoding="utf-8"
+                        ) as file:
                             file.write(json.dumps(data["result"][uid], indent=4))
             else:
                 print(f'Failed to fetch data for pm_ids: {",".join(uncached_pm_ids)}')
@@ -92,7 +104,7 @@ def _fetch_metadata(pm_ids, batch_size) -> tuple[list[dict], list[str]]:
 
 
 def _fetch_metadata_with_retries(
-    pm_ids: list[str], batch_size: int, retries: int
+    pm_ids: list[str], batch_size: int, retries: int, cache_dir: Path
 ) -> tuple[list[dict], list[str]]:
     """Fetch publication metadata from the cache and the NCBI API with retries.
 
@@ -102,14 +114,15 @@ def _fetch_metadata_with_retries(
     :type batch_size: int
     :param retries: The number of times to retry fetching metadata for failed PubMed IDs
     :type retries: int
+    :param cache_dir: The path to the cache directory
+    :type cache_dir: Path
     :return: A tuple of a list of json-encoded responses and
         a list of PubMed IDs for which the metadata could not be fetched
     """
-    Path(".cache").mkdir(parents=True, exist_ok=True)
-    publications, failed_ids = _fetch_metadata(pm_ids, batch_size)
+    publications, failed_ids = _fetch_metadata(pm_ids, batch_size, cache_dir)
 
     for _ in range(retries):
-        additional_pubs, failed_ids = _fetch_metadata(failed_ids, batch_size)
+        additional_pubs, failed_ids = _fetch_metadata(failed_ids, batch_size, cache_dir)
         publications.extend(additional_pubs)
 
     return publications, failed_ids
@@ -149,8 +162,10 @@ def fetch_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict
     relations = relations.drop_duplicates(subset=["pmid"])[:num_semmed]
     relations = relations.apply(np.vectorize(clean_string))
 
+    cache_dir = Path(".cache/SemMed")
+    cache_dir.mkdir(parents=True, exist_ok=True)
     publications, _ = _fetch_metadata_with_retries(
-        relations["pmid"], batch_size=400, retries=1
+        relations["pmid"], batch_size=400, retries=1, cache_dir=cache_dir
     )
 
     return relations, publications
