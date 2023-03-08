@@ -115,8 +115,8 @@ def _fetch_metadata_with_retries(
     return publications, failed_ids
 
 
-def _get_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict]]:
-    """Get SemMed data for the given file path.
+def fetch_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict]]:
+    """Fetch SemMed data for the given file path.
 
     :param file_path: The file path
     :type file_path: str
