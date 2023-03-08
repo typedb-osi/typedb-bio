@@ -164,8 +164,11 @@ def fetch_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict
 
     cache_dir = Path(".cache/SemMed")
     cache_dir.mkdir(parents=True, exist_ok=True)
-    publications, _ = _fetch_metadata_with_retries(
+    publications, failed_ids = _fetch_metadata_with_retries(
         relations["pmid"], batch_size=400, retries=1, cache_dir=cache_dir
     )
+
+    with open(cache_dir / "failed_ids.json", "w", encoding="utf-8") as file:
+        file.write(json.dumps({"failed_ids": failed_ids}, indent=4))
 
     return relations, publications
