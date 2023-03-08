@@ -21,7 +21,7 @@ def insert_gene_disease(session, num, num_threads, batch_size):
     get_file(url, 'Dataset/Disgenet/')
     print("\n Finished downloading dataset")
 
-    with gzip.open('Dataset/Disgenet/all_gene_disease_associations.tsv.gz', 'rt') as f:
+    with gzip.open('Dataset/Disgenet/all_gene_disease_associations.tsv.gz', 'rt', encoding='utf-8') as f:
         csvreader = csv.reader(f, delimiter='\t')
         raw_file = []
         n = 0

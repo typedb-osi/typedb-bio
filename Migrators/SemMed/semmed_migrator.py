@@ -1,16 +1,21 @@
 import csv
 import multiprocessing
+import threading
+from multiprocessing.pool import ThreadPool
+
 import pandas as pd
 import untangle
 from typedb.client import TypeDB, SessionType, TransactionType
+
+from Migrators.Helpers.read_csv import readCSV
 
 
 def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
     print("Migrate 'Subject_CORD_NER.csv'")
 
     file_path = "Dataset/SemMed/Subject_CORD_NER.csv"
-    raw_file = openFile(file_path, 1)[:num_semmed]
-    pmids_set = list(set([tupple[3] for tupple in raw_file]))  # get set of pmids
+    rows = readCSV(file_path, num_semmed, separator=';')
+    pmids_set = list(set([tupple[3] for tupple in rows]))  # get set of pmids
 
     ###Fetch articles metadata from pubmed
     xml_articles_data = fetch_articles_metadata(pmids_set)
@@ -32,8 +37,8 @@ def migrate_semmed(session, uri, num_semmed, num_threads, batch_size):
     print("Migrate 'Object_CORD_NER.csv'")
 
     file_path = "Dataset/SemMed/Object_CORD_NER.csv"
-    raw_file = openFile(file_path, 1)[:num_semmed]
-    pmids_set = list(set([tupple[3] for tupple in raw_file]))  # get set of pmids
+    rows = readCSV(file_path, num_semmed, separator=';')
+    pmids_set = list(set([tupple[3] for tupple in rows]))  # get set of pmids
 
     ###Fetch articles metadata from pubmed
     xml_articles_data = fetch_articles_metadata(pmids_set)
@@ -77,7 +82,7 @@ def get_journal_names(xml_response):
     return list(journals_set)
 
 
-def migrate_journals(uri, database, journal_names: list, batch_size, process_id=0):
+def migrate_journals(uri, database, batch_size, journal_names, process_id=0):
     '''
     Migrate journals to TypeDB \n
     journal_names - list of journal names (strings) \n
@@ -129,7 +134,7 @@ def get_authors_names(xml_response):
     return list(authors_set)
 
 
-def migrate_authors(uri, database, author_names: list, batch_size, process_id=0):
+def migrate_authors(uri, database, batch_size, author_names: list, process_id=0):
     '''
     Migrate authors to TypeDB\n
     author_names - list of author names (strings)\n
@@ -142,10 +147,10 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
             for author_name in author_names:
                 ##Check if journal already in Knowledge Base
                 try:
-                    match_query = 'match $a isa person, has published-name "{}";'.format(author_name)
+                    match_query = 'match $a isa person, has published-name "{}";'.format(escape_string(author_name))
                     next(transaction.query().match(match_query))
                 except StopIteration:
-                    insert_query = 'insert $a isa person, has published-name "{}";'.format(author_name)
+                    insert_query = 'insert $a isa person, has published-name "{}";'.format(escape_string(author_name))
                     transaction.query().insert(insert_query)
                 if counter % batch_size == 0:
                     transaction.commit()
@@ -156,6 +161,8 @@ def migrate_authors(uri, database, author_names: list, batch_size, process_id=0)
             transaction.commit()
             transaction.close()
 
+def escape_string(str):
+    return str.replace("\\", "\\\\")
 
 def get_publication_data(xml_response):
     '''
@@ -208,7 +215,7 @@ def get_publication_data(xml_response):
     return list(publications)
 
 
-def migrate_publications(uri, database, publications_list: list, batch_size, process_id=0):
+def migrate_publications(uri, database, batch_size, publications_list: list, process_id=0):
     '''
     Migrate publiations to TypeDB\n
     publications_list - list of dictionaries with publication data\n
@@ -264,7 +271,7 @@ def get_relationship_data(data_path):
     return data_df.to_numpy().tolist()
 
 
-def migrate_relationships(uri, database, data: list, batch_size, process_id=0):
+def migrate_relationships(uri, database, batch_size, data: list, process_id=0):
     '''
     Migrate relations to TypeDB\n
     data - table in a form of list of lists \n
@@ -332,8 +339,7 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
     '''
     # start_time = datetime.datetime.now()
     chunk_size = int(len(data) / num_threads)
-    processes = []
-
+    args = []
     for i in range(num_threads):
 
         if i == num_threads - 1:
@@ -341,14 +347,10 @@ def load_in_parallel(session, uri, function, data, num_threads, batch_size):
 
         else:
             chunk = data[i * chunk_size:(i + 1) * chunk_size]
+        args.append((uri, session.database().name(), batch_size, chunk, i))
 
-        process = multiprocessing.Process(target=function, args=(uri, session.database().name(), chunk, batch_size, i))
-
-        process.start()
-        processes.append(process)
-
-    for process in processes:
-        process.join()
+    with ThreadPool(num_threads) as pool:
+        pool.starmap(function, args)
 
     # end_time = datetime.datetime.now()
     # print("-------------\nTime taken: {}".format(end_time - start_time))
@@ -397,16 +399,3 @@ def relationship_mapper(relationship: str):
     mapping = mapper.get(relationship, {})
 
     return mapping
-
-
-def openFile(filePath, num):
-    if num != 0:
-        with open(filePath) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=';')
-            raw_file = []
-            n = 0
-            for row in csvreader:
-                n = n + 1
-                if n != 1:
-                    raw_file.append(row)
-    return raw_file
