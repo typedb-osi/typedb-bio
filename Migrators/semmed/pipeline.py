@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Define the pipeline for migrating SemMed data to TypeDB."""
 from functools import partial
 from typing import Any, Callable
 
@@ -20,23 +21,33 @@ from Migrators.semmed.parse import (
 )
 
 
-def migrate_semmed(session, uri, num_semmed, n_jobs, batch_size):
-    """Import SemMed data into the database.
+def migrate_semmed(
+    session: typedb.api.connection.session.TypeDBSession,
+    uri: str,
+    num_semmed: int,
+    n_jobs: int,
+    batch_size: int,
+) -> None:
+    """Migrate SemMed data to TypeDB.
 
-    :param session: The session
-    :param uri: The semmed uri
-    :param num_semmed: The number of SemMed data to import
-    :param n_jobs: The number of threads to use for importing
-    :param batch_size: The batch size for adding into the database.
+    :param session: The TypeDB session
+    :type session: typedb.api.connection.session.TypeDBSession
+    :param uri: The uri of the TypeDB server
+    :type uri: str
+    :param num_semmed: The number of publications to be migrated
+    :type num_semmed: int
+    :param n_jobs: The number of jobs to be run in parallel
+    :type n_jobs: int
+    :param batch_size: The batch size for committing
+    :type batch_size: int
     """
-
     __load_dataset = partial(
         _migrate_dataset,
-        num_semmed=num_semmed,
         session=session,
         uri=uri,
-        batch_size=batch_size,
+        num_semmed=num_semmed,
         n_jobs=n_jobs,
+        batch_size=batch_size,
     )
 
     __load_dataset(file_path="Dataset/SemMed/Subject_CORD_NER.csv")
@@ -44,25 +55,28 @@ def migrate_semmed(session, uri, num_semmed, n_jobs, batch_size):
 
 
 def _migrate_dataset(
-    file_path,
-    num_semmed,
-    session,
-    uri,
-    batch_size,
-    n_jobs,
-):
-    """Load dataset in parallel.
+    file_path: str,
+    session: typedb.api.connection.session.TypeDBSession,
+    uri: str,
+    num_semmed: int,
+    n_jobs: int,
+    batch_size: int,
+) -> None:
+    """Migrate different components of SemMed data to TypeDB.
 
-    :param author_names: The list of author names
-    :param batch_size: The number of data to be added into the database at once
-    :param journal_names: The list of journal names
-    :param n_jobs:  The number of threads to use for importing
-    :param publications_list: The list of publications
-    :param relationship_data: The list of relationship data
-    :param session: Database session
-    :param uri: semmed uri
+    :param file_path: The path to the file specifying the SemMed data
+    :type file_path: str
+    :param session: The TypeDB session
+    :type session: typedb.api.connection.session.TypeDBSession
+    :param uri: The uri of the TypeDB server
+    :type uri: str
+    :param num_semmed: The number of publications to be migrated
+    :type num_semmed: int
+    :param n_jobs: The number of jobs to be run in parallel
+    :type n_jobs: int
+    :param batch_size: The batch size for committing
+    :type batch_size: int
     """
-
     print(f"Migrate {file_path}")
     relations, publications = fetch_data(file_path, num_semmed)
 
@@ -84,26 +98,26 @@ def _migrate_dataset(
 
 
 def _load_data(
-    session: typedb.api.connection.session.TypeDBSession,
-    uri: str,
     func: Callable,
     data: Any,
+    session: typedb.api.connection.session.TypeDBSession,
+    uri: str,
     n_jobs: int,
     batch_size: int,
 ):
     """Load `data` to TypeDB using `func` and `n_jobs` in parallel.
 
-    :param session: The TypeDB session
-    :type session: typedb.api.connection.session.TypeDBSession
-    :param uri: The uri of the TypeDB server
-    :type uri: str
     :param func: The function to run for loading data
     :type func: Callable
     :param data: The data to load
     :type data: Any
+    :param session: The TypeDB session
+    :type session: typedb.api.connection.session.TypeDBSession
+    :param uri: The uri of the TypeDB server
+    :type uri: str
     :param n_jobs: The number of jobs to run in parallel
     :type n_jobs: int
-    :param batch_size: The batch size for each job
+    :param batch_size: The batch size for committing
     :type batch_size: int
     """
     joblib.Parallel(n_jobs=n_jobs)(

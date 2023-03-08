@@ -118,7 +118,7 @@ def _fetch_metadata_with_retries(
 def fetch_data(file_path: str, num_semmed: int) -> tuple[pd.DataFrame, list[dict]]:
     """Fetch SemMed data for the given file path.
 
-    :param file_path: The file path
+    :param file_path: The path to the file specifying the SemMed data
     :type file_path: str
     :param num_semmed: The number of publications to import
     :type num_semmed: int
