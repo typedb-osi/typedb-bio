@@ -24,7 +24,7 @@ The team behind TypeDB Bio consists of a partnership between [GSK](http://gsk.co
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows TypeDB Bio to become an intelligent database of biomedical data in the biomedical field that infers implicit knowledge based on the explicitly stored data. TypeDB Bio can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >3.6, [TypeDB Core 2.14.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.14.3](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
+**Prerequesites**: Python >3.10, [TypeDB Core 2.14.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.14.3](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
 
 Clone this repo:
 
@@ -48,12 +48,6 @@ Start typedb
 typedb server
 ```
 
-Create the bio database if it doesn't exist
-```bash
-typedb console
-database create bio
-```
-
 Start the migrator script
 
 ```bash
@@ -67,6 +61,27 @@ python migrator.py -h
 ```
 
 Now grab a coffee (or two) while the migrator builds the database and schema for you!
+
+## Testing
+Install the test dependencies:
+
+```bash
+pip install -r requirements-test.txt
+```
+
+Run the tests:
+
+```bash
+python -m pytest -v -s tests
+```
+
+## Development
+Install the development dependencies:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+```
 
 ## Examples
 TypeQL queries can be run either in the [TypeDB console](https://docs.vaticle.com/docs/console/console), in [TypeDB Studio](https://docs.vaticle.com/docs/studio/overview) or through [client APIs](https://docs.vaticle.com/docs/client-api/overview).  However, we encourage running the queries on TypeDB Studio to have the best visual experience.
