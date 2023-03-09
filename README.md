@@ -66,7 +66,7 @@ Now grab a coffee (or two) while the migrator builds the database and schema for
 Install the test dependencies:
 
 ```bash
-pip install -r requirements-test.txt
+pip install -r requirements_test.txt
 ```
 
 Run the tests:
@@ -79,7 +79,7 @@ python -m pytest -v -s tests
 Install the development dependencies:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements_dev.txt
 pre-commit install
 ```
 

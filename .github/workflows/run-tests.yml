@@ -1,0 +1,39 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Change the ownership of the workspace to the current user
+        run: sudo chown -R "$USER":"$USER" "${{ github.workspace }}"
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.8
+      - name: Run Python commands
+        run: |
+          pip install --upgrade pip
+          python3 -m venv env
+          source env/bin/activate
+          echo "VIRTUAL ENV:" "$VIRTUAL_ENV"
+          pip install .
+          pip install -r requirements_test.txt
+          # force reinstall the version of the upstream caller repository
+      - name: Run tests
+        run: |
+          python -m pytest --junitxml=pytest.xml --cov-report=term-missing --cov=./ tests/ > pytest-coverage.txt
+      - name: Comment test coverage
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
+      - name: Clean virtual environment
+        run: |
+          rm -r env
