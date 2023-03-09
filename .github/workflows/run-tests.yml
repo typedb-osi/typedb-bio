@@ -26,8 +26,6 @@ jobs:
           echo "deb [ arch=all ] https://repo.vaticle.com/repository/apt/ trusty main" | sudo tee /etc/apt/sources.list.d/vaticle.list > /dev/null
           sudo apt update
           sudo apt install typedb-all=2.15.0 typedb-bin=2.12.0 -y
-      - name: Start TypeDB
-        run: typedb server
       - name: Run Python commands
         run: |
           pip install --upgrade pip
@@ -38,7 +36,7 @@ jobs:
           # force reinstall the version of the upstream caller repository
       - name: Run tests
         run: |
-          python -m pytest --junitxml=pytest.xml --cov-report=term-missing --cov=./ tests/ > pytest-coverage.txt
+          typedb server & python -m pytest --junitxml=pytest.xml --cov-report=term-missing --cov=./ tests/ > pytest-coverage.txt
       - name: Comment test coverage
         uses: MishaKav/pytest-coverage-comment@main
         with:
