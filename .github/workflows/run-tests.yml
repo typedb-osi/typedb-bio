@@ -1,0 +1,44 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Change the ownership of the workspace to the current user
+        run: sudo chown -R "$USER":"$USER" "${{ github.workspace }}"
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.8
+      - name: Setup TypeDB
+        run: |
+          sudo apt install software-properties-common apt-transport-https gpg
+          gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 8F3DA4B5E9AEF44C
+          gpg --export 8F3DA4B5E9AEF44C | sudo tee /etc/apt/trusted.gpg.d/vaticle.gpg > /dev/null
+          echo "deb [ arch=all ] https://repo.vaticle.com/repository/apt/ trusty main" | sudo tee /etc/apt/sources.list.d/vaticle.list > /dev/null
+          sudo apt update
+          sudo apt install typedb-all=2.15.0 typedb-console=2.15.0 typedb-server=2.15.0 typedb-bin=2.12.0 -y
+      - name: Run Python commands
+        run: |
+          pip install --upgrade pip
+          python3 -m venv env
+          source env/bin/activate
+          echo "VIRTUAL ENV:" "$VIRTUAL_ENV"
+          pip install -r requirements_test.txt
+      - name: Run tests
+        run: |
+          source env/bin/activate
+          typedb server &
+          sleep 5
+          python -m pytest -v -s tests
+      - name: Clean virtual environment
+        run: |
+          rm -r env
