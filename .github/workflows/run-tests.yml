@@ -36,6 +36,7 @@ jobs:
           # force reinstall the version of the upstream caller repository
       - name: Run tests
         run: |
+          source env/bin/activate
           typedb server & python -m pytest --junitxml=pytest.xml --cov-report=term-missing --cov=./ tests/ > pytest-coverage.txt
       - name: Comment test coverage
         uses: MishaKav/pytest-coverage-comment@main
