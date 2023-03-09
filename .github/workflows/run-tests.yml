@@ -38,7 +38,12 @@ jobs:
           source env/bin/activate
           typedb server &
           sleep 10
-          python -m pytest tests
+          python -m pytest -v -s tests --junitxml=pytest.xml --cov-report=term-missing --cov=./ > pytest-coverage.txt
+      - name: Comment test coverage
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
       - name: Clean virtual environment
         run: |
           rm -r env
