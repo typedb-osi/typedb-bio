@@ -26,13 +26,14 @@ jobs:
           echo "deb [ arch=all ] https://repo.vaticle.com/repository/apt/ trusty main" | sudo tee /etc/apt/sources.list.d/vaticle.list > /dev/null
           sudo apt update
           sudo apt install typedb-all=2.15.0 typedb-bin=2.12.0 -y
+      - name: Start TypeDB
+        run: typedb server
       - name: Run Python commands
         run: |
           pip install --upgrade pip
           python3 -m venv env
           source env/bin/activate
           echo "VIRTUAL ENV:" "$VIRTUAL_ENV"
-          pip install .
           pip install -r requirements_test.txt
           # force reinstall the version of the upstream caller repository
       - name: Run tests
