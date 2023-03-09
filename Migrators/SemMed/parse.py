@@ -47,6 +47,7 @@ def get_publication_data(publications: list[dict]):
             pub = {}
             pub["paper-id"] = pub["pmid"] = clean_string(publication["uid"])
 
+            pub["doi"] = ""
             for article_id in publication["articleids"]:
                 if article_id["idtype"] == "doi":
                     pub["doi"] = article_id["value"]
@@ -55,16 +56,20 @@ def get_publication_data(publications: list[dict]):
             for author in publication["authors"]:
                 pub["authors"].append(clean_string(author["name"]))  # type: ignore
 
-            pub["issn"] = publication["issn"]
-            pub["volume"] = publication["volume"]
+            pub["issn"] = publication["issn"] if "issn" in publication else ""
+            pub["volume"] = publication["volume"] if "volume" in publication else ""
 
             pub["journal-name"] = ""
             if "Journal Article" in publication["pubtype"]:
                 pub["journal-name"] = clean_string(publication["fulljournalname"])
 
-            pub["publish-time"] = publication["pubdate"]
+            pub["publish-time"] = (
+                publication["pubdate"] if "pubdate" in publication else ""
+            )
 
-            pub["title"] = publication["title"].replace('"', "'")
+            pub["title"] = (
+                publication["title"].replace('"', "'") if "title" in publication else ""
+            )
 
             parsed_publications[pub["paper-id"]] = pub
 

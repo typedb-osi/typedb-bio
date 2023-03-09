@@ -4,7 +4,9 @@ import uuid
 from pathlib import Path
 
 import pytest
-from typedb.client import SessionType, TransactionType, TypeDB, TypeDBClient
+from typedb.client import TypeDB, TypeDBClient
+
+from Schema.initialise import initialise_database
 
 
 @pytest.fixture(scope="session")
@@ -56,7 +58,7 @@ def cache_dir(tmp_path_factory: pytest.TempPathFactory, identifier: str) -> Path
 
 
 @pytest.fixture
-def database(client: TypeDBClient, identifier: str) -> str:
+def database(client: TypeDBClient, identifier: str) -> str:  # type: ignore
     """Create and return a database.
 
     :param client: The TypeDB client.
@@ -67,20 +69,6 @@ def database(client: TypeDBClient, identifier: str) -> str:
     :rtype: str
     """
     _database = f"test_{identifier}"
-    client.databases().create(_database)
-
-    with client.session(_database, SessionType.SCHEMA) as session:
-        print(".....")
-        print("Inserting schema...")
-        print(".....")
-        with open("Schema/schema.tql", "r", encoding="utf-8") as typeql_file:
-            schema = typeql_file.read()
-        with session.transaction(TransactionType.WRITE) as write_transaction:
-            write_transaction.query().define(schema)
-            write_transaction.commit()
-        print(".....")
-        print("Successfully committed schema!")
-        print(".....")
-
+    initialise_database(client, _database, False)
     yield _database
     client.databases().get(_database).delete()
