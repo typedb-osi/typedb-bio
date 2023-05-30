@@ -9,9 +9,9 @@
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typeql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/typeql)
 
 ## Overview
-TypeDB Bio is an open source biomedical knowledge graph to enable research in areas such as drug discovery, precision medicine and drug repurposing. It provides biomedical researchers an intuitive way to query interconnected and heterogeneous biomedical data in one single place. 
+TypeDB Bio is an open source biomedical knowledge graph to enable research in areas such as drug discovery, precision medicine and drug repurposing. It provides biomedical researchers an intuitive way to query interconnected and heterogeneous biomedical data in one single place.
 
-For example, by querying for the virus *SARS-CoV-2,* we can find the associated human protein, *proteasome subunit alpha type-2* (PSMA2), a component of the proteasome, implicated in *SARS-CoV-2* replication, and its encoding gene (*PSMA2*). Additionally, we can identify the drug *carfilzomib,* a known inhibitor of the proteasome that could therefore be researched as a potential treatment for patients with Covid-19. 
+For example, by querying for the virus *SARS-CoV-2,* we can find the associated human protein, *proteasome subunit alpha type-2* (PSMA2), a component of the proteasome, implicated in *SARS-CoV-2* replication, and its encoding gene (*PSMA2*). Additionally, we can identify the drug *carfilzomib,* a known inhibitor of the proteasome that could therefore be researched as a potential treatment for patients with Covid-19.
 
 <img width="962" alt="image" src="https://user-images.githubusercontent.com/20223184/179493757-039db277-22ac-4bf4-b79e-f32a44481f7d.png">
 
@@ -24,11 +24,11 @@ The team behind TypeDB Bio consists of a partnership between [GSK](http://gsk.co
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows TypeDB Bio to become an intelligent database of biomedical data in the biomedical field that infers implicit knowledge based on the explicitly stored data. TypeDB Bio can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >3.6, [TypeDB Core 2.14.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.14.3](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
+**Prerequesites**: Python >3.10, [TypeDB Core 2.15.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.14.3](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
 
 Clone this repo:
 
-```bash 
+```bash
 git clone https://github.com/vaticle/typedb-bio.git
 ```
 
@@ -44,9 +44,10 @@ pip install -r requirements.txt
 ```
 
 Start typedb
-```bash 
+```bash
 typedb server
 ```
+
 Start the migrator script
 
 ```bash
@@ -61,18 +62,39 @@ python migrator.py -h
 
 Now grab a coffee (or two) while the migrator builds the database and schema for you!
 
+## Testing
+Install the test dependencies:
+
+```bash
+pip install -r requirements_test.txt
+```
+
+Run the tests:
+
+```bash
+python -m pytest -v -s tests
+```
+
+## Development
+Install the development dependencies:
+
+```bash
+pip install -r requirements_dev.txt
+pre-commit install
+```
+
 ## Examples
-TypeQL queries can be run either in the [TypeDB console](https://docs.vaticle.com/docs/console/console), in [TypeDB Studio](https://docs.vaticle.com/docs/studio/overview) or through [client APIs](https://docs.vaticle.com/docs/client-api/overview).  However, we encourage running the queries on TypeDB Studio to have the best visual experience. 
+TypeQL queries can be run either in the [TypeDB console](https://docs.vaticle.com/docs/console/console), in [TypeDB Studio](https://docs.vaticle.com/docs/studio/overview) or through [client APIs](https://docs.vaticle.com/docs/client-api/overview).  However, we encourage running the queries on TypeDB Studio to have the best visual experience.
 
 ```bash
 # What are the drugs that interact with the genes associated to the virus Sars?
 
-match 
-$virus isa virus, has virus-name "SARS"; 
-$gene isa gene; 
-$drug isa drug; 
-$rel1 ($gene, $virus) isa gene-virus-association; 
-$rel2 ($gene, $drug) isa drug-gene-interaction; 
+match
+$virus isa virus, has virus-name "SARS";
+$gene isa gene;
+$drug isa drug;
+$rel1 ($gene, $virus) isa gene-virus-association;
+$rel2 ($gene, $drug) isa drug-gene-interaction;
 offset 0; limit 20;
 ```
 
@@ -93,10 +115,10 @@ Currently the datasets we've integrated include:
 
 In progress:
 
-* [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.    
+* [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.
     * TODO: write migrator script
-* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/) 
-    * TODO: `./Migrators/TissueNet/TissueNetMigrator.py` incomplete: only migrates a single data file and is not called in `./migrator.py`. 
+* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/)
+    * TODO: `./Migrators/TissueNet/TissueNetMigrator.py` incomplete: only migrates a single data file and is not called in `./migrator.py`.
 
 We plan to add many more datasets!
 
