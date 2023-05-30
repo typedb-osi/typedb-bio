@@ -26,7 +26,7 @@ def migrator_parser():
         "-n",
         "--n_jobs",
         type=int,
-        help="Number of threads to enable multi-threading (default: 8)",
+        help="The maximum number of concurrently running jobs (default: 8)",
         default=8,
     )
     parser.add_argument(
