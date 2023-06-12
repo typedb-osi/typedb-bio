@@ -1,4 +1,3 @@
-import sys
 from typedb.client import TransactionType
 import csv
 from Migrators.Helpers.batchLoader import write_batches
@@ -23,7 +22,6 @@ def load_uniprot(session, max_proteins, num_threads, batch_size):
         print(".....")
         print("Finished migrating Uniprot file.")
         print(".....")
-        sys.exit()
 
 
 def get_uniprot_dataset(max_rows):
@@ -37,16 +35,16 @@ def get_uniprot_dataset(max_rows):
     if max_rows is None:
         max_rows = len(rows)
 
-    for i in rows[:max_rows]:
+    for row in rows[:max_rows]:
         data = {
-            "uniprot-id": i[0],
-            "uniprot-entry-name": i[1],
-            "protein-name": i[3],
-            "gene-symbol": i[4],
-            "organism": i[5],
-            "function-description": i[7],
-            "ensembl-transcript": i[11],
-            "entrez-id": i[12][:-1],
+            "uniprot-id": row[0],
+            "uniprot-entry-name": row[1],
+            "protein-name": row[3],
+            "gene-symbol": row[4],
+            "organism": row[5],
+            "function-description": row[7],
+            "ensembl-transcript": row[11],
+            "entrez-id": row[12][:-1],
         }
 
         dataset.append(data)
