@@ -12,7 +12,7 @@ from Migrators.HumanProteinAtlas.HumanProteinAtlasMigrator import migrate_protei
 from Migrators.Reactome.reactomeMigrator import migrate_reactome
 from Migrators.SemMed.pipeline import migrate_semmed
 from Migrators.TissueNet.TissueNetMigrator import migrate_tissuenet
-from Migrators.Uniprot.UniprotMigrator import migrate_uniprot
+from Migrators.Uniprot.UniprotMigrator import load_uniprot
 from Schema.initialise import initialise_database
 
 
@@ -57,14 +57,16 @@ def migrator_parser():
     return parser
 
 
-NUM_PROTEINS = 10000000  # Total proteins to migrate (There are total of 20350 proteins)
-NUM_DIS = 10000000  # Total diseases to migrate
-NUM_DR = 10000000  # Total drug to migrate (32k total)
-NUM_INT = 10000000  # Total drug-gene interactions to migrate (42k total)
-NUM_PATH = 10000000  # Total pathway associations to migrate
-NUM_TN = 10000000  # Total TissueNet being migrated
-NUM_PA = 10000000  # Total Tissues <> Genes to migrate
-NUM_SEM = 10000000  # Total number of rows from SemMed to migrate
+# Set a constant to None to migrate all entries.
+# Set a constant to 0 to migrate no entries.
+MAX_PROTEINS = None  # Maximum number of proteins to migrate.
+MAX_DISEASES = 0  # Maximum number of diseases to migrate.
+MAX_DRUGS = 0  # Maximum number of drugs to migrate.
+MAX_INTERACTIONS = 0  # Maximum number of drug-gene interactions to migrate.
+MAX_PATHWAYS = 0  # Maximum number of pathway associations to migrate.
+MAX_TISSUENET_ROWS = 0  # Maximum number of TissueNet rows to migrate.
+MAX_TISSUES = 0  # Maximum number of Tissues to migrate.
+MAX_SEMMED_ROWS = 0  # Maximum number of SemMed rows to migrate.
 
 start = timer()
 if __name__ == "__main__":
@@ -75,16 +77,16 @@ if __name__ == "__main__":
     with TypeDB.core_client(uri) as client:
         initialise_database(client, args.database, args.force)
         with client.session(args.database, SessionType.DATA) as session:
-            migrate_uniprot(session, NUM_PROTEINS, args.n_jobs, args.commit_batch)
+            load_uniprot(session, MAX_PROTEINS, args.n_jobs, args.commit_batch)
             migrate_coronavirus(session)
-            migrate_reactome(session, NUM_PATH, args.n_jobs, args.commit_batch)
-            migrate_disgenet(session, NUM_DIS, args.n_jobs, args.commit_batch)
-            migrate_dgibd(session, NUM_DR, NUM_INT, args.n_jobs, args.commit_batch)
-            migrate_protein_atlas(session, NUM_PA, args.n_jobs, args.commit_batch)
-            migrate_semmed(session, uri, NUM_SEM, args.n_jobs, args.commit_batch)
+            migrate_reactome(session, MAX_PATHWAYS, args.n_jobs, args.commit_batch)
+            migrate_disgenet(session, MAX_DISEASES, args.n_jobs, args.commit_batch)
+            migrate_dgibd(session, MAX_DRUGS, MAX_INTERACTIONS, args.n_jobs, args.commit_batch)
+            migrate_protein_atlas(session, MAX_TISSUES, args.n_jobs, args.commit_batch)
+            migrate_semmed(session, uri, MAX_SEMMED_ROWS, args.n_jobs, args.commit_batch)
 
             # TODO: add protein interaction relations in tissues
-            migrate_tissuenet(session, args.n_jobs, args.commit_batch)
+            migrate_tissuenet(session, MAX_TISSUENET_ROWS, args.n_jobs, args.commit_batch)
 end = timer()
 time_in_sec = end - start
 print("Elapsed time: " + str(time_in_sec) + " seconds.")

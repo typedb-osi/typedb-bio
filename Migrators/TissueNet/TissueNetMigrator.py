@@ -18,7 +18,7 @@ def openFileVariant(path, tissue_name):
                 raw_file.append(row)
         return raw_file
 
-def migrate_tissuenet(session, num_threads, batch_size):
+def migrate_tissuenet(session, num, num_threads, batch_size):
 
     print("Downloading HPA - Protein dataset from TissueNet")
     url = "https://netbio.bgu.ac.il/tissuenet2-interactomes/TissueNet2.0/HPA-Protein.zip"
