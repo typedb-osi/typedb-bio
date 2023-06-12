@@ -1,193 +1,238 @@
+import sys
 from typedb.client import TransactionType
 import csv
-import re
-
-from multiprocessing.dummy import Pool as ThreadPool
-from functools import partial
-from Migrators.Helpers.batchLoader import write_batch
+from Migrators.Helpers.batchLoader import write_batches
 
 
-def migrate_uniprot(session, num, num_threads, batch_size):
-    if num != 0:
-        print('  ')
-        print('Opening Uniprot dataset...')
-        print('  ')
+def load_uniprot(session, max_proteins, num_threads, batch_size):
+    if max_proteins is None or max_proteins > 0:
+        print("  ")
+        print("Opening Uniprot dataset...")
+        print("  ")
 
-        with session.transaction(TransactionType.WRITE) as tx:
-            org = "insert $h isa organism, has organism-name 'Homo sapiens (Human)', has organism-name 'Human'; $o2 isa organism, has organism-name 'Avian';"
-            tx.query().insert(org)
-            tx.commit()
+        with session.transaction(TransactionType.WRITE) as transaction:
+            # TODO: Work out why this query is necessary. Where in the architecture should organisms be loaded?
+            org = "insert $o1 isa organism, has organism-name 'Homo sapiens (Human)', has organism-name 'Human'; $o2 isa organism, has organism-name 'Avian';"
+            transaction.query().insert(org)
+            transaction.commit()
 
-        uniprotdb = get_uniprotdb(num)
-        insert_genes(uniprotdb, session, num_threads, batch_size)
-        insert_transcripts(uniprotdb, session, num_threads, batch_size)
-        insert_proteins(uniprotdb, session, num_threads, batch_size)
-        print('.....')
-        print('Finished migrating Uniprot file.')
-        print('.....')
-
-
-def get_uniprotdb(split_size):
-    with open('Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv', 'rt', encoding='utf-8') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='\t')
-        raw_file = []
-        n = 0
-        for row in csvreader:
-            n = n + 1
-            if n != 1:
-                raw_file.append(row)
-
-    uniprotdb = []
-    for i in raw_file[:split_size]:
-        data = {}
-        data['uniprot-id'] = i[0]
-        data['uniprot-entry-name'] = i[1]
-        data['protein-name'] = i[3]
-        data['gene-symbol'] = i[4]
-        data['organism'] = i[5]
-        data['function-description'] = i[7]
-        data['ensembl-transcript'] = i[11]
-        data['entrez-id'] = i[12]
-        uniprotdb.append(data)
-    return uniprotdb
+        uniprot_dataset = get_uniprot_dataset(max_proteins)
+        insert_genes(uniprot_dataset, session, num_threads, batch_size)
+        insert_transcripts(uniprot_dataset, session, num_threads, batch_size)
+        insert_proteins(uniprot_dataset, session, num_threads, batch_size)
+        print(".....")
+        print("Finished migrating Uniprot file.")
+        print(".....")
+        sys.exit()
 
 
-def transcript_helper(q):
-    list = []
-    n = q['ensembl-transcript']
-    nt = n.count(';')
-    if nt != 0:
-        while nt != 0:
-            nt = nt - 1
-            pos = [m.start() for m in re.finditer(r";", n)]
-            if nt == 0:
-                n2 = n[0:pos[0]]
+def get_uniprot_dataset(max_rows):
+    with open("Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv", "rt", encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter='\t')
+        next(reader)
+        rows = list(reader)
+
+    dataset = list()
+
+    if max_rows is None:
+        max_rows = len(rows)
+
+    for i in rows[:max_rows]:
+        data = {
+            "uniprot-id": i[0],
+            "uniprot-entry-name": i[1],
+            "protein-name": i[3],
+            "gene-symbol": i[4],
+            "organism": i[5],
+            "function-description": i[7],
+            "ensembl-transcript": i[11],
+            "entrez-id": i[12][:-1],
+        }
+
+        dataset.append(data)
+
+    return dataset
+
+
+def extract_gene_entry(data):
+    entry = dict()
+    symbols = [symbol.strip() for symbol in data["gene-symbol"].strip().split(" ")]
+    entry["official-gene-symbol"] = symbols.pop(0)
+    entry["alternative-gene-symbol"] = symbols
+
+    if data["entrez-id"].strip() == "":
+        entry["entrez-id"] = list()
+    else:
+        entry["entrez-id"] = data["entrez-id"].split(";")
+
+    return entry
+
+
+def insert_genes(uniprot_dataset, session, num_threads, batch_size):
+    gene_entries = list()
+
+    for data in uniprot_dataset:
+        if data["gene-symbol"].strip() != "":
+            gene_entries.append(extract_gene_entry(data))
+
+    symbols = set(entry["official-gene-symbol"] for entry in gene_entries)
+    genes = list()
+
+    for symbol in symbols:
+        gene = dict()
+        gene["official-gene-symbol"] = symbol
+        gene["alternative-gene-symbol"] = list()
+        gene["entrez-id"] = list()
+
+        for entry in gene_entries:
+            if entry["official-gene-symbol"] == symbol:
+                gene["alternative-gene-symbol"] += entry["alternative-gene-symbol"]
+                gene["entrez-id"] += entry["entrez-id"]
+
+        genes.append(gene)
+
+    queries = list()
+
+    for gene in genes:
+        query = "insert $g isa gene, has official-gene-symbol \"{}\"".format(gene["official-gene-symbol"])
+
+        for symbol in gene["alternative-gene-symbol"]:
+            query += ", has alternative-gene-symbol \"{}\"".format(symbol)
+
+        for entrez_id in gene["entrez-id"]:
+            query += ", has entrez-id \"{}\"".format(entrez_id)
+
+        query += ";"
+        queries.append(query)
+
+    write_batches(session, queries, batch_size, num_threads)
+    print("Genes committed!")
+
+
+def extract_transcript_entries(data):
+    entries = [entry.split("[")[0].strip() for entry in data["ensembl-transcript"][:-1].split(";")]
+    return [entry for entry in entries if entry != ""]
+
+
+def insert_transcripts(uniprot_dataset, session, num_threads, batch_size):
+    transcripts = set()
+    queries = list()
+
+    for data in uniprot_dataset:
+        entries = extract_transcript_entries(data)
+        transcripts.update(entries)
+
+    for transcript in transcripts:
+        query = "insert $t isa transcript, has ensembl-transcript-stable-id \"{}\";".format(transcript)
+        queries.append(query)
+
+    write_batches(session, queries, batch_size, num_threads)
+    print("Transcripts committed!")
+
+
+def extract_protein_names(entry):
+    protein_names = {
+        "alternative-names": list()
+    }
+
+    if entry.strip() == "":
+        return protein_names
+
+    candidate_names = list()
+    name = ""
+    depth = 0
+
+    for char in entry.strip()[::-1]:
+        if char in (")", "]"):
+            depth += 1
+            name = char + name
+        elif char in ("(", "["):
+            depth -= 1
+            name = char + name
+
+            if depth == 0:
+                candidate_names.append(name)
+                name = ""
+        else:
+            name = char + name
+
+    candidate_names.append(name)
+
+    if len(candidate_names) == 0:
+        return protein_names
+    else:
+        primary_name = ""
+        alternative_names = list()
+        in_primary_name = False
+
+        for name in candidate_names:
+            if name == "":
+                continue
+
+            if name.strip()[0] == "(" and name.strip()[-1] == ")":
+                alternative_names.append(name.strip()[1:-1].strip())
+            elif name.strip()[0] == "[" and name.strip()[-1] == "]":
+                if in_primary_name:
+                    primary_name = name + primary_name
+                else:
+                    continue
             else:
-                try:
-                    pos_st = pos[nt - 1] + 1
-                    pos_end = pos[nt]
-                    n2 = n[pos_st:pos_end]
-                except:
-                    pass
-            estr = n2.find('[') - 1
-            n2 = n2[:estr]
-            list.append(n2)
-        return list
+                in_primary_name = True
+                primary_name = name + primary_name
+
+    protein_names["primary-name"] = primary_name.strip()
+    protein_names["alternative-names"] = alternative_names[::-1]
+    return protein_names
 
 
-# Returns: a list of [gene, entrez-id]
-# Method removes synonyms from genes and only takes the first one
-def gene_helper(q):
-    gene_name = q['gene-symbol']
-    entrez_id = q['entrez-id'][0:-1]
-    if gene_name.find(' ') != -1:
-        gene_name = gene_name[0:gene_name.find(' ')]
-    list = [gene_name, entrez_id]
-    return list
+def insert_proteins(uniprot_dataset, session, num_threads, batch_size):
+    queries = list()
 
+    for data in uniprot_dataset:
+        transcripts = extract_transcript_entries(data)
+        match_clause = "match"
+        insert_clause = "insert"
 
-# Insert genes from gene-symbol.
-# NB: We only insert the first name, if there are synonyms, we ignore them. 
-def insert_genes(uniprotdb, session, num_threads, batch_size):
-    gene_list = []
-    batch = []
-    batches = []
-    for q in uniprotdb:
-        if q['gene-symbol'] != "":
-            gene_list.append(gene_helper(q))
+        insert_clause += " " + " ".join([
+            "$p isa protein,",
+            "has uniprot-id \"{}\",",
+            "has function-description \"{}\",",
+            "has uniprot-entry-name \"{}\"",
+        ]).format(
+            data["uniprot-id"],
+            data["function-description"],
+            data["uniprot-entry-name"]
+        )
 
-    # gene_list = list(dict.fromkeys(gene_list)) # TO DO: Remove duplicate gene-symbols
+        names = extract_protein_names(data["protein-name"])
 
-    for g in gene_list:
-        typeql = f"insert $g isa gene, has gene-symbol '{g[0]}', has entrez-id '{g[1]}';"
-        batch.append(typeql)
-        if len(batch) == batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
-    pool.close()
-    pool.join()
-    print('Genes committed!')
+        if "primary-name" in names:
+            insert_clause += ", has primary-uniprot-name \"{}\"".format(names["primary-name"])
 
+        for name in names["alternative-names"]:
+            insert_clause += ", has alternative-uniprot-name \"{}\"".format(name)
 
-# Insert transcripts
-def insert_transcripts(uniprotdb, session, num_threads, batch_size):
-    transcript_list = []
-    batch = []
-    batches = []
-    for q in uniprotdb:
-        tr = transcript_helper(q)
-        if tr != None:
-            transcript_list = transcript_list + tr
+        insert_clause += ";"
 
-    transcript_list = list(dict.fromkeys(transcript_list))  # Remove duplicate transcripts
+        match_clause += " $o isa organism, has organism-name \"{}\";".format(data["organism"])
+        insert_clause += " (associated-organism: $o, associating: $p) isa organism-association;"
 
-    for q in transcript_list:
-        typeql = "insert $t isa transcript, has ensembl-transcript-stable-id '" + q + "' ;"
-        batch.append(typeql)
-        if len(batch) == batch_size:
-            batches.append(batch)
-            batch = []
-    batches.append(batch)
-    pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batches)
-    pool.close()
-    pool.join()
-    print('Transcripts committed!')
+        if data["gene-symbol"].strip() != "":
+            gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
+            match_clause += " $g isa gene, has official-gene-symbol \"{}\";".format(gene_symbol)
+            insert_clause += " (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;"
+        else:
+            gene_symbol = None
 
+        for i in range(len(transcripts)):
+            match_clause += " $t{} isa transcript, has ensembl-transcript-stable-id \"{}\";".format(i, transcripts[i])
+            insert_clause += " (translating-transcript: $t{}, translated-protein: $p) isa translation;".format(i)
 
-def get_batched_protein_queries(uniprotdb, batch_size):
-    batches = []
-    batch = []
-    for q in uniprotdb:
-        transcripts = transcript_helper(q)
-        gene = gene_helper(q)[0]
-        if transcripts != None:
-            variables = []
-            tvariable = 1
-            typeql = "match "
-            for t in transcripts:
-                variables.append(tvariable)
-                typeql = typeql + "$" + str(
-                    tvariable) + " isa transcript, has ensembl-transcript-stable-id '" + t + "'; "
-                tvariable = tvariable + 1
-        if gene != None:
-            try:
-                typeql = typeql + "$g isa gene, has gene-symbol '" + gene + "';"
-            except Exception:
-                typeql = "match $g isa gene, has gene-symbol '" + gene + "';"
-        try:
-            typeql = typeql + "$h isa organism, has organism-name '" + q['organism'] + "';"
-        except Exception:
-            typeql = "match $h isa organism, has organism-name '" + q['organism'] + "';"
+            if gene_symbol is not None:
+                insert_clause += " (transcribing-gene: $g, encoded-transcript: $t{}) isa transcription;".format(i)
 
-        typeql = f"""{typeql} insert $a isa protein, has uniprot-id "{q['uniprot-id']}", has uniprot-name
-    "{q['protein-name']}", has function-description "{q['function-description']}", 
-    has uniprot-entry-name "{q['uniprot-entry-name']}";
-    $r (associated-organism: $h, associating: $a) isa organism-association;"""
-        if gene != None:
-            typeql = typeql + "$gpe (encoding-gene: $g, encoded-protein: $a) isa gene-protein-encoding;"
-        if transcripts != None:
-            for v in variables:
-                typeql = f"""{typeql} $r{str(v)}(translating-transcript: ${str(v)}, translated-protein: $a) isa translation; """
-        if gene and transcripts != None:
-            for v in variables:
-                typeql = typeql + "$trans" + str(v) + "(transcribing-gene: $g, encoded-transcript: $" + str(
-                    v) + ") isa transcription;"
+        query = match_clause + " " + insert_clause
+        queries.append(query)
 
-        batch.append(typeql)
-        del typeql
-        if len(batch) == batch_size:
-            batches.append(batch)
-            batch = []
-    return batches
-
-
-def insert_proteins(uniprotdb, session, num_threads, batch_size):
-    batched_protein_queries = get_batched_protein_queries(uniprotdb, batch_size)
-    pool = ThreadPool(num_threads)
-    pool.map(partial(write_batch, session), batched_protein_queries)
-    pool.close()
-    pool.join()
+    write_batches(session, queries, batch_size, num_threads)
+    print("Proteins committed!")

@@ -28,7 +28,8 @@ tissue sub fully-formed-anatomical-structure,
     plays mention:mentioned;
 
 gene sub fully-formed-anatomical-structure,
-    owns gene-symbol,
+    owns official-gene-symbol,
+    owns alternative-gene-symbol,
     owns entrez-id,
     owns ensembl-gene-stable-id,
     owns ensembl-xref,
@@ -97,8 +98,9 @@ protein sub chemical,
     owns uniprot-id,
     owns uniprot-entry-name,
     owns uniprot-symbol,
-    owns uniprot-name,
-    owns ensembl-protein-stable-id, 
+    owns primary-uniprot-name,
+    owns alternative-uniprot-name,
+    owns ensembl-protein-stable-id,
     owns go-evidence-code,
     owns go-taxon,
     owns go-id,
@@ -458,8 +460,12 @@ authorship sub relation,
     disease-name sub attribute, value string;
     disease-type sub attribute, value string;
     database-name sub attribute, value string;
-    uniprot-name sub attribute, value string;
-    gene-symbol sub attribute, value string;
+    uniprot-name sub attribute, abstract, value string;
+    primary-uniprot-name sub uniprot-name, value string;
+    alternative-uniprot-name sub uniprot-name, value string;
+    gene-symbol sub attribute, abstract, value string;
+    official-gene-symbol sub gene-symbol, value string;
+    alternative-gene-symbol sub attribute, value string;
     ensembl-xref sub attribute, value string; 
     uniprot-symbol sub attribute, value string; 
     complexportal-name sub attribute, value string;
