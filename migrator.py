@@ -54,9 +54,6 @@ def migrator_parser():
     parser.add_argument(
         "-p", "--port", help="Server port (default: 1729)", default="1729"
     )
-    parser.add_argument(
-        "-v", "--verbose", help="Verbosity (default: False)", default=False
-    )
     return parser
 
 
@@ -73,10 +70,6 @@ start = timer()
 if __name__ == "__main__":
     parser = migrator_parser()
     args = parser.parse_args()
-
-    # This is a global flag toggling counter and query printouts
-    # when we want to see less detail
-    verbose = args.verbose
 
     uri = args.address + ":" + args.port
     with TypeDB.core_client(uri) as client:
