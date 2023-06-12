@@ -522,7 +522,7 @@ identifier sub attribute, abstract, value string;
 expression-value sub attribute, value string; 
 expression-value-reliability sub attribute, value string; 
 drug-claim-source sub attribute, value string;
-identity-percentage sub attribute, value string;
+identity-percentage sub attribute, value double;
 go-evidence-code sub attribute, value string; 
 go-taxon sub attribute, value long; 
 function-description sub attribute, value string;
