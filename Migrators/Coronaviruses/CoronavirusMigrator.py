@@ -2,7 +2,7 @@ import csv
 from typedb.client import TransactionType
 
 
-def migrate_coronavirus(session):
+def load_coronavirus(session):
     print(".....")
     print("Starting with Coronavirus file.")
     print(".....")
@@ -21,14 +21,14 @@ def migrate_coronavirus(session):
         transaction.query().insert(query)
         transaction.commit()
 
-    load_genome_identity(session)
-    load_host_proteins(session)
+    insert_viruses(session)
+    insert_host_proteins(session)
     print(".....")
     print("Finished with Coronavirus file.")
     print(".....")
 
 
-def load_genome_identity(session):
+def insert_viruses(session):
     with open("Dataset/Coronaviruses/Genome identity.csv", "r", encoding="utf-8") as file:
         reader = csv.reader(file, delimiter=",")
         next(reader)
@@ -88,7 +88,7 @@ def load_genome_identity(session):
         transaction.commit()
 
 
-def load_host_proteins(session):
+def insert_host_proteins(session):
     with open("Dataset/Coronaviruses/Host proteins (potential drug targets).csv", "r", encoding="utf-8") as file:
         reader = csv.reader(file, delimiter=",")
         next(reader)
