@@ -73,7 +73,7 @@ def insert_genes(uniprot_dataset, session, num_threads, batch_size):
         if data["gene-symbol"].strip() != "":
             gene_entries.append(extract_gene_entry(data))
 
-    symbols = set(entry["official-gene-symbol"] for entry in gene_entries)
+    symbols = {entry["official-gene-symbol"] for entry in gene_entries}
     genes = list()
 
     for symbol in symbols:
@@ -113,15 +113,34 @@ def extract_transcript_entries(data):
 
 
 def insert_transcripts(uniprot_dataset, session, num_threads, batch_size):
-    transcripts = set()
+    transcripts = dict()
     queries = list()
 
     for data in uniprot_dataset:
         entries = extract_transcript_entries(data)
-        transcripts.update(entries)
+
+        for entry in entries:
+            if entry not in transcripts:
+                transcripts[entry] = list()
+
+            if data["gene-symbol"].strip() != "":
+                gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
+                transcripts[entry].append(gene_symbol)
 
     for transcript in transcripts:
-        query = "insert $t isa transcript, has ensembl-transcript-stable-id \"{}\";".format(transcript)
+        match_clause = "match"
+        insert_clause = "insert $t isa transcript, has ensembl-transcript-stable-id \"{}\";".format(transcript)
+        gene_symbols = transcripts[transcript]
+
+        for i in range(len(gene_symbols)):
+            match_clause += " $g{} isa gene, has official-gene-symbol \"{}\";".format(i, gene_symbols[i])
+            insert_clause += " (transcribing-gene: $g{}, encoded-transcript: $t) isa transcription;".format(i)
+
+        if match_clause == "match":
+            query = insert_clause
+        else:
+            query = match_clause + " " + insert_clause
+
         queries.append(query)
 
     write_batches(session, queries, batch_size, num_threads)
@@ -219,15 +238,10 @@ def insert_proteins(uniprot_dataset, session, num_threads, batch_size):
             gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
             match_clause += " $g isa gene, has official-gene-symbol \"{}\";".format(gene_symbol)
             insert_clause += " (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;"
-        else:
-            gene_symbol = None
 
         for i in range(len(transcripts)):
             match_clause += " $t{} isa transcript, has ensembl-transcript-stable-id \"{}\";".format(i, transcripts[i])
             insert_clause += " (translating-transcript: $t{}, translated-protein: $p) isa translation;".format(i)
-
-            if gene_symbol is not None:
-                insert_clause += " (transcribing-gene: $g, encoded-transcript: $t{}) isa transcription;".format(i)
 
         query = match_clause + " " + insert_clause
         queries.append(query)

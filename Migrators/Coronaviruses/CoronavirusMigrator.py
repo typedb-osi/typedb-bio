@@ -98,9 +98,9 @@ def insert_host_proteins(session):
 
     for row in rows:
         data = {
-            'coronavirus': row[0].strip(),
-            'uniprot-id': row[3].strip(),
-            'entrez-id': row[4].strip()
+            "coronavirus": row[0].strip(),
+            "uniprot-id": row[3].strip(),
+            "entrez-id": row[4].strip()
         }
 
         dataset.append(data)
@@ -111,15 +111,29 @@ def insert_host_proteins(session):
         query = " ".join([
             "match",
             "$v isa virus, has virus-name \"{}\";",
-            "$p isa protein, has uniprot-id \"{}\";",
             "$g isa gene, has entrez-id \"{}\";",
+            "not {{ (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association; }};",
             "insert",
-            "$r2 (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;",
-            "$r3 (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;",
+            "(associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;",
         ]).format(
-            data['coronavirus'],
-            data['uniprot-id'],
-            data['entrez-id'],
+            data["coronavirus"],
+            data["uniprot-id"],
+            data["entrez-id"],
+        )
+
+        queries.append(query)
+
+        query = " ".join([
+            "match",
+            "$v isa virus, has virus-name \"{}\";",
+            "$p isa protein, has uniprot-id \"{}\";",
+            "not {{ (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association; }};",
+            "insert",
+            "(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;",
+        ]).format(
+            data["coronavirus"],
+            data["uniprot-id"],
+            data["entrez-id"],
         )
 
         queries.append(query)
