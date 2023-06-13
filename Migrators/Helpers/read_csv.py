@@ -1,19 +1,13 @@
 import csv 
 
-def readCSV(filePath, num_rows, skip_header = True, separator='\t'):
-    if num_rows > 0:
-        with open(filePath, encoding='utf8') as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=separator)
-            rows = []
-            n = 0
-            for row in csvreader:
-                n = n + 1
-                if n == 1 and skip_header:
-                    continue
-                else:
-                    rows.append(row)
-                if n == num_rows:
-                    break
-            return rows
-    else:
-        return []
+
+def read_tsv(path, num_rows=0, header=True, separator="\t"):
+    with open(path, encoding='utf8') as file:
+        reader = csv.reader(file, delimiter=separator)
+
+        if header:
+            next(reader)
+
+        rows = list(reader)
+
+    return rows

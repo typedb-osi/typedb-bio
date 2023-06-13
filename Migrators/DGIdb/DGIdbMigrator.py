@@ -5,7 +5,7 @@ import wget
 
 from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
-from Migrators.Helpers.read_csv import readCSV
+from Migrators.Helpers.read_csv import read_tsv
 
 
 def migrate_dgibd(session, num_dr, num_int, num_threads, batch_size):
@@ -26,7 +26,7 @@ def insert_drugs(session, num_dr, num_threads, batch_size):
     print('  Finished downloading')
     file = 'Dataset/DGIdb/drugs.tsv'
 
-    rows = readCSV(file, num_dr)
+    rows = read_tsv(file, num_dr)
     drugs = []
     for row in rows[:num_dr]:
         data = {}
@@ -55,7 +55,7 @@ def insert_interactions(session, num_int, num_threads, batch_size):
     wget.download(url, 'Dataset/DGIdb/')
     print('  Finished downloading')
     file = 'Dataset/DGIdb/interactions.tsv'
-    rows = readCSV(file, num_int)
+    rows = read_tsv(file, num_int)
 
     interactions = []
     for row in rows[:num_int]:
