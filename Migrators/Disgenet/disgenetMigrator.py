@@ -1,74 +1,91 @@
-import gzip, csv, os, itertools
-
+import csv
+import gzip
+import os
 from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
 
 
-def migrate_disgenet(session, num, num_threads, batch_size):
-    if num == 0: return
-    print('  ')
-    print('Opening Disgenet dataset...')
-    print('  ')
-    insert_gene_disease(session, num, num_threads, batch_size)
-    print('.....')
-    print('Finished migrating Disgenet.')
-    print('.....')
+def load_disgenet(session, max_diseases, num_threads, batch_size):
+    if max_diseases is None or max_diseases > 0:
+        print("  ")
+        print("Opening Disgenet dataset...")
+        print("  ")
+        insert_associations(session, max_diseases, num_threads, batch_size)
+        print(".....")
+        print("Finished migrating Disgenet.")
+        print(".....")
 
 
-def insert_gene_disease(session, num, num_threads, batch_size):
+def insert_associations(session, max_rows, num_threads, batch_size):
     print("  Downloading Disgenet dataset")
     url = "https://www.disgenet.org/static/disgenet_ap1/files/downloads/all_gene_disease_associations.tsv.gz"
-    get_file(url, 'Dataset/Disgenet/')
+    get_file(url, "Dataset/Disgenet/")
     print("\n Finished downloading dataset")
 
-    with gzip.open('Dataset/Disgenet/all_gene_disease_associations.tsv.gz', 'rt', encoding='utf-8') as f:
-        csvreader = csv.reader(f, delimiter='\t')
-        raw_file = []
-        n = 0
-        for row in csvreader:
-            n = n + 1
-            if n != 1:
-                raw_file.append(row)
+    with gzip.open("Dataset/Disgenet/all_gene_disease_associations.tsv.gz", "rt", encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter="\t")
+        next(reader)
+        rows = list(reader)
 
-    disgenet = []
-    for i in raw_file[:num]:
-        data = {}
-        data['entrez-id'] = i[0].strip()
-        data['gene-symbol'] = i[1]
-        data['disease-id'] = i[4]
-        data['disease-name'] = i[5]
-        data['disgenet-score'] = float(i[9])
-        disgenet.append(data)
-    os.remove('Dataset/Disgenet/all_gene_disease_associations.tsv.gz')
-    insert_diseases(disgenet, session, num_threads, batch_size)
+    dataset = list()
 
-    queries = []
-    total = 0
+    for row in rows[:max_rows]:
+        data = {
+            "entrez-id": row[0].strip(),
+            "gene-symbol": row[1].strip(),
+            "disease-id": row[4].strip(),
+            "disease-name": row[5].strip(),
+            "disgenet-score": row[9].strip()
+        }
+
+        dataset.append(data)
+
+    os.remove("Dataset/Disgenet/all_gene_disease_associations.tsv.gz")
+    insert_diseases(dataset, session, num_threads, batch_size)
+    queries = list()
     print("  Starting with gene disease associations.")
-    for q in disgenet:
-        typeql = f"""
-match $g isa gene, has gene-symbol "{q['gene-symbol']}", has entrez-id "{q['entrez-id']}";
-$d isa disease, has disease-id "{q['disease-id']}", has disease-name "{q['disease-name']}";
-insert $r (associated-gene: $g, associated-disease: $d) isa gene-disease-association, has disgenet-score {q['disgenet-score']};"""
-        queries.append(typeql)
-        total += 1
+
+    for data in dataset:
+        query = " ".join([
+            "match",
+            "$g isa gene, has gene-symbol \"{}\";",
+            "$d isa disease, has disease-id \"{}\";",
+            "not {{ (associated-gene: $g, associated-disease: $d) isa gene-disease-association; }};",
+            "insert",
+            "(associated-gene: $g, associated-disease: $d) isa gene-disease-association, has disgenet-score {};",
+        ]).format(
+            data['gene-symbol'],
+            data['disease-id'],
+            data['disgenet-score'],
+        )
+
+        queries.append(query)
+
     write_batches(session, queries, batch_size, num_threads)
-    print(f' gene-disease associations inserted! ({total} entries)')
+    print(" gene-disease associations inserted! ({} entries)".format(len(queries)))
 
 
-def insert_diseases(disgenet, session, num_threads, batch_size):
-    print('  Starting with diseases.')
-    disease_list = []
-    queries = []
-    for q in disgenet:
-        disease_list.append([q['disease-name'], q['disease-id']])
-    disease_list.sort()
-    disease_list = list(disease_list for disease_list, _ in itertools.groupby(disease_list))  # Remove duplicates
+def insert_diseases(dataset, session, num_threads, batch_size):
+    print("  Starting with diseases.")
+    diseases = dict()
+    queries = list()
 
-    total = 0
-    for d in disease_list:
-        typeql = f'insert $d isa disease, has disease-name "{d[0]}", has disease-id "{d[1]}";'
-        queries.append(typeql)
-        total += 1
+    for data in dataset:
+        if data["disease-id"] != "":
+            if data["disease-id"] not in diseases:
+                diseases[data["disease-id"]] = set()
+
+            if data["disease-name"] != "":
+                diseases[data["disease-id"]].add(data["disease-name"])
+
+    for disease_id in diseases.keys():
+        query = "insert $d isa disease, has disease-id \"{}\"".format(disease_id)
+
+        for name in diseases[disease_id]:
+            query += ", has disease-name \"{}\"".format(name)
+
+        query += ";"
+        queries.append(query)
+
     write_batches(session, queries, batch_size, num_threads)
-    print(f' Diseases inserted! ({total} entries)')
+    print(" Diseases inserted! ({} entries)".format(len(diseases)))
