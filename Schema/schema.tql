@@ -15,12 +15,15 @@ chromosome sub entity,
 fully-formed-anatomical-structure sub entity;
 
 cell sub fully-formed-anatomical-structure,
-    owns cell-name;
+    owns cell-name,
+    plays expression:expressing-cell,
+    plays composition:composing-cell;
 
 tissue sub fully-formed-anatomical-structure,
     owns tissue-name,
     plays tissue-enhancement:enhanced-tissue,
-    plays expression:expressed-tissue,
+    plays expression:expressing-tissue,
+    plays composition:composed-tissue,
     plays process-localisation:tissue-context,
     plays gene-tissue-association:associated-tissue,
     plays disease-tissue-association:associated-tissue,
@@ -34,7 +37,7 @@ gene sub fully-formed-anatomical-structure,
     owns ensembl-gene-stable-id,
     owns ensembl-xref,
     owns gene-name,
-    plays expression:expressing-gene,
+    plays expression:expressed-gene,
     plays gene-protein-encoding:encoding-gene,
     plays transcription:transcribing-gene,
     plays mention:mentioned,
@@ -295,8 +298,13 @@ disease-class-association sub relation,
 expression sub relation, 
     owns expression-value, 
     owns expression-value-reliability,
-    relates expressed-tissue,
-    relates expressing-gene;
+    relates expressing-tissue,
+    relates expressing-cell,
+    relates expressed-gene;
+
+composition sub relation,
+    relates composed-tissue,
+    relates composing-cell;
 
 inhibition sub relation,
     relates inhibited,
@@ -603,3 +611,14 @@ when {
 } then {
     (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
 };
+
+rule inferred-gene-expression:
+    when {
+        $t isa tissue;
+        $c isa cell;
+        $g isa gene;
+        (composed-tissue: $t, composing-cell: $c) isa composition;
+        (expressing-cell: $c, expressed-gene: $g) isa expression;
+    } then {
+        (expressing-tissue: $t, expressed-gene: $g) isa expression;
+    };
