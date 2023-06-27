@@ -21,9 +21,10 @@ def load_protein_atlas(session, max_tissues, num_threads, batch_size):
 
 
 def get_tissue_dataset(max_rows):
-    print("  Downloading protein atlas data")
-    get_file("https://www.proteinatlas.org/download/normal_tissue.tsv.zip", "Dataset/HumanProteinAtlas/")
-    print("  Finished downloading")
+    if not os.path.exists("Dataset/HumanProteinAtlas/normal_tissue.tsv.zip"):
+        print("  Downloading protein atlas data")
+        get_file("https://www.proteinatlas.org/download/normal_tissue.tsv.zip", "Dataset/HumanProteinAtlas/")
+        print("  Finished downloading")
 
     with ZipFile("Dataset/HumanProteinAtlas/normal_tissue.tsv.zip", "r") as file:
         file.extractall("Dataset/HumanProteinAtlas")
@@ -55,7 +56,6 @@ def get_tissue_dataset(max_rows):
         else:
             raise ValueError("Unhandled gene expression value: {}".format(data["expression-value"]))
 
-    os.remove("Dataset/HumanProteinAtlas/normal_tissue.tsv.zip")
     os.remove("Dataset/HumanProteinAtlas/normal_tissue.tsv")
 
     return dataset

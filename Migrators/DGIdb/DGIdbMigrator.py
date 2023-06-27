@@ -1,5 +1,4 @@
 import os
-import wget
 from Migrators.Helpers.batchLoader import write_batches
 from Migrators.Helpers.get_file import get_file
 from Migrators.Helpers.read_csv import read_tsv
@@ -21,9 +20,11 @@ def load_dgibd(session, max_drugs, max_interactions, num_threads, batch_size):
 
 
 def insert_drugs(session, max_rows, num_threads, batch_size):
-    print("  Downloading dataset")
-    get_file("https://www.dgidb.org/data/monthly_tsvs/2021-Jan/drugs.tsv", "Dataset/DGIdb/")
-    print("  Finished downloading")
+    if not os.path.exists("Dataset/DGIdb/drugs.tsv"):
+        print("  Downloading dataset")
+        get_file("https://www.dgidb.org/data/monthly_tsvs/2021-Jan/drugs.tsv", "Dataset/DGIdb/")
+        print("  Finished downloading")
+
     rows = read_tsv("Dataset/DGIdb/drugs.tsv")
     drugs = list()
 
@@ -40,7 +41,6 @@ def insert_drugs(session, max_rows, num_threads, batch_size):
 
         drugs.append(data)
 
-    os.remove("Dataset/DGIdb/drugs.tsv")
     print("  Starting with drugs.")
     queries = list()
 
@@ -66,11 +66,11 @@ def insert_drugs(session, max_rows, num_threads, batch_size):
 
 
 def insert_interactions(session, max_rows, num_threads, batch_size):
-    print("  Downloading drug-gene interactions dataset")
-    #ssl._create_default_https_context = ssl._create_unverified_context
-    url = "https://www.dgidb.org/data/monthly_tsvs/2021-Jan/interactions.tsv"
-    wget.download(url, "Dataset/DGIdb/")
-    print("  Finished downloading")
+    if not os.path.exists("Dataset/DGIdb/interactions.tsv"):
+        print("  Downloading drug-gene interactions dataset")
+        get_file("https://www.dgidb.org/data/monthly_tsvs/2021-Jan/interactions.tsv", "Dataset/DGIdb/")
+        print("  Finished downloading")
+
     rows = read_tsv("Dataset/DGIdb/interactions.tsv")
     interactions = list()
 
@@ -86,7 +86,6 @@ def insert_interactions(session, max_rows, num_threads, batch_size):
 
         interactions.append(data)
 
-    os.remove("Dataset/DGIdb/interactions.tsv")
     print("  Starting with drug-gene interactions.")
     queries = list()
 

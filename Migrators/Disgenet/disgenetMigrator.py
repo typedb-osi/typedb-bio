@@ -17,10 +17,10 @@ def load_disgenet(session, max_diseases, num_threads, batch_size):
 
 
 def insert_associations(session, max_rows, num_threads, batch_size):
-    print("  Downloading Disgenet dataset")
-    url = "https://www.disgenet.org/static/disgenet_ap1/files/downloads/all_gene_disease_associations.tsv.gz"
-    get_file(url, "Dataset/Disgenet/")
-    print("\n Finished downloading dataset")
+    if not os.path.exists("Dataset/Disgenet/all_gene_disease_associations.tsv.gz"):
+        print("  Downloading Disgenet dataset")
+        get_file("https://www.disgenet.org/static/disgenet_ap1/files/downloads/all_gene_disease_associations.tsv.gz", "Dataset/Disgenet/")
+        print("  Finished downloading dataset")
 
     with gzip.open("Dataset/Disgenet/all_gene_disease_associations.tsv.gz", "rt", encoding="utf-8") as file:
         reader = csv.reader(file, delimiter="\t")
@@ -40,7 +40,6 @@ def insert_associations(session, max_rows, num_threads, batch_size):
 
         dataset.append(data)
 
-    os.remove("Dataset/Disgenet/all_gene_disease_associations.tsv.gz")
     insert_diseases(dataset, session, num_threads, batch_size)
     queries = list()
     print("  Starting with gene disease associations.")

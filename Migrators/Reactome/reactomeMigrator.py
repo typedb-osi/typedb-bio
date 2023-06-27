@@ -1,7 +1,6 @@
 import os
-import wget
-
 from Migrators.Helpers.batchLoader import write_batches
+from Migrators.Helpers.get_file import get_file
 from Migrators.Helpers.read_csv import read_tsv
 
 
@@ -19,10 +18,11 @@ def load_reactome(session, max_pathways, num_threads, batch_size):
 
 
 def get_reactome_dataset(max_rows):
-    print("Downloading reactome dataset")
-    url = "https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt"
-    wget.download(url, "Dataset/Reactome/")
-    print("\nFinished downloading reactome dataset")
+    if not os.path.exists("Dataset/Reactome/UniProt2Reactome_All_Levels.txt"):
+        print("Downloading reactome dataset")
+        get_file("https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt", "Dataset/Reactome/")
+        print("\nFinished downloading reactome dataset")
+
     path = "Dataset/Reactome/UniProt2Reactome_All_Levels.txt"
     rows = [row for row in read_tsv(path) if row[5] == "Homo sapiens"]
     dataset = list()
@@ -40,7 +40,6 @@ def get_reactome_dataset(max_rows):
 
         dataset.append(data)
 
-    os.remove('Dataset/Reactome/UniProt2Reactome_All_Levels.txt')
     return dataset
 
 
