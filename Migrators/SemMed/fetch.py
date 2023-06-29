@@ -2,12 +2,10 @@
 """Define functions for fetching article metadata from the NCBI E-utilities API."""
 import json
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import requests
 from tqdm import tqdm
-
 from Migrators.Helpers.utils import clean_string
 
 
@@ -19,10 +17,8 @@ def _fetch_metadata_from_api(pm_ids: list[str]) -> tuple[dict, int]:
     :return: A tuple of json-encoded response and status code
     :rtype: tuple
     """
-    url = (
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?"
-        f"db=pubmed&id={','.join(pm_ids)}&retmode=json"
-    )
+    id_arg = ','.join(pm_ids)
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id={}&retmode=json".format(id_arg)
     response = requests.get(url)
     data = response.json() if response.status_code == 200 else None
     return data, response.status_code
@@ -36,11 +32,13 @@ def _read_metadata_from_cache(pm_id: str, cache_dir: Path) -> tuple[dict | None,
     :param cache_dir: The path to the cache directory
     :type cache_dir: Path
     """
-    file_path = cache_dir / f"{pm_id}.json"
+    file_path = cache_dir / "{}.json".format(pm_id)
+
     if file_path.exists():
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
             return data, 200
+
     return None, 404
 
 
@@ -57,13 +55,17 @@ def _fetch_metadata_from_cache(
         a list of PubMed IDs that were not found in the cache
     :rtype: tuple
     """
-    publications, uncached_ids = [], []
+    publications = list()
+    uncached_ids = list()
+
     for pm_id in pm_ids:
         data, status_code = _read_metadata_from_cache(pm_id, cache_dir)
+
         if status_code == 200 and data is not None:
             publications.append(data)
         else:
             uncached_ids.append(pm_id)
+
     return publications, uncached_ids
 
 
@@ -81,25 +83,28 @@ def _fetch_metadata(
     :return: A tuple of a list of json-encoded responses and
         a list of PubMed IDs for which the metadata could not be fetched
     """
-    publications: list[dict] = []
-    failed_ids: list[str] = []
+    publications: list[dict] = list()
+    failed_ids: list[str] = list()
+
     for i in tqdm(range(0, len(pm_ids), batch_size)):
         publications, uncached_pm_ids = _fetch_metadata_from_cache(
-            pm_ids[i : i + batch_size], cache_dir
+            pm_ids[i: i + batch_size], cache_dir
         )
+
         if len(uncached_pm_ids) > 0:
             data, status_code = _fetch_metadata_from_api(uncached_pm_ids)
+
             if status_code == 200 and data is not None:
                 for uid in data["result"]:
                     if uid != "uids":
                         publications.append(data["result"][uid])
-                        with open(
-                            cache_dir / f"{uid}.json", "w", encoding="utf-8"
-                        ) as file:
+
+                        with open(cache_dir / "{}.json".format(uid), "w", encoding="utf-8") as file:
                             file.write(json.dumps(data["result"][uid], indent=4))
             else:
-                print(f'Failed to fetch data for pm_ids: {",".join(uncached_pm_ids)}')
+                print("Failed to fetch data for pm_ids: {}".format(",".join(uncached_pm_ids)))
                 failed_ids = uncached_pm_ids
+
     return publications, failed_ids
 
 
@@ -129,46 +134,36 @@ def _fetch_metadata_with_retries(
 
 
 def fetch_data(
-    file_path: str, num_semmed: int, cache_dir: Path
+    file_path: str, max_rows: int | None, cache_dir: Path
 ) -> tuple[pd.DataFrame, list[dict]]:
     """Fetch SemMed data for the given file path.
 
     :param file_path: The path to the file specifying the SemMed data
     :type file_path: str
-    :param num_semmed: The number of publications to import
-    :type num_semmed: int
+    :param max_rows: The maximum number of publications to import
+    :type max_rows: int | None
     :param cache_dir: The path to the cache directory
     :type cache_dir: Path
     :return: A tuple of a dataframe of relations and a list of publications
     :rtype: tuple[pd.DataFrame, list[dict]]
     """
-    relations = pd.read_csv(
-        file_path,
-        sep=";",
-        dtype=str,
-        usecols=[
-            "P_PMID",
-            "P_PREDICATE",
-            "P_SUBJECT_NAME",
-            "P_OBJECT_NAME",
-            "S_SENTENCE",
-        ],
-    )
-    relations = relations.rename(
-        columns={
-            "P_PMID": "pmid",
-            "P_PREDICATE": "predicate",
-            "P_SUBJECT_NAME": "subject",
-            "P_OBJECT_NAME": "object",
-            "S_SENTENCE": "sentence",
-        }
-    )
-    relations = relations.drop_duplicates(subset=["pmid"])[:num_semmed]
-    relations = relations.apply(np.vectorize(clean_string))
+    columns = {
+        "P_PMID": "pmid",
+        "P_PREDICATE": "predicate",
+        "P_SUBJECT_NAME": "subject",
+        "P_OBJECT_NAME": "object",
+        "S_SENTENCE": "sentence",
+    }
 
-    publications, failed_ids = _fetch_metadata_with_retries(
-        relations["pmid"], batch_size=400, retries=1, cache_dir=cache_dir
-    )
+    relations = pd.read_csv(file_path, sep=";", dtype=str, usecols=columns.keys())
+    relations = relations.rename(columns=columns)
+    relations = relations.drop_duplicates(subset=["pmid"])
+
+    if max_rows is not None:
+        relations = relations[:max_rows]
+
+    relations = relations.apply(np.vectorize(clean_string))
+    publications, failed_ids = _fetch_metadata_with_retries(relations["pmid"], batch_size=400, retries=1, cache_dir=cache_dir)
 
     with open(cache_dir / "failed_ids.json", "w", encoding="utf-8") as file:
         file.write(json.dumps({"failed_ids": failed_ids}, indent=4))

@@ -189,7 +189,7 @@ publication sub entity,
     owns paper-id,
     owns title,
     owns doi,
-    owns publish-time, 
+    owns year,
     owns volume, 
     owns issn, 
     owns pmid,
@@ -309,141 +309,119 @@ composition sub relation,
 inhibition sub relation,
     relates inhibited,
     relates inhibiting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 interaction sub relation,
     relates interacted,
     relates interacting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 coexistance sub relation,
     relates coexisting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 comparison sub relation,
     relates compared,
     relates comparing,
     relates higher,
     relates lower,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 stimulation sub relation,
     relates stimulated,
     relates stimulating,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 conversion sub relation,
     relates converted,
     relates converting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 production sub relation,
     relates producing,
     relates produced,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
  neg-coexistance sub relation,
     relates neg-coexisting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
  neg-inhibition sub relation,
     relates neg-inhibited,
     relates neg-inhibiting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-interaction sub relation,
     relates neg-interacted,
     relates neg-interacting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-stimulation sub relation,
     relates neg-stimulated,
     relates neg-stimulating,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-production sub relation,
     relates neg-produced,
     relates neg-producing,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-constitution sub relation,
     relates neg-constituted,
     relates neg-constituting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 similarity sub relation,
     relates similar,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-similarity sub relation,
     relates neg-similar,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 location sub relation,
     relates located,
     relates locating,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 constitution sub relation,
     relates constituted,
     relates constituting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-comparison sub relation,
     relates neg-higher,
     relates neg-lower,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 neg-conversion sub relation,
     relates neg-converted,
     relates neg-converting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 disruption sub relation,
     relates disrupted,
     relates disrupting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 augmentation sub relation,
     relates augmented,
     relates augmenting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 affection sub relation,
     relates affected,
     relates affecting,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 association sub relation,
     relates associated,
     relates associating,
-    plays mention:mentioned-genes-relation,
-    owns sentence-text;
+    plays mention:mentioned-genes-relation;
 
 mention sub relation,  
-    owns source,      
+    owns source,
+    owns sentence-text,
     relates mentioning-paragraph,  
     relates mentioning,  
     relates mentioned, 
@@ -495,11 +473,10 @@ authorship sub relation,
     pmid sub attribute, value string; 
     paper-id sub identifier;
     title sub attribute, value string; 
-    publish-time sub attribute, value string; 
-    volume sub attribute, value string; 
+    year sub attribute, value long;
+    volume sub attribute, value string;
     issn sub attribute, value string; 
-    doi sub attribute, value string; 
-    issn sub attribute, value string; 
+    doi sub attribute, value string;
 
 
 identifier sub attribute, abstract, value string;

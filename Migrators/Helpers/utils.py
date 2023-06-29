@@ -10,4 +10,4 @@ def clean_string(string: str) -> str:
     :param string: Raw string
     :return: Return string without special characters
     """
-    return "".join(re.findall(r"\w+", unicodedata.normalize("NFC", string), re.UNICODE))
+    return " ".join(re.findall(r"\w+", unicodedata.normalize("NFC", string), re.UNICODE))

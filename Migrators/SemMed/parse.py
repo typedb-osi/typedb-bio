@@ -11,13 +11,7 @@ def get_journal_names(publications: list[dict]) -> list[str]:
     :return: A list of journal names
     :rtype: list[str]
     """
-    return list(
-        {
-            clean_string(p["fulljournalname"])
-            for p in publications
-            if "Journal Article" in p["pubtype"]
-        }
-    )
+    return list({clean_string(publication["fulljournalname"]) for publication in publications if "Journal Article" in publication["pubtype"]})
 
 
 def get_author_names(publications: list[dict]) -> list[str]:
@@ -28,9 +22,7 @@ def get_author_names(publications: list[dict]) -> list[str]:
     :return: List of author names
     :rtype: list[str]
     """
-    return list(
-        {clean_string(author["name"]) for p in publications for author in p["authors"]}
-    )
+    return list({clean_string(author["name"]) for publication in publications for author in publication["authors"]})
 
 
 def get_publication_data(publications: list[dict]):
@@ -41,36 +33,47 @@ def get_publication_data(publications: list[dict]):
     :return: A list of dictionaries with relevant publication data
     :rtype: list[dict]
     """
-    parsed_publications = {}
-    for publication in publications:
-        if publication["uid"] not in parsed_publications:
-            pub = {}
-            pub["paper-id"] = pub["pmid"] = clean_string(publication["uid"])
+    parsed_publications = dict()
 
-            pub["doi"] = ""
+    for publication in publications:
+        uid = clean_string(publication["uid"])
+
+        if uid not in parsed_publications.keys():
+            parsed_publication = {
+                "paper-id": uid,
+                "pmid": uid,
+                "authors": list(),
+            }
+
+            if "issn" in publication and publication["issn"].strip() != "":
+                parsed_publication["issn"] = publication["issn"]
+
+            if "volume" in publication and publication["volume"].strip() != "":
+                parsed_publication["volume"] = publication["volume"]
+
+            if "pubdate" in publication and publication["pubdate"].strip() != "":
+                parsed_publication["year"] = publication["pubdate"][:4]
+
+            if "title" in publication and publication["title"].strip() != "":
+                parsed_publication["title"] = publication["title"].replace("\"", "'")
+
             for article_id in publication["articleids"]:
                 if article_id["idtype"] == "doi":
-                    pub["doi"] = article_id["value"]
+                    parsed_publication["doi"] = article_id["value"]
+                    break
 
-            pub["authors"] = []  # type: ignore
             for author in publication["authors"]:
-                pub["authors"].append(clean_string(author["name"]))  # type: ignore
+                name = clean_string(author["name"])
 
-            pub["issn"] = publication["issn"] if "issn" in publication else ""
-            pub["volume"] = publication["volume"] if "volume" in publication else ""
+                if name != "" and name not in parsed_publication["authors"]:
+                    parsed_publication["authors"].append(name)
 
-            pub["journal-name"] = ""
             if "Journal Article" in publication["pubtype"]:
-                pub["journal-name"] = clean_string(publication["fulljournalname"])
+                name = clean_string(publication["fulljournalname"])
 
-            pub["publish-time"] = (
-                publication["pubdate"] if "pubdate" in publication else ""
-            )
+                if name != "":
+                    parsed_publication["journal-name"] = name
 
-            pub["title"] = (
-                publication["title"].replace('"', "'") if "title" in publication else ""
-            )
-
-            parsed_publications[pub["paper-id"]] = pub
+            parsed_publications[uid] = parsed_publication
 
     return list(parsed_publications.values())

@@ -7,7 +7,7 @@ import pytest
 import requests
 from typedb.client import SessionType, TypeDBClient
 
-from Migrators.SemMed.pipeline import migrate_semmed
+from Migrators.SemMed.pipeline import load_semmed
 from Schema.initialise import initialise_database
 
 
@@ -37,7 +37,7 @@ def test_migrate_semmed(
     """
     with client.session(database, SessionType.DATA) as session:
         _migrate_semmed = partial(
-            migrate_semmed,
+            load_semmed,
             session=session,
             uri=db_uri,
             num_semmed=100,
