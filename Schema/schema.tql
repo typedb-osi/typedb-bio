@@ -17,7 +17,8 @@ fully-formed-anatomical-structure sub entity;
 cell sub fully-formed-anatomical-structure,
     owns cell-name,
     plays expression:expressing-cell,
-    plays composition:composing-cell;
+    plays composition:composing-cell,
+    plays process-localisation:cell-context;
 
 tissue sub fully-formed-anatomical-structure,
     owns tissue-name,
@@ -38,6 +39,7 @@ gene sub fully-formed-anatomical-structure,
     owns ensembl-xref,
     owns gene-name,
     plays expression:expressed-gene,
+    plays gene-gene-interaction:interacting-gene,
     plays gene-protein-encoding:encoding-gene,
     plays transcription:transcribing-gene,
     plays mention:mentioned,
@@ -246,7 +248,8 @@ tissue-enhancement sub relation,
     relates expressed-protein;
 process-localisation sub relation,
     relates biomolecular-process,
-    relates tissue-context;
+    relates tissue-context,
+    relates cell-context;
 protein-protein-interaction sub relation,
     relates interacting-protein,
     relates activating-protein,
@@ -342,11 +345,11 @@ production sub relation,
     relates produced,
     plays mention:mentioned-genes-relation;
 
- neg-coexistance sub relation,
+neg-coexistance sub relation,
     relates neg-coexisting,
     plays mention:mentioned-genes-relation;
 
- neg-inhibition sub relation,
+neg-inhibition sub relation,
     relates neg-inhibited,
     relates neg-inhibiting,
     plays mention:mentioned-genes-relation;
@@ -438,6 +441,10 @@ publishing sub relation,
 authorship sub relation,  
     relates author,  
     relates authored-publication;
+
+gene-gene-interaction sub relation,
+    relates interacting-gene,
+    plays process-localisation:biomolecular-process;
 
 ## Attributes
 # Name attributes: 
@@ -598,4 +605,52 @@ rule inferred-gene-expression:
         (expressing-cell: $c, expressed-gene: $g) isa expression;
     } then {
         (expressing-tissue: $t, expressed-gene: $g) isa expression;
+    };
+
+rule inferred-tissue-context:
+    when {
+        $g1 isa gene;
+        $g2 isa gene;
+        $i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+        $c isa cell;
+        (biomolecular-process: $i, cell-context: $c) isa process-localisation;
+        $t isa tissue;
+        (composed-tissue: $t, composing-cell: $c) isa composition;
+    } then {
+        (biomolecular-process: $i, tissue-context: $t) isa process-localisation;
+    };
+
+rule inferred-protein-interaction:
+    when {
+        $g1 isa gene;
+        $p1 isa protein;
+        (encoding-gene: $g1, encoded-protein: $p1) isa gene-protein-encoding;
+        $g2 isa gene;
+        $p2 isa protein;
+        (encoding-gene: $g2, encoded-protein: $p2) isa gene-protein-encoding;
+        (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+    } then {
+        (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
+    };
+
+rule inferred-protein-interaction-context:
+    when {
+        $g1 isa gene;
+        $p1 isa protein;
+        (encoding-gene: $g1, encoded-protein: $p1) isa gene-protein-encoding;
+        $g2 isa gene;
+        $p2 isa protein;
+        (encoding-gene: $g2, encoded-protein: $p2) isa gene-protein-encoding;
+        $gi (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+        {
+            $c isa tissue;
+            $context type process-localisation:tissue-context;
+        } or {
+            $c isa cell;
+            $context type process-localisation:cell-context;
+        };
+        (biomolecular-process: $gi, $context: $c) isa process-localisation;
+        $pi (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
+    } then {
+        (biomolecular-process: $pi, $context: $c) isa process-localisation;
     };
