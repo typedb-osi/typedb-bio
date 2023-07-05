@@ -26,7 +26,7 @@ def insert_drugs(session, max_rows, num_threads, batch_size):
         print("  Finished downloading")
 
     rows = read_tsv("Dataset/DGIdb/drugs.tsv")
-    drugs = list()
+    dataset = list()
 
     if max_rows is None:
         max_rows = len(rows)
@@ -39,25 +39,46 @@ def insert_drugs(session, max_rows, num_threads, batch_size):
             "drug-claim-source": row[3].strip(),
         }
 
-        drugs.append(data)
+        dataset.append(data)
+
+    drugs = dict()
+
+    for data in dataset:
+        if data["chembl-id"] == "":
+            continue
+
+        if data["chembl-id"] not in drugs.keys():
+            drugs[data["chembl-id"]] = {
+                "drug-claim-name": list(),
+                "drug-name": list(),
+                "drug-claim-source": list(),
+            }
+
+        if data["drug-claim-name"] != "":
+            drugs[data["chembl-id"]]["drug-claim-name"].append(data["drug-claim-name"])
+
+        if data["drug-name"] != "":
+            drugs[data["chembl-id"]]["drug-name"].append(data["drug-name"])
+
+        if data["drug-claim-source"] != "":
+            drugs[data["chembl-id"]]["drug-claim-source"].append(data["drug-claim-source"])
 
     print("  Starting with drugs.")
     queries = list()
 
-    for drug in drugs:
-        query = " ".join([
-            "insert",
-            "$d isa drug,",
-            "has drug-claim-name \"{}\",",
-            "has drug-name \"{}\",",
-            "has chembl-id \"{}\",",
-            "has drug-claim-source \"{}\";",
-        ]).format(
-            drug["drug-claim-name"],
-            drug["drug-name"],
-            drug["chembl-id"],
-            drug["drug-claim-source"]
-        )
+    for chembl_id in drugs.keys():
+        query = "insert $d isa drug, has chembl-id \"{}\"".format(chembl_id)
+
+        for claim_name in drugs[chembl_id]["drug-claim-name"]:
+            query += ", has drug-claim-name \"{}\"".format(claim_name)
+
+        for name in drugs[chembl_id]["drug-name"]:
+            query += ", has drug-name \"{}\"".format(name)
+
+        for claim_source in drugs[chembl_id]["drug-claim-source"]:
+            query += ", has drug-claim-source \"{}\"".format(claim_source)
+
+        query += ";"
 
         queries.append(query)
 
@@ -76,12 +97,12 @@ def insert_interactions(session, max_rows, num_threads, batch_size):
 
     for row in rows[:max_rows]:
         data = {
-            "gene-name": row[0],
-            "entrez-id": row[2],
-            "interaction-type": row[4],
-            "drug-claim-name": row[5],
-            "drug-name": row[7],
-            "chembl-id": row[8],
+            "gene-name": row[0].strip(),
+            "entrez-id": row[2].strip(),
+            "interaction-type": row[4].strip(),
+            "drug-claim-name": row[5].strip(),
+            "drug-name": row[7].strip(),
+            "chembl-id": row[8].strip(),
         }
 
         interactions.append(data)
@@ -91,25 +112,27 @@ def insert_interactions(session, max_rows, num_threads, batch_size):
 
     for interaction in interactions:
         if interaction["entrez-id"] != "":
-            query = " ".join([
+            match_clause = " ".join([
                 "match",
                 "$g isa gene,",
                 "has entrez-id \"{}\";",
                 "$d isa drug,",
-                "has drug-claim-name \"{}\";"
+                "has chembl-id \"{}\";",
             ]).format(
                 interaction["entrez-id"],
-                interaction["drug-claim-name"],
+                interaction["chembl-id"],
             )
 
-            # TODO Insert interaction type as a role
-
-            query += " insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
+            match_clause += " not { (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
+            insert_clause = "insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
 
             if interaction["interaction-type"] != "":
-                query += ", has interaction-type \"{}\"".format(interaction["interaction-type"])
+                match_clause += ", has interaction-type \"{}\"".format(interaction["interaction-type"])
+                insert_clause += ", has interaction-type \"{}\"".format(interaction["interaction-type"])
 
-            query += ";"
+            match_clause += "; };"
+            insert_clause += ";"
+            query = match_clause + " " + insert_clause
             queries.append(query)
 
     write_batches(session, queries, batch_size, num_threads)

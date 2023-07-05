@@ -3,7 +3,7 @@ import csv
 from Migrators.Helpers.batchLoader import write_batches
 
 
-def load_uniprot(session, max_proteins, num_threads, batch_size):
+def load_uniprot(session, max_proteins, num_jobs, batch_size):
     if max_proteins is None or max_proteins > 0:
         print("  ")
         print("Opening Uniprot dataset...")
@@ -16,16 +16,16 @@ def load_uniprot(session, max_proteins, num_threads, batch_size):
             transaction.commit()
 
         uniprot_dataset = get_uniprot_dataset(max_proteins)
-        insert_genes(uniprot_dataset, session, num_threads, batch_size)
-        insert_transcripts(uniprot_dataset, session, num_threads, batch_size)
-        insert_proteins(uniprot_dataset, session, num_threads, batch_size)
+        insert_genes(uniprot_dataset, session, num_jobs, batch_size)
+        insert_transcripts(uniprot_dataset, session, num_jobs, batch_size)
+        insert_proteins(uniprot_dataset, session, num_jobs, batch_size)
         print(".....")
         print("Finished migrating Uniprot file.")
         print(".....")
 
 
 def get_uniprot_dataset(max_rows):
-    with open("Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv", "rt", encoding="utf-8") as file:
+    with open("Dataset/Uniprot/uniprot-reviewed_yes+AND+proteome.tsv", "r", encoding="utf-8") as file:
         reader = csv.reader(file, delimiter='\t')
         next(reader)
         rows = list(reader)
@@ -37,14 +37,14 @@ def get_uniprot_dataset(max_rows):
 
     for row in rows[:max_rows]:
         data = {
-            "uniprot-id": row[0],
-            "uniprot-entry-name": row[1],
-            "protein-name": row[3],
-            "gene-symbol": row[4],
-            "organism": row[5],
-            "function-description": row[7],
-            "ensembl-transcript": row[11],
-            "entrez-id": row[12][:-1],
+            "uniprot-id": row[0].strip(),
+            "uniprot-entry-name": row[1].strip(),
+            "protein-name": row[3].strip(),
+            "gene-symbol": row[4].strip(),
+            "organism": row[5].strip(),
+            "function-description": row[7].strip(),
+            "ensembl-transcript": row[11].strip(),
+            "entrez-id": row[12][:-1].strip(),
         }
 
         dataset.append(data)
@@ -54,11 +54,11 @@ def get_uniprot_dataset(max_rows):
 
 def extract_gene_entry(data):
     entry = dict()
-    symbols = [symbol.strip() for symbol in data["gene-symbol"].strip().split(" ")]
+    symbols = [symbol.strip() for symbol in data["gene-symbol"].split(" ")]
     entry["official-gene-symbol"] = symbols.pop(0)
     entry["alternative-gene-symbol"] = symbols
 
-    if data["entrez-id"].strip() == "":
+    if data["entrez-id"] == "":
         entry["entrez-id"] = list()
     else:
         entry["entrez-id"] = data["entrez-id"].split(";")
@@ -66,11 +66,11 @@ def extract_gene_entry(data):
     return entry
 
 
-def insert_genes(uniprot_dataset, session, num_threads, batch_size):
+def insert_genes(uniprot_dataset, session, num_jobs, batch_size):
     gene_entries = list()
 
     for data in uniprot_dataset:
-        if data["gene-symbol"].strip() != "":
+        if data["gene-symbol"] != "":
             gene_entries.append(extract_gene_entry(data))
 
     symbols = {entry["official-gene-symbol"] for entry in gene_entries}
@@ -103,7 +103,7 @@ def insert_genes(uniprot_dataset, session, num_threads, batch_size):
         query += ";"
         queries.append(query)
 
-    write_batches(session, queries, batch_size, num_threads)
+    write_batches(session, queries, batch_size, num_jobs)
     print("Genes committed!")
 
 
@@ -112,7 +112,7 @@ def extract_transcript_entries(data):
     return [entry for entry in entries if entry != ""]
 
 
-def insert_transcripts(uniprot_dataset, session, num_threads, batch_size):
+def insert_transcripts(uniprot_dataset, session, num_jobs, batch_size):
     transcripts = dict()
     queries = list()
 
@@ -123,14 +123,14 @@ def insert_transcripts(uniprot_dataset, session, num_threads, batch_size):
             if entry not in transcripts:
                 transcripts[entry] = list()
 
-            if data["gene-symbol"].strip() != "":
+            if data["gene-symbol"] != "":
                 gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
                 transcripts[entry].append(gene_symbol)
 
-    for transcript in transcripts:
+    for transcript_id in transcripts.keys():
         match_clause = "match"
-        insert_clause = "insert $t isa transcript, has ensembl-transcript-stable-id \"{}\";".format(transcript)
-        gene_symbols = transcripts[transcript]
+        insert_clause = "insert $t isa transcript, has ensembl-transcript-stable-id \"{}\";".format(transcript_id)
+        gene_symbols = transcripts[transcript_id]
 
         for i in range(len(gene_symbols)):
             match_clause += " $g{} isa gene, has official-gene-symbol \"{}\";".format(i, gene_symbols[i])
@@ -143,7 +143,7 @@ def insert_transcripts(uniprot_dataset, session, num_threads, batch_size):
 
         queries.append(query)
 
-    write_batches(session, queries, batch_size, num_threads)
+    write_batches(session, queries, batch_size, num_jobs)
     print("Transcripts committed!")
 
 
@@ -152,14 +152,14 @@ def extract_protein_names(entry):
         "alternative-names": list()
     }
 
-    if entry.strip() == "":
+    if entry == "":
         return protein_names
 
     candidate_names = list()
     name = ""
     depth = 0
 
-    for char in entry.strip()[::-1]:
+    for char in entry[::-1]:
         if char in (")", "]"):
             depth += 1
             name = char + name
@@ -202,7 +202,7 @@ def extract_protein_names(entry):
     return protein_names
 
 
-def insert_proteins(uniprot_dataset, session, num_threads, batch_size):
+def insert_proteins(uniprot_dataset, session, num_jobs, batch_size):
     queries = list()
 
     for data in uniprot_dataset:
@@ -213,13 +213,14 @@ def insert_proteins(uniprot_dataset, session, num_threads, batch_size):
         insert_clause += " " + " ".join([
             "$p isa protein,",
             "has uniprot-id \"{}\",",
-            "has function-description \"{}\",",
             "has uniprot-entry-name \"{}\"",
         ]).format(
             data["uniprot-id"],
-            data["function-description"],
-            data["uniprot-entry-name"]
+            data["uniprot-entry-name"],
         )
+
+        if data["function-description"] != "":
+            insert_clause += ", has function-description \"{}\"".format(data["function-description"])
 
         names = extract_protein_names(data["protein-name"])
 
@@ -234,7 +235,7 @@ def insert_proteins(uniprot_dataset, session, num_threads, batch_size):
         match_clause += " $o isa organism, has organism-name \"{}\";".format(data["organism"])
         insert_clause += " (associated-organism: $o, associating: $p) isa organism-association;"
 
-        if data["gene-symbol"].strip() != "":
+        if data["gene-symbol"] != "":
             gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
             match_clause += " $g isa gene, has official-gene-symbol \"{}\";".format(gene_symbol)
             insert_clause += " (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;"
@@ -246,5 +247,5 @@ def insert_proteins(uniprot_dataset, session, num_threads, batch_size):
         query = match_clause + " " + insert_clause
         queries.append(query)
 
-    write_batches(session, queries, batch_size, num_threads)
+    write_batches(session, queries, batch_size, num_jobs)
     print("Proteins committed!")
