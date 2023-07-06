@@ -3,15 +3,12 @@ from loader.util import write_batches, get_file, read_tsv
 
 def load_reactome(session, max_pathways, num_jobs, batch_size):
     if max_pathways is None or max_pathways > 0:
-        print(".....")
-        print("Starting with reactome.")
-        print(".....")
+        print("Loading Reactome dataset...")
         dataset = get_reactome_dataset(max_pathways)
         insert_pathways(session, num_jobs, batch_size, dataset)
         insert_pathway_interactions(session, num_jobs, batch_size, dataset)
-        print(".....")
-        print("Finished with reactome.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def get_reactome_dataset(max_rows):
@@ -36,8 +33,6 @@ def get_reactome_dataset(max_rows):
 
 
 def insert_pathways(session, num_jobs, batch_size, dataset):
-    print("  Starting with reactome pathways.")
-
     pathway_ids = {data["pathway-id"] for data in dataset}
     pathways = list()
 
@@ -63,12 +58,11 @@ def insert_pathways(session, num_jobs, batch_size, dataset):
         query += ";"
         queries.append(query)
 
+    print("Inserting pathways:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("  Reactome Pathways inserted! ({} entries)".format(len(queries)))
 
 
 def insert_pathway_interactions(session, num_jobs, batch_size, dataset):
-    print("  Starting with reactome pathway interactions.")
     queries = list()
 
     for data in dataset:
@@ -86,5 +80,5 @@ def insert_pathway_interactions(session, num_jobs, batch_size, dataset):
 
         queries.append(query)
 
+    print("Inserting protein-pathway participations:")
     write_batches(session, queries, num_jobs, batch_size)
-    print(" Reactome pathway interactions inserted! ({} entries)".format(len(queries)))

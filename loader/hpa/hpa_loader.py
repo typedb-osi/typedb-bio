@@ -1,19 +1,15 @@
-from typedb.client import TransactionType
 from loader.util import write_batches, get_file, read_tsv
 
 
 def load_hpa(session, max_tissues, num_jobs, batch_size):
     if max_tissues is None or max_tissues > 0:
-        print("  ")
-        print("Opening HPA dataset...")
-        print("  ")
+        print("Loading HPA dataset...")
         dataset = get_tissue_dataset(max_tissues)
-        insert_tissue(dataset, session)
+        insert_tissue(dataset, session, num_jobs, batch_size)
         insert_ensemble_id(dataset, session, num_jobs, batch_size)
         insert_gene_tissue(dataset, session, num_jobs, batch_size)
-        print(".....")
-        print("Finished migrating HPA.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def get_tissue_dataset(max_rows):
@@ -44,9 +40,7 @@ def get_tissue_dataset(max_rows):
     return dataset
 
 
-def insert_tissue(dataset, session):
-    print("  Starting with tissue.")
-
+def insert_tissue(dataset, session, num_jobs, batch_size):
     cell_types = dict()
 
     for data in dataset:
@@ -58,19 +52,19 @@ def insert_tissue(dataset, session):
     for tissue in cell_types.keys():
         cell_types[tissue] = list(cell_types[tissue])
 
-    with session.transaction(TransactionType.WRITE) as transaction:
-        for tissue in cell_types.keys():
-            query = "insert $t isa tissue, has tissue-name \"{}\";".format(tissue)
+    queries = list()
 
-            for i, cell_name in enumerate(cell_types[tissue]):
-                query += " $c{} isa cell, has cell-name \"{}\";".format(i, cell_name)
-                query += " (composed-tissue: $t, composing-cell: $c{}) isa composition;".format(i)
+    for tissue in cell_types.keys():
+        query = "insert $t isa tissue, has tissue-name \"{}\";".format(tissue)
 
-            transaction.query().insert(query)
+        for i, cell_name in enumerate(cell_types[tissue]):
+            query += " $c{} isa cell, has cell-name \"{}\";".format(i, cell_name)
+            query += " (composed-tissue: $t, composing-cell: $c{}) isa composition;".format(i)
 
-        transaction.commit()
+        queries.append(query)
 
-    print("  Finished tissue. ({} entries)".format(len(cell_types)))
+    print("Inserting tissues:")
+    write_batches(session, queries, num_jobs, batch_size)
 
 
 def insert_ensemble_id(dataset, session, num_jobs, batch_size):
@@ -83,7 +77,6 @@ def insert_ensemble_id(dataset, session, num_jobs, batch_size):
         ensembl_ids[data["gene-symbol"]].add(data["ensembl-gene-id"])
 
     queries = list()
-    print("  Starting ensembl id.")
 
     for gene in ensembl_ids.keys():
         query = "match $g isa gene, has gene-symbol \"{}\"; insert".format(gene)
@@ -93,13 +86,12 @@ def insert_ensemble_id(dataset, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting additional gene IDs:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("  Finished ensembl id! ({} entries)".format(len(ensembl_ids)))
 
 
 def insert_gene_tissue(dataset, session, num_jobs, batch_size):
     queries = list()
-    print("  Starting expression.")
 
     for data in dataset:
         query = " ".join([
@@ -125,5 +117,5 @@ def insert_gene_tissue(dataset, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting gene-tissue expressions:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("  Finished Genes <> Tissues expression. ({} entries)".format(len(dataset)))

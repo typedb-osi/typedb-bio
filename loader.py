@@ -87,7 +87,7 @@ MAX_DISEASES = None  # Maximum number of diseases to migrate.
 MAX_DRUGS = None  # Maximum number of drugs to migrate.
 MAX_DRUG_INTERACTIONS = None  # Maximum number of drug-gene interactions to migrate.
 MAX_TISSUES = None  # Maximum number of tissues to migrate.
-MAX_PREDICATES = None  # Maximum number of SemMed predicates to migrate.
+MAX_PUBLICATIONS = None  # Maximum number of publications to migrate.
 MAX_PROTEIN_INTERACTIONS = None  # Maximum number of protein-protein interactions per tissue to migrate.
 
 if __name__ == "__main__":
@@ -102,6 +102,9 @@ if __name__ == "__main__":
     else:
         raise ValueError("Unknown server type. Must be \"CORE\" or \"CLUSTER\".")
 
+    print("Welcome to the TypeDB Bio database loader!")
+    print("--------------------------------------------------")
+
     with client_partial() as client:
         initialise_database(client, args.database, args.force)
 
@@ -112,5 +115,8 @@ if __name__ == "__main__":
             load_disgenet(session, MAX_DISEASES, args.num_jobs, args.commit_batch)
             load_dgibd(session, MAX_DRUGS, MAX_DRUG_INTERACTIONS, args.num_jobs, args.commit_batch)
             load_hpa(session, MAX_TISSUES, args.num_jobs, args.commit_batch)
-            load_semmed(session, MAX_PREDICATES, args.num_jobs, args.commit_batch)
+            load_semmed(session, MAX_PUBLICATIONS, args.num_jobs, args.commit_batch)
             load_tissuenet(session, MAX_PROTEIN_INTERACTIONS, args.num_jobs, args.commit_batch)
+
+    print("All data loaded.")
+    print("Goodbye!")

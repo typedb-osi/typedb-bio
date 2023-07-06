@@ -2,10 +2,9 @@
 """Define functions for fetching article metadata from the NCBI E-utilities API."""
 import json
 from pathlib import Path
-import numpy as np
-import pandas as pd
+import numpy
+import pandas
 import requests
-from tqdm import tqdm
 from loader.util import clean_string
 
 
@@ -86,7 +85,7 @@ def _fetch_metadata(
     publications: list[dict] = list()
     failed_ids: list[str] = list()
 
-    for i in tqdm(range(0, len(pm_ids), batch_size)):
+    for i in range(0, len(pm_ids), batch_size):
         publications, uncached_pm_ids = _fetch_metadata_from_cache(
             pm_ids[i: i + batch_size], cache_dir
         )
@@ -134,14 +133,14 @@ def _fetch_metadata_with_retries(
 
 
 def fetch_data(
-    file_path: str, max_rows: int | None, cache_dir: Path
-) -> tuple[pd.DataFrame, list[dict]]:
+    file_path: str, max_publications: int | None, cache_dir: Path
+) -> tuple[pandas.DataFrame, list[dict]]:
     """Fetch SemMed data for the given file path.
 
     :param file_path: The path to the file specifying the SemMed data
     :type file_path: str
-    :param max_rows: The maximum number of publications to import
-    :type max_rows: int | None
+    :param max_publications: The maximum number of publications to import
+    :type max_publications: int | None
     :param cache_dir: The path to the cache directory
     :type cache_dir: Path
     :return: A tuple of a dataframe of relations and a list of publications
@@ -155,14 +154,14 @@ def fetch_data(
         "S_SENTENCE": "sentence",
     }
 
-    relations = pd.read_csv(file_path, sep=";", dtype=str, usecols=columns.keys())
+    relations = pandas.read_csv(file_path, sep=";", dtype=str, usecols=columns.keys())
     relations = relations.rename(columns=columns)
     relations = relations.drop_duplicates(subset=["pmid"])
 
-    if max_rows is not None:
-        relations = relations[:max_rows]
+    if max_publications is not None:
+        relations = relations[:max_publications]
 
-    relations = relations.apply(np.vectorize(clean_string))
+    relations = relations.apply(numpy.vectorize(clean_string))
     publications, failed_ids = _fetch_metadata_with_retries(relations["pmid"], batch_size=400, retries=1, cache_dir=cache_dir)
 
     with open(cache_dir / "failed_ids.json", "w", encoding="utf-8") as file:

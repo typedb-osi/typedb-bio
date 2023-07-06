@@ -4,16 +4,13 @@ from loader.util import write_batches, read_tsv
 
 def load_coronavirus(session, load, num_jobs, batch_size):
     if load:
-        print(".....")
-        print("Starting with Coronavirus file.")
-        print(".....")
+        print("Loading Coronavirus dataset...")
         virus_dataset = get_virus_dataset()
         insert_extra_roleplayers(virus_dataset, session, num_jobs, batch_size)
         insert_viruses(virus_dataset, session, num_jobs, batch_size)
         insert_host_proteins(session, num_jobs, batch_size)
-        print(".....")
-        print("Finished with Coronavirus file.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def get_virus_dataset():
@@ -76,6 +73,7 @@ def insert_extra_roleplayers(dataset, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting organisms and countries:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
@@ -108,6 +106,7 @@ def insert_viruses(dataset, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting viruses:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
@@ -157,4 +156,5 @@ def insert_host_proteins(session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting protein-virus associations:")
     write_batches(session, queries, num_jobs, batch_size)

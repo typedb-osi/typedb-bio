@@ -3,17 +3,14 @@ from loader.util import write_batches, get_file, read_tsv
 
 def load_dgibd(session, max_drugs, max_interactions, num_jobs, batch_size):
     if max_drugs is None or max_drugs > 0:
-        print("  ")
-        print("Opening DGIdb...")
-        print("  ")
+        print("Loading DGIdb dataset...")
         insert_drugs(session, max_drugs, num_jobs, batch_size)
 
         if max_interactions is None or max_interactions > 0:
             insert_interactions(session, max_interactions, num_jobs, batch_size)
 
-        print(".....")
-        print("Finished migrating DGIdb.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def insert_drugs(session, max_rows, num_jobs, batch_size):
@@ -56,7 +53,6 @@ def insert_drugs(session, max_rows, num_jobs, batch_size):
         if data["drug-claim-source"] != "":
             drugs[data["chembl-id"]]["drug-claim-source"].append(data["drug-claim-source"])
 
-    print("  Starting with drugs.")
     queries = list()
 
     for chembl_id in drugs.keys():
@@ -75,8 +71,8 @@ def insert_drugs(session, max_rows, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting drugs:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("  Drugs inserted! ({} entries)".format(len(queries)))
 
 
 def insert_interactions(session, max_rows, num_jobs, batch_size):
@@ -96,7 +92,6 @@ def insert_interactions(session, max_rows, num_jobs, batch_size):
 
         interactions.append(data)
 
-    print("  Starting with drug-gene interactions.")
     queries = list()
 
     for interaction in interactions:
@@ -124,5 +119,5 @@ def insert_interactions(session, max_rows, num_jobs, batch_size):
             query = match_clause + " " + insert_clause
             queries.append(query)
 
+    print("Inserting drug-gene interactions:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("  Finished drug-gene interactions. ({} entries) ".format(len(queries)))

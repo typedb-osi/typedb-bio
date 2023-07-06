@@ -12,9 +12,7 @@ def initialise_database(client, database, force):
             raise ValueError("database {} already exists, use --force True to overwrite")
 
     client.databases().create(database)
-    print(".....")
-    print("Inserting schema...")
-    print(".....")
+    print("Defining schema...")
 
     with open("Schema/schema.tql", "r", encoding="utf-8") as file:
         schema = file.read()
@@ -24,6 +22,5 @@ def initialise_database(client, database, force):
             transaction.query().define(schema)
             transaction.commit()
 
-    print(".....")
-    print("Successfully committed schema!")
-    print(".....")
+    print("Schema definition complete.")
+    print("--------------------------------------------------")

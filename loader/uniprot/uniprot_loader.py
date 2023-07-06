@@ -3,17 +3,14 @@ from loader.util import write_batches, read_tsv
 
 def load_uniprot(session, max_proteins, num_jobs, batch_size):
     if max_proteins is None or max_proteins > 0:
-        print("  ")
-        print("Opening Uniprot dataset...")
-        print("  ")
+        print("Loading UniProt dataset...")
         uniprot_dataset = get_uniprot_dataset(max_proteins)
         insert_organisms(uniprot_dataset, session, num_jobs, batch_size)
         insert_genes(uniprot_dataset, session, num_jobs, batch_size)
         insert_transcripts(uniprot_dataset, session, num_jobs, batch_size)
         insert_proteins(uniprot_dataset, session, num_jobs, batch_size)
-        print(".....")
-        print("Finished migrating Uniprot file.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def get_uniprot_dataset(max_rows):
@@ -61,6 +58,7 @@ def insert_organisms(uniprot_dataset, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting organisms:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
@@ -115,8 +113,8 @@ def insert_genes(uniprot_dataset, session, num_jobs, batch_size):
         query += ";"
         queries.append(query)
 
+    print("Inserting genes:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("Genes committed!")
 
 
 def extract_transcript_entries(data):
@@ -155,8 +153,8 @@ def insert_transcripts(uniprot_dataset, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting transcripts:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("Transcripts committed!")
 
 
 def extract_protein_names(entry):
@@ -259,5 +257,5 @@ def insert_proteins(uniprot_dataset, session, num_jobs, batch_size):
         query = match_clause + " " + insert_clause
         queries.append(query)
 
+    print("Inserting proteins:")
     write_batches(session, queries, num_jobs, batch_size)
-    print("Proteins committed!")

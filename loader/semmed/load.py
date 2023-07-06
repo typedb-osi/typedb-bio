@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Define functions for loading data into TypeDB."""
-import pandas as pd
+import pandas
 from typedb.api.connection.session import TypeDBSession
 from loader.util import write_batches
 from loader.semmed.mapper import relationship_mapper
@@ -35,6 +35,7 @@ def load_journals(
         )
         queries.append(query)
 
+    print("Inserting journals:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
@@ -67,6 +68,7 @@ def load_authors(
         )
         queries.append(query)
 
+    print("Inserting authors:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
@@ -132,10 +134,11 @@ def load_publications(
         query = match_clause + " " + insert_clause
         queries.append(query)
 
+    print("Inserting publications:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
-def load_relations(data: pd.DataFrame, session: TypeDBSession, num_jobs: int, batch_size: int) -> None:
+def load_relations(data: pandas.DataFrame, session: TypeDBSession, num_jobs: int, batch_size: int) -> None:
     """Load relations into TypeDB.
 
     :param data: The data to load
@@ -151,7 +154,7 @@ def load_relations(data: pd.DataFrame, session: TypeDBSession, num_jobs: int, ba
     load_gene_mentions(data, session, num_jobs, batch_size)
 
 
-def load_gene_relations(data: pd.DataFrame, session: TypeDBSession, num_jobs: int, batch_size: int) -> None:
+def load_gene_relations(data: pandas.DataFrame, session: TypeDBSession, num_jobs: int, batch_size: int) -> None:
     """Load gene relations into TypeDB.
 
     :param data: The data to load
@@ -198,10 +201,11 @@ def load_gene_relations(data: pd.DataFrame, session: TypeDBSession, num_jobs: in
         query = match_clause + " " + insert_clause
         queries.append(query)
 
+    print("Inserting gene relations:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
-def load_gene_mentions(data: pd.DataFrame, session: TypeDBSession, num_jobs: int, batch_size: int) -> None:
+def load_gene_mentions(data: pandas.DataFrame, session: TypeDBSession, num_jobs: int, batch_size: int) -> None:
     """Load gene mentions into TypeDB.
 
     :param data: The data to load
@@ -251,4 +255,5 @@ def load_gene_mentions(data: pd.DataFrame, session: TypeDBSession, num_jobs: int
         query = match_clause + " " + insert_clause
         queries.append(query)
 
+    print("Inserting publication references:")
     write_batches(session, queries, num_jobs, batch_size)

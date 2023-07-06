@@ -1,5 +1,4 @@
 import glob
-import csv
 import os.path
 from zipfile import ZipFile
 from loader.util import write_batches, get_file, read_tsv
@@ -8,22 +7,18 @@ from loader.tissuenet.mapper import tissue_mapper
 
 def load_tissuenet(session, max_interactions, num_jobs, batch_size):
     if max_interactions is None or max_interactions > 0:
+        print("Loading TissueNet dataset...")
         get_file("https://netbio.bgu.ac.il/tissuenet2-interactomes/TissueNet2.0/HPA-Protein.zip", "dataset/tissuenet")
-        print("Extracting TissueNet data")
 
         with ZipFile("dataset/tissuenet/HPA-Protein.zip", "r") as file:
             file.extractall("dataset/tissuenet/")
 
         paths = glob.iglob("dataset/tissuenet/*.tsv")
 
-        print("  ")
-        print("Opening TissueNet dataset...")
-        print("  ")
-
         for path in paths:
             file_name = path.split("/")[-1].split(".")[0]
             tissue = tissue_mapper(file_name)
-            print("Opening dataset: {}".format(file_name))
+            print("Loading TissueNet {} dataset:".format(file_name))
             rows = read_tsv(path)
             os.remove(path)
             interactions = list()
@@ -44,9 +39,8 @@ def load_tissuenet(session, max_interactions, num_jobs, batch_size):
             load_interactions(interactions, session, num_jobs, batch_size)
             load_contexts(interactions, session, num_jobs, batch_size)
 
-        print(".....")
-        print("Finished migrating TissueNet file.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def load_interactions(interactions, session, num_jobs, batch_size):
@@ -69,6 +63,7 @@ def load_interactions(interactions, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting protein-protein interactions:")
     write_batches(session, queries, num_jobs, batch_size)
 
 
@@ -105,4 +100,5 @@ def load_contexts(interactions, session, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting tissue contexts:")
     write_batches(session, queries, num_jobs, batch_size)

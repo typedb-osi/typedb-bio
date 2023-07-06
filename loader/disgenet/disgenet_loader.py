@@ -3,13 +3,10 @@ from loader.util import write_batches, get_file, read_tsv
 
 def load_disgenet(session, max_diseases, num_jobs, batch_size):
     if max_diseases is None or max_diseases > 0:
-        print("  ")
-        print("Opening Disgenet dataset...")
-        print("  ")
+        print("Loading DisGeNET dataset...")
         insert_associations(session, max_diseases, num_jobs, batch_size)
-        print(".....")
-        print("Finished migrating Disgenet.")
-        print(".....")
+        print("Dataset load complete.")
+        print("--------------------------------------------------")
 
 
 def insert_associations(session, max_rows, num_jobs, batch_size):
@@ -30,7 +27,6 @@ def insert_associations(session, max_rows, num_jobs, batch_size):
 
     insert_diseases(dataset, session, num_jobs, batch_size)
     queries = list()
-    print("  Starting with gene disease associations.")
 
     for data in dataset:
         query = " ".join([
@@ -48,12 +44,11 @@ def insert_associations(session, max_rows, num_jobs, batch_size):
 
         queries.append(query)
 
+    print("Inserting gene-disease associations:")
     write_batches(session, queries, num_jobs, batch_size)
-    print(" gene-disease associations inserted! ({} entries)".format(len(queries)))
 
 
 def insert_diseases(dataset, session, num_jobs, batch_size):
-    print("  Starting with diseases.")
     diseases = dict()
     queries = list()
 
@@ -74,5 +69,5 @@ def insert_diseases(dataset, session, num_jobs, batch_size):
         query += ";"
         queries.append(query)
 
+    print("Inserting diseases:")
     write_batches(session, queries, num_jobs, batch_size)
-    print(" Diseases inserted! ({} entries)".format(len(diseases)))
