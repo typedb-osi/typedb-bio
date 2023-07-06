@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from typedb.client import TypeDB, TypeDBClient
 
-from Schema.initialise import initialise_database
+from schema.initialise import initialise_database
 
 
 @pytest.fixture(scope="session")

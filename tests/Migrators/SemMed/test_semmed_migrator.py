@@ -7,8 +7,8 @@ import pytest
 import requests
 from typedb.client import SessionType, TypeDBClient
 
-from Migrators.SemMed.pipeline import load_semmed
-from Schema.initialise import initialise_database
+from loader.semmed.pipeline import load_semmed
+from schema.initialise import initialise_database
 
 
 def _raise_exception(*args, **kwargs):

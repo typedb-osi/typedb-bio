@@ -8,5 +8,5 @@ __pycache__
 
 # Datasets
 .cache
-Dataset/CORD_NER
-Dataset/TissueNet
+dataset/cordner
+dataset/tissuenet

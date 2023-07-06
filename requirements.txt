@@ -1,4 +1,4 @@
-typedb-client==2.14.3
+typedb-client==2.18.1
 pandas==1.5.3
 joblib==1.2.0
 requests==2.28.2

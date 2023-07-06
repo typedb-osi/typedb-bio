@@ -32,7 +32,7 @@ Clone this repo:
 git clone https://github.com/vaticle/typedb-bio.git
 ```
 
-Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `Dataset/CORD_NER`
+Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `dataset/cordner`
 
 Set up a virtual environment and install the dependencies:
 
@@ -48,19 +48,19 @@ Start typedb
 typedb server
 ```
 
-Start the migrator script
+Start the loader script
 
 ```bash
-python migrator.py -n 4 # insert using 4 threads
+python loader.py -n 4 # insert using 4 threads
 ```
 
-For help with the migrator script command line options:
+For help with the loader script command line options:
 
 ```bash
-python migrator.py -h
+python loader.py -h
 ```
 
-Now grab a coffee (or two) while the migrator builds the database and schema for you!
+Now grab a coffee (or two) while the loader builds the schema and data for you!
 
 ## Testing
 Install the test dependencies:
@@ -106,19 +106,18 @@ Currently the datasets we've integrated include:
 
 * [CORD-NER](https://xuanwang91.github.io/2020-03-20-cord19-ner/): The CORD-19 dataset that the White House released has been annotated and made publicly available. It uses various NER methods to recognise named entities on CORD-19 with distant or weak supervision.
 * [Uniprot](https://www.uniprot.org/uniprot/?query=proteome:UP000005640%20reviewed:yes): We’ve downloaded the reviewed human subset, and ingested genes, transcripts and protein identifiers.
-* [Coronaviruses](https://github.com/vaticle/typedb-bio/tree/master/Dataset/Coronaviruses): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
+* [Coronaviruses](https://github.com/vaticle/typedb-bio/tree/master/dataset/coronavirus): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
 * [DGIdb](http://www.dgidb.org/downloads): We’ve taken the *Interactions TSV* which includes all drug-gene interactions.
 * [Human Protein Atlas](https://www.proteinatlas.org/about/download): The *Normal Tissue Data* includes the expression profiles for proteins in human tissues.
 * [Reactome](https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt): This dataset connects pathways and their participating proteins.
 * [DisGeNet](https://www.disgenet.org/downloads): We’ve taken the *curated gene-disease-associations* dataset, which contains associations from Uniprot, CGI, ClinGen, Genomics England and CTD, PsyGeNET, and Orphanet.
-* [SemMed](https://skr3.nlm.nih.gov/SemMedDB/dbinfo.html): This is a subset of the SemMed version 4.0 database
+* [SemMed](https://skr3.nlm.nih.gov/SemMedDB/dbinfo.html): This is a subset of the SemMed version 4.0 database.
+* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/): A dataset of protein-protein interactions.
 
 In progress:
 
 * [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.
-    * TODO: write migrator script
-* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/)
-    * TODO: `./Migrators/TissueNet/TissueNetMigrator.py` incomplete: only migrates a single data file and is not called in `./migrator.py`.
+    * TODO: write loader script
 
 We plan to add many more datasets!
 
@@ -136,6 +135,7 @@ If you wish to get in touch, please talk to us on the #typedb-bio channel on our
 - Konrad Myśliwiec ([LinkedIn](https://www.linkedin.com/in/konrad-my%C5%9Bliwiec-764ba9163/))
 - Kim Wager ([LinkedIn](https://www.linkedin.com/in/kimwager/))
 - Tomás Sabat ([LinkedIn](https://www.linkedin.com/in/tom%C3%A1s-sabat-83265841/))
+- James Whiteside ([LinkedIn](https://www.linkedin.com/in/james-whiteside-engineer/))
 
 ## **Further Learning**
 - [TypeDB for Life Sciences](https://vaticle.com/use-cases/life-sciences)
