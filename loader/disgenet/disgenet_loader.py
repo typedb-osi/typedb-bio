@@ -31,8 +31,8 @@ def insert_associations(session, max_rows, num_jobs, batch_size):
     for data in dataset:
         query = " ".join([
             "match",
-            "$g isa gene, has gene-symbol \"{}\";",
-            "$d isa disease, has disease-id \"{}\";",
+            "$g isa gene, has primary-gene-symbol \"{}\";",
+            "$d isa disease, has umls-id \"{}\";",
             "not {{ (associated-gene: $g, associated-disease: $d) isa gene-disease-association; }};",
             "insert",
             "(associated-gene: $g, associated-disease: $d) isa gene-disease-association, has disgenet-score {};",
@@ -61,7 +61,7 @@ def insert_diseases(dataset, session, num_jobs, batch_size):
                 diseases[data["disease-id"]].add(data["disease-name"])
 
     for disease_id in diseases.keys():
-        query = "insert $d isa disease, has disease-id \"{}\"".format(disease_id)
+        query = "insert $d isa disease, has umls-id \"{}\"".format(disease_id)
 
         for name in diseases[disease_id]:
             query += ", has disease-name \"{}\"".format(name)

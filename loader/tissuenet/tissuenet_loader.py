@@ -50,9 +50,9 @@ def load_interactions(interactions, session, num_jobs, batch_size):
         query = " ".join([
             "match",
             "$g1 isa gene,",
-            "has ensembl-gene-stable-id \"{}\";",
+            "has ensembl-gene-id \"{}\";",
             "$g2 isa gene,",
-            "has ensembl-gene-stable-id \"{}\";",
+            "has ensembl-gene-id \"{}\";",
             "not {{ (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction; }};"
             "insert",
             "$i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;",
@@ -77,9 +77,9 @@ def load_contexts(interactions, session, num_jobs, batch_size):
         query = " ".join([
             "match",
             "$g1 isa gene,",
-            "has ensembl-gene-stable-id \"{}\";",
+            "has ensembl-gene-id \"{}\";",
             "$g2 isa gene,",
-            "has ensembl-gene-stable-id \"{}\";",
+            "has ensembl-gene-id \"{}\";",
             "$i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;",
             "$t isa tissue;",
             "$c isa cell;",

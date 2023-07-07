@@ -102,7 +102,7 @@ def insert_genes(uniprot_dataset, session, num_jobs, batch_size):
     queries = list()
 
     for gene in genes:
-        query = "insert $g isa gene, has official-gene-symbol \"{}\"".format(gene["official-gene-symbol"])
+        query = "insert $g isa gene, has primary-gene-symbol \"{}\"".format(gene["official-gene-symbol"])
 
         for symbol in gene["alternative-gene-symbol"]:
             query += ", has alternative-gene-symbol \"{}\"".format(symbol)
@@ -139,11 +139,11 @@ def insert_transcripts(uniprot_dataset, session, num_jobs, batch_size):
 
     for transcript_id in transcripts.keys():
         match_clause = "match"
-        insert_clause = "insert $t isa transcript, has ensembl-transcript-stable-id \"{}\";".format(transcript_id)
+        insert_clause = "insert $t isa transcript, has ensembl-transcript-id \"{}\";".format(transcript_id)
         gene_symbols = transcripts[transcript_id]
 
         for i, gene_symbol in enumerate(gene_symbols):
-            match_clause += " $g{} isa gene, has official-gene-symbol \"{}\";".format(i, gene_symbol)
+            match_clause += " $g{} isa gene, has primary-gene-symbol \"{}\";".format(i, gene_symbol)
             insert_clause += " (transcribing-gene: $g{}, encoded-transcript: $t) isa transcription;".format(i)
 
         if match_clause == "match":
@@ -247,11 +247,11 @@ def insert_proteins(uniprot_dataset, session, num_jobs, batch_size):
 
         if data["gene-symbol"] != "":
             gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
-            match_clause += " $g isa gene, has official-gene-symbol \"{}\";".format(gene_symbol)
+            match_clause += " $g isa gene, has primary-gene-symbol \"{}\";".format(gene_symbol)
             insert_clause += " (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;"
 
         for i, transcript_id in enumerate(transcripts):
-            match_clause += " $t{} isa transcript, has ensembl-transcript-stable-id \"{}\";".format(i, transcript_id)
+            match_clause += " $t{} isa transcript, has ensembl-transcript-id \"{}\";".format(i, transcript_id)
             insert_clause += " (translating-transcript: $t{}, translated-protein: $p) isa translation;".format(i)
 
         query = match_clause + " " + insert_clause

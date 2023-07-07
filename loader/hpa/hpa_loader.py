@@ -79,10 +79,10 @@ def insert_ensemble_id(dataset, session, num_jobs, batch_size):
     queries = list()
 
     for gene in ensembl_ids.keys():
-        query = "match $g isa gene, has gene-symbol \"{}\"; insert".format(gene)
+        query = "match $g isa gene, has primary-gene-symbol \"{}\"; insert".format(gene)
 
         for ensembl_id in ensembl_ids[gene]:
-            query += " $g has ensembl-gene-stable-id \"{}\";".format(ensembl_id)
+            query += " $g has ensembl-gene-id \"{}\";".format(ensembl_id)
 
         queries.append(query)
 
@@ -97,7 +97,7 @@ def insert_gene_tissue(dataset, session, num_jobs, batch_size):
         query = " ".join([
             "match",
             "$g isa gene,",
-            "has gene-symbol \"{}\";",
+            "has primary-gene-symbol \"{}\";",
             "$t isa tissue,",
             "has tissue-name \"{}\";",
             "$c isa cell,",

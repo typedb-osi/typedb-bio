@@ -50,7 +50,7 @@ def insert_pathways(session, num_jobs, batch_size, dataset):
     queries = list()
 
     for pathway in pathways:
-        query = "insert $p isa pathway, has pathway-id \"{}\"".format(pathway["pathway-id"])
+        query = "insert $p isa pathway, has reactome-id \"{}\"".format(pathway["pathway-id"])
 
         for name in pathway["pathway-name"]:
             query += ", has pathway-name \"{}\"".format(name)
@@ -68,7 +68,7 @@ def insert_pathway_interactions(session, num_jobs, batch_size, dataset):
     for data in dataset:
         query = " ".join([
             "match",
-            "$p isa pathway, has pathway-id \"{}\";",
+            "$p isa pathway, has reactome-id \"{}\";",
             "$pr isa protein, has uniprot-id \"{}\";",
             "not {{ (participated-pathway: $p, participating-protein: $pr) isa pathway-participation; }};"
             "insert",

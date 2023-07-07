@@ -59,10 +59,10 @@ def load_authors(
         query = " ".join([
             "match",
             "?pn = \"{}\";",
-            "not {{ $p isa person, has published-name ?pn; }};",
+            "not {{ $p isa person, has author-name ?pn; }};",
             "insert",
             "$p isa person,",
-            "has published-name ?pn;",
+            "has author-name ?pn;",
         ]).format(
             author_name,
         )
@@ -92,7 +92,7 @@ def load_publications(
         match_clause = " ".join([
             "match",
             "$publication type publication;",
-            "not {{ $p isa $publication, has paper-id \"{}\"; }};",
+            "not {{ $p isa $publication, has pubmed-id \"{}\"; }};",
         ]).format(
             publication["paper-id"],
         )
@@ -100,11 +100,9 @@ def load_publications(
         insert_clause = " ".join([
             "insert",
             "$p isa publication,",
-            "has paper-id \"{}\",",
-            "has pmid \"{}\"",
+            "has pubmed-id \"{}\"",
         ]).format(
             publication["paper-id"],
-            publication["pmid"],
         )
 
         for attribute in ("title", "doi", "issn", "volume"):
@@ -118,7 +116,7 @@ def load_publications(
         insert_clause += ";"
 
         for i, author in enumerate(publication["authors"]):
-            match_clause += " $pe{} isa person, has published-name \"{}\";".format(i, author)
+            match_clause += " $pe{} isa person, has author-name \"{}\";".format(i, author)
             insert_clause += " (author: $pe{}, authored-publication: $p) isa authorship;".format(i)
 
         if "journal-name" in publication.keys():
@@ -177,9 +175,9 @@ def load_gene_relations(data: pandas.DataFrame, session: TypeDBSession, num_jobs
         match_clause = " ".join([
             "match",
             "$g1 isa gene,",
-            "has official-gene-symbol \"{}\";",
+            "has primary-gene-symbol \"{}\";",
             "$g2 isa gene,",
-            "has official-gene-symbol \"{}\";",
+            "has primary-gene-symbol \"{}\";",
             "not {{ ({}: $g1, {}: $g2) isa {}; }};"
         ]).format(
             row.subject,
@@ -228,11 +226,11 @@ def load_gene_mentions(data: pandas.DataFrame, session: TypeDBSession, num_jobs:
         match_clause = " ".join([
             "match",
             "$p isa publication,",
-            "has paper-id \"{}\";",
+            "has pubmed-id \"{}\";",
             "$g1 isa gene,",
-            "has official-gene-symbol \"{}\";",
+            "has primary-gene-symbol \"{}\";",
             "$g2 isa gene,",
-            "has official-gene-symbol \"{}\";",
+            "has primary-gene-symbol \"{}\";",
             "$r ({}: $g1, {}: $g2) isa {};"
         ]).format(
             row.pmid,
@@ -245,7 +243,7 @@ def load_gene_mentions(data: pandas.DataFrame, session: TypeDBSession, num_jobs:
 
         insert_clause = " ".join([
             "insert",
-            "$m (mentioned-genes-relation: $r, mentioning: $p) isa mention,",
+            "$m (mentioned: $r, mentioning: $p) isa mention,",
             "has sentence-text \"{}\",",
             "has source \"SemMed\";",
         ]).format(

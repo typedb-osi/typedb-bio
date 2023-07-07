@@ -59,10 +59,10 @@ def insert_drugs(session, max_rows, num_jobs, batch_size):
         query = "insert $d isa drug, has chembl-id \"{}\"".format(chembl_id)
 
         for claim_name in drugs[chembl_id]["drug-claim-name"]:
-            query += ", has drug-claim-name \"{}\"".format(claim_name)
+            query += ", has dgidb-claim-name \"{}\"".format(claim_name)
 
         for name in drugs[chembl_id]["drug-name"]:
-            query += ", has drug-name \"{}\"".format(name)
+            query += ", has dgidb-name \"{}\"".format(name)
 
         for claim_source in drugs[chembl_id]["drug-claim-source"]:
             query += ", has drug-claim-source \"{}\"".format(claim_source)
