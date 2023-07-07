@@ -18,7 +18,7 @@ def load_tissuenet(session, max_interactions, num_jobs, batch_size):
         for path in paths:
             file_name = path.split("/")[-1].split(".")[0]
             tissue = tissue_mapper(file_name)
-            print("Loading TissueNet {} dataset:".format(file_name))
+            print("Loading TissueNet \"{}\" dataset...".format(file_name))
             rows = read_tsv(path)
             os.remove(path)
             interactions = list()
