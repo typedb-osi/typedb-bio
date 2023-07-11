@@ -33,9 +33,9 @@ def insert_associations(session, max_rows, num_jobs, batch_size):
             "match",
             "$g isa gene, has primary-gene-symbol \"{}\";",
             "$d isa disease, has umls-id \"{}\";",
-            "not {{ (associated-gene: $g, associated-disease: $d) isa gene-disease-association; }};",
+            "not {{ (interacting-disease: $d, interacting-gene: $g) isa disease-gene-interaction; }};",
             "insert",
-            "(associated-gene: $g, associated-disease: $d) isa gene-disease-association, has disgenet-score {};",
+            "(interacting-disease: $d, interacting-gene: $g) isa disease-gene-interaction, has disgenet-score {};",
         ]).format(
             data['gene-symbol'],
             data['disease-id'],

@@ -99,7 +99,7 @@ def insert_viruses(dataset, session, num_jobs, batch_size):
         query += " ".join([
             ", has identity-percentage {};",
             "(discovering-location: $c, discovered-virus: $v) isa discovery;",
-            "(hosting-organism: $o, hosted-virus: $v) isa organism-virus-hosting;",
+            "(host-organism: $o, hosted-virus: $v) isa virus-hosting;",
         ]).format(
             data["identity-percent"],
         )
@@ -129,25 +129,10 @@ def insert_host_proteins(session, num_jobs, batch_size):
         query = " ".join([
             "match",
             "$v isa virus, has virus-name \"{}\";",
-            "$g isa gene, has entrez-id \"{}\";",
-            "not {{ (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association; }};",
-            "insert",
-            "(associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;",
-        ]).format(
-            data["coronavirus"],
-            data["uniprot-id"],
-            data["entrez-id"],
-        )
-
-        queries.append(query)
-
-        query = " ".join([
-            "match",
-            "$v isa virus, has virus-name \"{}\";",
             "$p isa protein, has uniprot-id \"{}\";",
-            "not {{ (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association; }};",
+            "not {{ (targeted-protein: $p, interacting-virus: $v) isa virus-protein-interaction; }};",
             "insert",
-            "(hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;",
+            "(targeted-protein: $p, interacting-virus: $v) isa virus-protein-interaction;",
         ]).format(
             data["coronavirus"],
             data["uniprot-id"],

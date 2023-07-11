@@ -144,7 +144,7 @@ def insert_transcripts(uniprot_dataset, session, num_jobs, batch_size):
 
         for i, gene_symbol in enumerate(gene_symbols):
             match_clause += " $g{} isa gene, has primary-gene-symbol \"{}\";".format(i, gene_symbol)
-            insert_clause += " (transcribing-gene: $g{}, encoded-transcript: $t) isa transcription;".format(i)
+            insert_clause += " (transcribed-gene: $g{}, synthesised-transcript: $t) isa transcription;".format(i)
 
         if match_clause == "match":
             query = insert_clause
@@ -243,16 +243,11 @@ def insert_proteins(uniprot_dataset, session, num_jobs, batch_size):
         insert_clause += ";"
 
         match_clause += " $o isa organism, has organism-name \"{}\";".format(data["organism"])
-        insert_clause += " (associated-organism: $o, associating: $p) isa organism-association;"
-
-        if data["gene-symbol"] != "":
-            gene_symbol = extract_gene_entry(data)["official-gene-symbol"]
-            match_clause += " $g isa gene, has primary-gene-symbol \"{}\";".format(gene_symbol)
-            insert_clause += " (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;"
+        insert_clause += " (associated-organism: $o, associated-protein: $p) isa organism-protein-association;"
 
         for i, transcript_id in enumerate(transcripts):
             match_clause += " $t{} isa transcript, has ensembl-transcript-id \"{}\";".format(i, transcript_id)
-            insert_clause += " (translating-transcript: $t{}, translated-protein: $p) isa translation;".format(i)
+            insert_clause += " (translated-transcript: $t{}, synthesised-protein: $p) isa translation;".format(i)
 
         query = match_clause + " " + insert_clause
         queries.append(query)

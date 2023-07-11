@@ -104,7 +104,7 @@ def insert_gene_tissue(dataset, session, num_jobs, batch_size):
             "has cell-name \"{}\";",
             "(composed-tissue: $t, composing-cell: $c) isa composition;"
             "insert",
-            "(expressed-gene: $g, expressing-cell: $c) isa expression,",
+            "(expressed-gene: $g, expressing-cell: $c) isa cell-expression,",
             "has expression-value \"{}\",",
             "has expression-value-reliability \"{}\";"
         ]).format(

@@ -1,447 +1,284 @@
 define
 
-cell sub entity,
-    owns cell-name,
-    plays expression:expressing-cell,
-    plays composition:composing-cell,
-    plays process-localisation:cell-context;
+# entities
 
-tissue sub entity,
-    owns tissue-name,
-    plays tissue-enhancement:enhanced-tissue,
-    plays expression:expressing-tissue,
-    plays composition:composed-tissue,
-    plays process-localisation:tissue-context,
-    plays disease-tissue-association:associated-tissue,
-    plays drug-tissue-association:associated-tissue;
+bio-entity sub entity,
+    abstract;
 
-gene sub entity,
+cell sub bio-entity,
+    owns cell-name;
+
+tissue sub bio-entity,
+    owns tissue-name;
+
+gene sub bio-entity,
     owns primary-gene-symbol,
     owns alternative-gene-symbol,
     owns entrez-id,
-    owns ensembl-gene-id,
-    plays expression:expressed-gene,
-    plays gene-gene-interaction:interacting-gene,
-    plays gene-protein-encoding:encoding-gene,
-    plays transcription:transcribing-gene,
-    plays gene-disease-association:associated-gene,
-    plays drug-gene-interaction:target-gene,
-    plays gene-virus-association:associated-virus-gene,
-    plays gene-inhibition:inhibited-gene,
-    plays gene-inhibition:inhibiting-gene,
-    plays gene-interaction:interacted-gene,
-    plays gene-interaction:interacting-gene,
-    plays gene-coexistance:coexisting-gene,
-    plays gene-comparison:comparing-gene,
-    plays gene-comparison:compared-gene,
-    plays gene-stimulation:stimulating-gene,
-    plays gene-stimulation:stimulated-gene,
-    plays gene-conversion:converting-gene,
-    plays gene-conversion:converted-gene,
-    plays gene-production:producing-gene,
-    plays gene-production:produced-gene,
-    plays gene-similarity:similar-gene,
-    plays gene-location:locating-gene,
-    plays gene-location:located-gene,
-    plays gene-constitution:constituting-gene,
-    plays gene-constitution:constituted-gene,
-    plays gene-disruption:disrupting-gene,
-    plays gene-disruption:disrupted-gene,
-    plays gene-augmentation:augmenting-gene,
-    plays gene-augmentation:augmented-gene,
-    plays gene-affection:affecting-gene,
-    plays gene-affection:affected-gene,
-    plays gene-association:associated-gene,
-    plays gene-association:associating-gene;
-transcript sub entity,
-    owns ensembl-transcript-id,
-    plays transcription:encoded-transcript,
-    plays translation:translating-transcript;
-protein sub entity,
+    owns ensembl-gene-id;
+
+transcript sub bio-entity,
+    owns ensembl-transcript-id;
+
+protein sub bio-entity,
     owns uniprot-id,
     owns uniprot-entry-name,
     owns primary-uniprot-name,
     owns alternative-uniprot-name,
-    owns function-description,
-    plays translation:translated-protein,
-    plays protein-disease-association:associated-protein,
-    plays gene-protein-encoding:encoded-protein,
-    plays tissue-enhancement:expressed-protein,
-    plays protein-protein-interaction:interacting-protein,
-    plays pathway-participation:participating-protein,
-    plays drug-protein-interaction:target-protein,
-    plays organism-association:associating,
-    plays protein-virus-association:hosting-virus-protein;
-disease sub entity,
+    owns function-description;
+
+disease sub bio-entity,
     owns disease-name,
-    owns umls-id,
-    owns disease-type,
-    plays protein-disease-association:associated-disease,
-    plays gene-disease-association:associated-disease,
-    plays disease-tissue-association:associated-disease,
-    plays drug-disease-association:affected-disease;
-drug sub entity,
+    owns umls-id;
+
+drug sub bio-entity,
     owns dgidb-name,
     owns chembl-id,
     owns dgidb-claim-name,
-    owns drug-claim-source,
-    plays drug-protein-interaction:interacting-drug,
-    plays drug-gene-interaction:interacting-drug,
-    plays drug-disease-association:therapeutic,
-    plays drug-tissue-association:associated-drug;
-pathway sub entity,
+    owns drug-claim-source;
+
+pathway sub bio-entity,
     owns pathway-name,
-    owns reactome-id,
-    plays pathway-participation:participated-pathway;
-organism sub entity,
-    owns organism-name,
-    plays organism-association:associated-organism,
-    plays organism-virus-hosting:hosting-organism;
-virus sub organism,
+    owns reactome-id;
+
+organism sub bio-entity,
+    owns organism-name;
+
+virus sub bio-entity,
     owns genbank-id,
     owns virus-name,
-    owns identity-percentage,
-    plays organism-virus-hosting:hosted-virus,
-    plays protein-virus-association:associated-virus,
-    plays gene-virus-association:associated-virus,
-    plays discovery:discovered-virus;
+    owns identity-percentage;
+
 country sub entity,
-    owns country-name,
-    plays discovery:discovering-location;
+    owns country-name;
+
 journal sub entity,
-    owns journal-name,
-    plays publishing:publishing-journal;
+    owns journal-name;
+
 publication sub entity,
     owns pubmed-id,
     owns title,
     owns doi,
     owns year,
     owns volume,
-    owns issn,
-    plays mention:mentioning,
-    plays authorship:authored-publication,
-    plays publishing:published-publication;
-person sub entity,
-    owns author-name,
-    plays authorship:author;
+    owns issn;
 
-## Relations
-transcription sub relation,
-    relates transcribing-gene,
-    relates encoded-transcript;
-translation sub relation,
-    relates translated-protein,
-    relates translating-transcript;
-gene-protein-encoding sub relation,
-    relates encoded-protein,
-    relates encoding-gene;
-protein-disease-association sub relation,
-    relates associated-protein,
-    relates associated-disease;
-gene-disease-association sub relation,
-    owns disgenet-score,
-    relates associated-gene,
-    relates associated-disease;
-drug-protein-interaction sub relation,
+person sub entity,
+    owns author-name;
+
+# relations
+
+# dataset bio-relations
+
+bio-relation sub relation,
+    abstract;
+
+transcription sub bio-relation,
+    relates transcribed-gene,
+    relates synthesised-transcript;
+
+gene plays transcription:transcribed-gene;
+transcript plays transcription:synthesised-transcript;
+
+translation sub bio-relation,
+    relates translated-transcript,
+    relates synthesised-protein;
+
+transcript plays translation:translated-transcript;
+protein plays translation:synthesised-protein;
+
+disease-gene-interaction sub bio-relation,
+    relates interacting-disease,
+    relates interacting-gene,
+    owns disgenet-score;
+
+disease plays disease-gene-interaction:interacting-disease;
+gene plays disease-gene-interaction:interacting-gene;
+
+drug-gene-interaction sub bio-relation,
+    relates interacting-gene,
     relates interacting-drug,
-    relates target-protein;
-drug-gene-interaction sub relation,
-    owns interaction-type,
-    relates target-gene,
-    relates interacting-drug;
-tissue-enhancement sub relation,
-    relates enhanced-tissue,
-    relates expressed-protein;
-process-localisation sub relation,
-    relates biomolecular-process,
-    relates tissue-context,
-    relates cell-context;
-protein-protein-interaction sub relation,
-    relates interacting-protein,
-    plays process-localisation:biomolecular-process;
-drug-disease-association sub relation,
-    relates affected-disease,
-    relates therapeutic;
-pathway-participation sub relation,
+    owns interaction-type;
+
+gene plays drug-gene-interaction:interacting-gene;
+drug plays drug-gene-interaction:interacting-drug;
+
+pathway-participation sub bio-relation,
     relates participating-protein,
     relates participated-pathway;
-disease-tissue-association sub relation,
-    relates associated-disease,
-    relates associated-tissue;
-drug-tissue-association sub relation,
-    relates associated-drug,
-    relates associated-tissue;
-organism-association sub relation,
+
+protein plays pathway-participation:participating-protein;
+pathway plays pathway-participation:participated-pathway;
+
+organism-protein-association sub bio-relation,
     relates associated-organism,
-    relates associating;
-organism-virus-hosting sub relation,
+    relates associated-protein;
+
+protein plays organism-protein-association:associated-protein;
+organism plays organism-protein-association:associated-organism;
+
+virus-hosting sub bio-relation,
     relates hosted-virus,
-    relates hosting-organism;
-protein-virus-association sub relation,
-    relates associated-virus,
-    relates hosting-virus-protein;
-gene-virus-association sub relation,
-    relates associated-virus,
-    relates associated-virus-gene;
-discovery sub relation,
-    relates discovered-virus,
-    relates discovering-location;
+    relates host-organism;
 
-expression sub relation,
-    owns expression-value,
-    owns expression-value-reliability,
-    relates expressing-tissue,
+organism plays virus-hosting:host-organism;
+virus plays virus-hosting:hosted-virus;
+
+virus-protein-interaction sub bio-relation,
+    relates interacting-virus,
+    relates targeted-protein;
+
+virus plays virus-protein-interaction:interacting-virus;
+protein plays virus-protein-interaction:targeted-protein;
+
+cell-expression sub bio-relation,
     relates expressing-cell,
-    relates expressed-gene;
+    relates expressed-gene,
+    owns expression-value,
+    owns expression-value-reliability;
 
-composition sub relation,
+cell plays cell-expression:expressing-cell;
+gene plays cell-expression:expressed-gene;
+
+composition sub bio-relation,
     relates composed-tissue,
     relates composing-cell;
 
-gene-relation sub relation,
-    relates passive-gene,
-    relates active-gene;
+cell plays composition:composing-cell;
+tissue plays composition:composed-tissue;
 
-gene-inhibition sub gene-relation,
-    relates inhibited-gene as passive-gene,
-    relates inhibiting-gene as active-gene,
-    plays mention:mentioned;
+gene-gene-interaction sub bio-relation,
+    relates interacting-gene;
 
-gene-interaction sub gene-relation,
-    relates interacted-gene as passive-gene,
-    relates interacting-gene as active-gene,
-    plays mention:mentioned;
+gene plays gene-gene-interaction:interacting-gene;
 
-gene-coexistance sub gene-relation,
-    relates coexisting-gene as passive-gene,
-    plays mention:mentioned;
+process-localisation sub bio-relation,
+    relates biomolecular-process,
+    relates tissue-context,
+    relates cell-context;
 
-gene-comparison sub gene-relation,
-    relates compared-gene as passive-gene,
-    relates comparing-gene as active-gene,
-    plays mention:mentioned;
+cell plays process-localisation:cell-context;
+tissue plays process-localisation:tissue-context;
+protein-protein-interaction plays process-localisation:biomolecular-process;
+gene-gene-interaction plays process-localisation:biomolecular-process;
 
-gene-stimulation sub gene-relation,
-    relates stimulated-gene as passive-gene,
-    relates stimulating-gene as active-gene,
-    plays mention:mentioned;
+# inferred bio-relations
 
-gene-conversion sub gene-relation,
-    relates converted-gene as passive-gene,
-    relates converting-gene as active-gene,
-    plays mention:mentioned;
+inferred-bio-relation sub bio-relation,
+    abstract;
 
-gene-production sub gene-relation,
-    relates produced-gene as passive-gene,
-    relates producing-gene as active-gene,
-    plays mention:mentioned;
+gene-protein-encoding sub inferred-bio-relation,
+    relates encoding-gene,
+    relates encoded-protein;
 
-gene-similarity sub gene-relation,
-    relates similar-gene as passive-gene,
-    plays mention:mentioned;
+gene plays gene-protein-encoding:encoding-gene;
+protein plays gene-protein-encoding:encoded-protein;
 
-gene-location sub gene-relation,
-    relates located-gene as passive-gene,
-    relates locating-gene as active-gene,
-    plays mention:mentioned;
+rule inferred-gene-protein-encoding:
+    when {
+        $g isa gene;
+        $t isa transcript;
+        $p isa protein;
+        (transcribed-gene: $g, synthesised-transcript: $t) isa transcription;
+        (translated-transcript: $t, synthesised-protein: $p) isa translation;
+    } then {
+        (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
+    };
 
-gene-constitution sub gene-relation,
-    relates constituted-gene as passive-gene,
-    relates constituting-gene as active-gene,
-    plays mention:mentioned;
+tissue-expression sub inferred-bio-relation,
+    relates expressing-tissue,
+    relates expressed-gene;
 
-gene-disruption sub gene-relation,
-    relates disrupted-gene as passive-gene,
-    relates disrupting-gene as active-gene,
-    plays mention:mentioned;
+tissue plays tissue-expression:expressing-tissue;
+gene plays tissue-expression:expressed-gene;
 
-gene-augmentation sub gene-relation,
-    relates augmented-gene as passive-gene,
-    relates augmenting-gene as active-gene,
-    plays mention:mentioned;
-
-gene-affection sub gene-relation,
-    relates affected-gene as passive-gene,
-    relates affecting-gene as active-gene,
-    plays mention:mentioned;
-
-gene-association sub gene-relation,
-    relates associated-gene as passive-gene,
-    relates associating-gene as active-gene;
-
-mention sub relation,
-    owns source,
-    owns sentence-text,
-    relates mentioning,
-    relates mentioned;
-
-publishing sub relation,
-    relates publishing-journal,
-    relates published-publication;
-
-authorship sub relation,
-    relates author,
-    relates authored-publication;
-
-gene-gene-interaction sub relation,
-    relates interacting-gene,
-    plays process-localisation:biomolecular-process;
-
-## Attributes
-# Name attributes:
-name sub attribute, abstract, value string;
-disease-name sub name;
-disease-type sub attribute, value string;
-protein-name sub name, abstract;
-uniprot-name sub protein-name, abstract;
-primary-uniprot-name sub uniprot-name, value string;
-alternative-uniprot-name sub uniprot-name, value string;
-gene-symbol sub gene-id, abstract;
-primary-gene-symbol sub gene-symbol;
-alternative-gene-symbol sub gene-symbol;
-journal-name sub name;
-cell-name sub name;
-uniprot-entry-name sub protein-name;
-pathway-name sub name;
-tissue-name sub name;
-drug-name sub name, abstract;
-dgidb-name sub drug-name;
-organism-name sub name;
-virus-name sub name;
-dgidb-claim-name sub drug-name;
-source sub attribute, value string;
-publication-id sub id, abstract;
-pubmed-id sub publication-id;
-publication-name sub name, abstract;
-title sub publication-name;
-year sub attribute, value long;
-volume sub attribute, value string;
-issn sub publication-id;
-doi sub publication-id;
-
-
-id sub attribute, abstract, value string;
-gene-id sub id, abstract;
-ensembl-gene-id sub gene-id;
-entrez-id sub gene-id;
-protein-id sub id, abstract;
-uniprot-id sub protein-id;
-transcript-id sub id, abstract;
-ensembl-transcript-id sub transcript-id;
-disease-id sub id, abstract;
-umls-id sub disease-id;
-virus-id sub id, abstract;
-genbank-id sub virus-id;
-pathway-id sub id, abstract;
-reactome-id sub pathway-id;
-drug-id sub id, abstract;
-chembl-id sub drug-id;
-
-
-
-expression-value sub attribute, value string;
-expression-value-reliability sub attribute, value string;
-drug-claim-source sub attribute, value string;
-identity-percentage sub attribute, value double;
-function-description sub attribute, value string;
-disgenet-score sub attribute, value double;
-interaction-type sub attribute, value string;
-sentence-text sub attribute, value string;
-country-name sub name;
-author-name sub name;
-
-### Rules
-
-
-rule gene-disease-association-and-gene-protein-encoding-protein-disease-association:
-when {
-    $g isa gene;
-    $pr isa protein;
-    $di isa disease;
-    $r1 (associated-disease: $di, associated-gene: $g) isa gene-disease-association;
-    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
-} then {
-    (associated-protein: $pr, associated-disease: $di) isa protein-disease-association;
-};
-
-rule gene-tissue-expression-gene-protein-encoding-implies-tissue-enhancement:
-when {
-    $g isa gene;
-    $pr isa protein;
-    $ti isa tissue;
-    $r1 (expressing-tissue: $ti, expressed-gene: $g) isa expression;
-    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
-} then {
-    (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
-};
-
-rule drug-gene-interaction-and-gene-protein-encoding-implies-drug-protein-interaction:
-when {
-    $g isa gene;
-    $pr isa protein;
-    $dr isa drug;
-    $r1 ($dr, target-gene: $g) isa drug-gene-interaction;
-    $r2 (encoding-gene: $g, encoded-protein: $pr) isa gene-protein-encoding;
-} then {
-    (target-protein: $pr, interacting-drug: $dr) isa drug-protein-interaction;
-};
-
-rule protein-disease-association-and-tissue-enhancement-implies-disease-tissue-association:
-when {
-   $di isa disease;
-   $pr isa protein;
-   $ti isa tissue;
-   $r1 (associated-disease: $di, associated-protein: $pr) isa protein-disease-association;
-   $r2 (expressed-protein: $pr, enhanced-tissue: $ti) isa tissue-enhancement;
-} then {
-   (associated-disease: $di, associated-tissue: $ti) isa disease-tissue-association;
-};
-
-rule drug-gene-interaction-and-gene-tissue-expression-implies-drug-tissue-association:
-when {
-   $dr isa drug;
-   $ti isa tissue;
-   $ge isa gene;
-   $r1 (interacting-drug: $dr, target-gene: $ge) isa drug-gene-interaction;
-   $r2 (expressed-gene: $ge, expressing-tissue: $ti) isa expression;
-} then {
-   (associated-drug: $dr, associated-tissue: $ti) isa drug-tissue-association;
-};
-
-rule virus-protein-then-virus-gene:
-when {
-    $g isa gene;
-    $v isa virus;
-    $p isa protein;
-    $1 (hosting-virus-protein: $p, associated-virus: $v) isa protein-virus-association;
-    $2 (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
-} then {
-    (associated-virus-gene: $g, associated-virus: $v) isa gene-virus-association;
-};
-
-rule inferred-gene-expression:
+rule inferred-tissue-expression:
     when {
         $t isa tissue;
         $c isa cell;
         $g isa gene;
         (composed-tissue: $t, composing-cell: $c) isa composition;
-        (expressing-cell: $c, expressed-gene: $g) isa expression;
+        (expressing-cell: $c, expressed-gene: $g) isa cell-expression;
     } then {
-        (expressing-tissue: $t, expressed-gene: $g) isa expression;
+        (expressing-tissue: $t, expressed-gene: $g) isa tissue-expression;
     };
 
-rule inferred-tissue-context:
+disease-protein-interaction sub inferred-bio-relation,
+    relates interacting-disease,
+    relates interacting-protein;
+
+protein plays disease-protein-interaction:interacting-protein;
+disease plays disease-protein-interaction:interacting-disease;
+
+rule inferred-disease-protein-interaction:
     when {
-        $g1 isa gene;
-        $g2 isa gene;
-        $i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
-        $c isa cell;
-        (biomolecular-process: $i, cell-context: $c) isa process-localisation;
-        $t isa tissue;
-        (composed-tissue: $t, composing-cell: $c) isa composition;
+        $p isa protein;
+        $g isa gene;
+        $d isa disease;
+        (encoded-protein: $p, encoding-gene: $g) isa gene-protein-encoding;
+        (interacting-gene: $g, interacting-disease: $d) isa disease-gene-interaction;
     } then {
-        (biomolecular-process: $i, tissue-context: $t) isa process-localisation;
+        (interacting-protein: $p, interacting-disease: $d) isa disease-protein-interaction;
     };
+
+drug-protein-interaction sub inferred-bio-relation,
+    relates interacting-drug,
+    relates interacting-protein;
+
+drug plays drug-protein-interaction:interacting-drug;
+protein plays drug-protein-interaction:interacting-protein;
+
+rule inferred-drug-protein-interaction:
+    when {
+        $d isa drug;
+        $g isa gene;
+        $p isa protein;
+        (interacting-drug: $d, interacting-gene: $g) isa drug-gene-interaction;
+        (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
+    } then {
+        (interacting-drug: $d, interacting-protein: $p) isa drug-protein-interaction;
+    };
+
+cell-enhancement sub inferred-bio-relation,
+    relates enhanced-cell,
+    relates expressed-protein;
+
+cell plays cell-enhancement:enhanced-cell;
+protein plays cell-enhancement:expressed-protein;
+
+rule inferred-cell-enhancement:
+    when {
+        $p isa protein;
+        $g isa gene;
+        $c isa cell;
+        (encoded-protein: $p, encoding-gene: $g) isa gene-protein-encoding;
+        (expressed-gene: $g, expressing-cell: $t) isa cell-expression;
+    } then {
+        (expressed-protein: $p, enhanced-cell: $t) isa cell-enhancement;
+    };
+
+tissue-enhancement sub inferred-bio-relation,
+    relates enhanced-tissue,
+    relates expressed-protein;
+
+tissue plays tissue-enhancement:enhanced-tissue;
+protein plays tissue-enhancement:expressed-protein;
+
+rule inferred-tissue-enhancement:
+    when {
+        $p isa protein;
+        $g isa gene;
+        $t isa tissue;
+        (encoded-protein: $p, encoding-gene: $g) isa gene-protein-encoding;
+        (expressed-gene: $g, expressing-tissue: $t) isa tissue-expression;
+    } then {
+        (expressed-protein: $p, enhanced-tissue: $t) isa tissue-enhancement;
+    };
+
+protein-protein-interaction sub inferred-bio-relation,
+    relates interacting-protein;
+
+protein plays protein-protein-interaction:interacting-protein;
 
 rule inferred-protein-interaction:
     when {
@@ -454,6 +291,197 @@ rule inferred-protein-interaction:
         (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
     } then {
         (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
+    };
+
+protein-protein-association sub inferred-bio-relation,
+    relates associated-protein;
+
+protein plays protein-protein-association:associated-protein;
+
+rule inferred-protein-protein-association:
+    when {
+        $p1 isa protein;
+        $p2 isa protein;
+        {
+            (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
+        } or {
+            (participating-protein: $p1, participated-pathway: $path) isa pathway-participation;
+            (participating-protein: $p2, participated-pathway: $path) isa pathway-participation;
+            not {
+                $p1 is $p2;
+            };
+        };
+    } then {
+        (associated-protein: $p1, associated-protein: $p2) isa protein-protein-association;
+    };
+
+indirect-bio-relation sub inferred-bio-relation,
+    abstract;
+
+drug-protein-association sub indirect-bio-relation,
+    relates associated-drug,
+    relates associated-protein;
+
+drug plays drug-protein-association:associated-drug;
+protein plays drug-protein-association:associated-protein;
+
+rule inferred-drug-protein-association:
+    when {
+        $d isa drug;
+        $p isa protein;
+        {
+            (interacting-drug: $d, interacting-protein: $p) isa drug-protein-interaction;
+        } or {
+            (interacting-drug: $d, interacting-protein: $p2) isa drug-protein-interaction;
+            (associated-protein: $p2, associated-protein: $p) isa protein-protein-association;
+        };
+    } then {
+        (associated-drug: $d, associated-protein: $p) isa drug-protein-association;
+    };
+
+disease-protein-association sub indirect-bio-relation,
+    relates associated-disease,
+    relates associated-protein;
+
+disease plays disease-protein-association:associated-disease;
+protein plays disease-protein-association:associated-protein;
+
+rule inferred-disease-protein-association:
+    when {
+        $d isa disease;
+        $p isa protein;
+        {
+            (interacting-disease: $d, interacting-protein: $p) isa disease-protein-interaction;
+        } or {
+            (interacting-disease: $d, interacting-protein: $p2) isa disease-protein-interaction;
+            (associated-protein: $p2, associated-protein: $p) isa protein-protein-association;
+        };
+    } then {
+        (associated-disease: $d, associated-protein: $p) isa disease-protein-association;
+    };
+
+#virus-protein-association sub indirect-bio-relation,
+#    relates associated-virus,
+#    relates associated-protein;
+#
+#virus plays virus-protein-association:associated-virus;
+#protein plays virus-protein-association:associated-protein;
+#
+#rule inferred-virus-protein-association:
+#    when {
+#        $v isa virus;
+#        $p isa protein;
+#        {
+#            (interacting-virus: $v, targeted-protein: $p) isa virus-protein-interaction;
+#        } or {
+#            (interacting-virus: $v, targeted-protein: $p2) isa virus-protein-interaction;
+#            (associated-protein: $p2, associated-protein: $p) isa protein-protein-association;
+#        };
+#    } then {
+#        (associated-virus: $v, associated-protein: $p) isa virus-protein-association;
+#    };
+
+potential-disease-treatment sub indirect-bio-relation,
+    relates treating-drug,
+    relates treated-disease;
+
+drug plays potential-disease-treatment:treating-drug;
+disease plays potential-disease-treatment:treated-disease;
+
+rule inferred-potential-disease-treatment:
+    when {
+        $dr isa drug;
+        $p isa protein;
+        $di isa disease;
+        (associated-drug: $dr, associated-protein: $p) isa drug-protein-association;
+        (associated-protein: $p, associated-disease: $di) isa disease-protein-association;
+    } then {
+        (treating-drug: $dr, treated-disease: $di) isa potential-disease-treatment;
+    };
+
+#disease-cell-association sub inferred-bio-relation,
+#    relates associated-disease,
+#    relates associated-cell;
+#
+#disease plays disease-cell-association:associated-disease;
+#cell plays disease-cell-association:associated-cell;
+#
+#rule inferred-disease-cell-association:
+#    when {
+#        $d isa disease;
+#        $p isa protein;
+#        $c isa cell;
+#        (associated-disease: $d, associated-protein: $p) isa disease-protein-association;
+#        (expressed-protein: $p, enhanced-cell: $c) isa cell-enhancement;
+#    } then {
+#        (associated-disease: $d, associated-cell: $c) isa disease-cell-association;
+#    };
+#
+#disease-tissue-association sub inferred-bio-relation,
+#    relates associated-disease,
+#    relates associated-tissue;
+#
+#disease plays disease-tissue-association:associated-disease;
+#tissue plays disease-tissue-association:associated-tissue;
+#
+#rule inferred-disease-tissue-association:
+#    when {
+#       $d isa disease;
+#       $p isa protein;
+#       $t isa tissue;
+#       (associated-disease: $d, associated-protein: $p) isa disease-protein-association;
+#       (expressed-protein: $p, enhanced-tissue: $t) isa tissue-enhancement;
+#    } then {
+#       (associated-disease: $d, associated-tissue: $t) isa disease-tissue-association;
+#    };
+#
+#drug-tissue-association sub inferred-bio-relation,
+#    relates associated-drug,
+#    relates associated-tissue;
+#
+#tissue plays drug-tissue-association:associated-tissue;
+#drug plays drug-tissue-association:associated-drug;
+#
+#rule inferred-drug-tissue-association:
+#    when {
+#       $d isa drug;
+#       $g isa gene;
+#       $t isa tissue;
+#       (interacting-drug: $d, interacting-gene: $g) isa drug-gene-interaction;
+#       (expressed-gene: $g, expressing-tissue: $t) isa tissue-expression;
+#    } then {
+#       (associated-drug: $d, associated-tissue: $t) isa drug-tissue-association;
+#    };
+#
+#gene-virus-association sub inferred-bio-relation,
+#    relates associated-gene,
+#    relates associated-virus;
+#
+#gene plays gene-virus-association:associated-gene;
+#virus plays gene-virus-association:associated-virus;
+#
+#rule inferred-gene-virus-association:
+#when {
+#    $g isa gene;
+#    $p isa protein;
+#    $v isa virus;
+#    (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
+#    (targeted-protein: $p, interacting-virus: $v) isa virus-protein-interaction;
+#} then {
+#    (associated-gene: $g, associated-virus: $v) isa gene-virus-association;
+#};
+
+rule inferred-tissue-context:
+    when {
+        $g1 isa gene;
+        $g2 isa gene;
+        $i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+        $c isa cell;
+        (biomolecular-process: $i, cell-context: $c) isa process-localisation;
+        $t isa tissue;
+        (composed-tissue: $t, composing-cell: $c) isa composition;
+    } then {
+        (biomolecular-process: $i, tissue-context: $t) isa process-localisation;
     };
 
 rule inferred-protein-interaction-context:
@@ -477,3 +505,230 @@ rule inferred-protein-interaction-context:
     } then {
         (biomolecular-process: $pi, $context: $c) isa process-localisation;
     };
+
+# dataset semantic relations
+
+gene-relation sub bio-relation,
+    relates passive-gene,
+    relates active-gene;
+
+gene-inhibition sub gene-relation,
+    relates inhibited-gene as passive-gene,
+    relates inhibiting-gene as active-gene;
+
+gene plays gene-inhibition:inhibited-gene;
+gene plays gene-inhibition:inhibiting-gene;
+
+gene-interaction sub gene-relation,
+    relates interacted-gene as passive-gene,
+    relates interacting-gene as active-gene;
+
+gene plays gene-interaction:interacted-gene;
+gene plays gene-interaction:interacting-gene;
+
+gene-coexistance sub gene-relation,
+    relates coexisting-gene as passive-gene;
+
+gene plays gene-coexistance:coexisting-gene;
+
+gene-comparison sub gene-relation,
+    relates compared-gene as passive-gene,
+    relates comparing-gene as active-gene;
+
+gene plays gene-comparison:comparing-gene;
+gene plays gene-comparison:compared-gene;
+
+gene-stimulation sub gene-relation,
+    relates stimulated-gene as passive-gene,
+    relates stimulating-gene as active-gene;
+
+gene plays gene-stimulation:stimulating-gene;
+gene plays gene-stimulation:stimulated-gene;
+
+gene-conversion sub gene-relation,
+    relates converted-gene as passive-gene,
+    relates converting-gene as active-gene;
+
+gene plays gene-conversion:converting-gene;
+gene plays gene-conversion:converted-gene;
+
+gene-production sub gene-relation,
+    relates produced-gene as passive-gene,
+    relates producing-gene as active-gene;
+
+gene plays gene-production:producing-gene;
+gene plays gene-production:produced-gene;
+
+gene-similarity sub gene-relation,
+    relates similar-gene as passive-gene;
+
+gene plays gene-similarity:similar-gene;
+
+gene-location sub gene-relation,
+    relates located-gene as passive-gene,
+    relates locating-gene as active-gene;
+
+gene plays gene-location:locating-gene;
+gene plays gene-location:located-gene;
+
+gene-constitution sub gene-relation,
+    relates constituted-gene as passive-gene,
+    relates constituting-gene as active-gene;
+
+gene plays gene-constitution:constituting-gene;
+gene plays gene-constitution:constituted-gene;
+
+gene-disruption sub gene-relation,
+    relates disrupted-gene as passive-gene,
+    relates disrupting-gene as active-gene;
+
+gene plays gene-disruption:disrupting-gene;
+gene plays gene-disruption:disrupted-gene;
+
+gene-augmentation sub gene-relation,
+    relates augmented-gene as passive-gene,
+    relates augmenting-gene as active-gene;
+
+gene plays gene-augmentation:augmenting-gene;
+gene plays gene-augmentation:augmented-gene;
+
+gene-affection sub gene-relation,
+    relates affected-gene as passive-gene,
+    relates affecting-gene as active-gene;
+
+gene plays gene-affection:affecting-gene;
+gene plays gene-affection:affected-gene;
+
+gene-association sub gene-relation,
+    relates associated-gene as passive-gene,
+    relates associating-gene as active-gene;
+
+gene plays gene-association:associated-gene;
+gene plays gene-association:associating-gene;
+
+mention sub relation,
+    relates mentioning,
+    relates mentioned,
+    owns source,
+    owns sentence-text;
+
+publication plays mention:mentioning;
+gene-inhibition plays mention:mentioned;
+gene-interaction plays mention:mentioned;
+gene-coexistance plays mention:mentioned;
+gene-comparison plays mention:mentioned;
+gene-stimulation plays mention:mentioned;
+gene-conversion plays mention:mentioned;
+gene-production plays mention:mentioned;
+gene-similarity plays mention:mentioned;
+gene-location plays mention:mentioned;
+gene-constitution plays mention:mentioned;
+gene-disruption plays mention:mentioned;
+gene-augmentation plays mention:mentioned;
+gene-affection plays mention:mentioned;
+gene-association plays mention:mentioned;
+
+publishing sub relation,
+    relates publishing-journal,
+    relates published-publication;
+
+journal plays publishing:publishing-journal;
+publication plays publishing:published-publication;
+
+authorship sub relation,
+    relates author,
+    relates authored-publication;
+
+publication plays authorship:authored-publication;
+person plays authorship:author;
+
+discovery sub relation,
+    relates discovered-virus,
+    relates discovering-location;
+
+virus plays discovery:discovered-virus;
+country plays discovery:discovering-location;
+
+# attributes
+
+# id attributes
+
+id sub attribute, abstract, value string;
+
+publication-id sub id, abstract;
+doi sub publication-id;
+issn sub publication-id;
+pubmed-id sub publication-id;
+
+gene-id sub id, abstract;
+entrez-id sub gene-id;
+ensembl-gene-id sub gene-id;
+gene-symbol sub gene-id, abstract;
+primary-gene-symbol sub gene-symbol;
+alternative-gene-symbol sub gene-symbol;
+
+protein-id sub id, abstract;
+uniprot-id sub protein-id;
+
+transcript-id sub id, abstract;
+ensembl-transcript-id sub transcript-id;
+
+disease-id sub id, abstract;
+umls-id sub disease-id;
+
+virus-id sub id, abstract;
+genbank-id sub virus-id;
+
+pathway-id sub id, abstract;
+reactome-id sub pathway-id;
+
+drug-id sub id, abstract;
+chembl-id sub drug-id;
+
+# name attributes
+
+name sub attribute, abstract, value string;
+
+disease-name sub name;
+
+protein-name sub name, abstract;
+uniprot-name sub protein-name, abstract;
+primary-uniprot-name sub uniprot-name, value string;
+alternative-uniprot-name sub uniprot-name, value string;
+uniprot-entry-name sub protein-name;
+
+journal-name sub name;
+
+cell-name sub name;
+
+pathway-name sub name;
+
+tissue-name sub name;
+
+drug-name sub name, abstract;
+dgidb-name sub drug-name;
+dgidb-claim-name sub drug-name;
+organism-name sub name;
+
+virus-name sub name;
+
+publication-name sub name, abstract;
+title sub publication-name;
+
+country-name sub name;
+
+author-name sub name;
+
+# descriptive attributes
+
+source sub attribute, value string;
+year sub attribute, value long;
+volume sub attribute, value string;
+expression-value sub attribute, value string;
+expression-value-reliability sub attribute, value string;
+drug-claim-source sub attribute, value string;
+identity-percentage sub attribute, value double;
+function-description sub attribute, value string;
+disgenet-score sub attribute, value double;
+interaction-type sub attribute, value string;
+sentence-text sub attribute, value string;

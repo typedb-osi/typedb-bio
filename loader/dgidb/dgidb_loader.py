@@ -107,8 +107,8 @@ def insert_interactions(session, max_rows, num_jobs, batch_size):
                 interaction["chembl-id"],
             )
 
-            match_clause += " not { (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
-            insert_clause = "insert $r (target-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
+            match_clause += " not { (interacting-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
+            insert_clause = "insert $r (interacting-gene: $g, interacting-drug: $d) isa drug-gene-interaction"
 
             if interaction["interaction-type"] != "":
                 match_clause += ", has interaction-type \"{}\"".format(interaction["interaction-type"])
