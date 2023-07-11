@@ -302,14 +302,14 @@ rule inferred-protein-protein-association:
     when {
         $p1 isa protein;
         $p2 isa protein;
+        not {
+                $p1 is $p2;
+        };
         {
             (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
         } or {
             (participating-protein: $p1, participated-pathway: $path) isa pathway-participation;
             (participating-protein: $p2, participated-pathway: $path) isa pathway-participation;
-            not {
-                $p1 is $p2;
-            };
         };
     } then {
         (associated-protein: $p1, associated-protein: $p2) isa protein-protein-association;
