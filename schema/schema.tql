@@ -140,12 +140,12 @@ cell-expression sub bio-relation,
 cell plays cell-expression:expressing-cell;
 gene plays cell-expression:expressed-gene;
 
-composition sub bio-relation,
+tissue-composition sub bio-relation,
     relates composed-tissue,
     relates composing-cell;
 
-cell plays composition:composing-cell;
-tissue plays composition:composed-tissue;
+cell plays tissue-composition:composing-cell;
+tissue plays tissue-composition:composed-tissue;
 
 gene-gene-interaction sub bio-relation,
     relates interacting-gene;
@@ -197,7 +197,7 @@ rule inferred-tissue-expression:
         $t isa tissue;
         $c isa cell;
         $g isa gene;
-        (composed-tissue: $t, composing-cell: $c) isa composition;
+        (composed-tissue: $t, composing-cell: $c) isa tissue-composition;
         (expressing-cell: $c, expressed-gene: $g) isa cell-expression;
     } then {
         (expressing-tissue: $t, expressed-gene: $g) isa tissue-expression;
@@ -303,7 +303,7 @@ rule inferred-protein-protein-association:
         $p1 isa protein;
         $p2 isa protein;
         not {
-                $p1 is $p2;
+            $p1 is $p2;
         };
         {
             (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
@@ -479,7 +479,7 @@ rule inferred-tissue-context:
         $c isa cell;
         (biomolecular-process: $i, cell-context: $c) isa process-localisation;
         $t isa tissue;
-        (composed-tissue: $t, composing-cell: $c) isa composition;
+        (composed-tissue: $t, composing-cell: $c) isa tissue-composition;
     } then {
         (biomolecular-process: $i, tissue-context: $t) isa process-localisation;
     };

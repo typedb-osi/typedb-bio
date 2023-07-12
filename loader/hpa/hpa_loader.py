@@ -59,7 +59,7 @@ def insert_tissue(dataset, session, num_jobs, batch_size):
 
         for i, cell_name in enumerate(cell_types[tissue]):
             query += " $c{} isa cell, has cell-name \"{}\";".format(i, cell_name)
-            query += " (composed-tissue: $t, composing-cell: $c{}) isa composition;".format(i)
+            query += " (composed-tissue: $t, composing-cell: $c{}) isa tissue-composition;".format(i)
 
         queries.append(query)
 
@@ -102,7 +102,7 @@ def insert_gene_tissue(dataset, session, num_jobs, batch_size):
             "has tissue-name \"{}\";",
             "$c isa cell,",
             "has cell-name \"{}\";",
-            "(composed-tissue: $t, composing-cell: $c) isa composition;"
+            "(composed-tissue: $t, composing-cell: $c) isa tissue-composition;"
             "insert",
             "(expressed-gene: $g, expressing-cell: $c) isa cell-expression,",
             "has expression-value \"{}\",",

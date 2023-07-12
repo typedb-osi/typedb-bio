@@ -83,7 +83,7 @@ def load_contexts(interactions, session, num_jobs, batch_size):
             "$i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;",
             "$t isa tissue;",
             "$c isa cell;",
-            "(composed-tissue: $t, composing-cell: $c) isa composition;",
+            "(composed-tissue: $t, composing-cell: $c) isa tissue-composition;",
             "not {{ (biomolecular-process: $i, cell-context: $c) isa process-localisation; }};",
         ]).format(
             interaction["gene-id-1"],
