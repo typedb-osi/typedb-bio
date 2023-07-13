@@ -23,10 +23,10 @@ def insert_drugs(session, max_rows, num_jobs, batch_size):
 
     for row in rows[:max_rows]:
         data = {
-            "drug-claim-name": row[0].strip("\"").strip(),
-            "drug-name": row[1].strip("\"").strip(),
-            "chembl-id": row[2].strip(),
-            "drug-claim-source": row[3].strip(),
+            "drug-claim-name": row["drug_claim_name"].strip("\"").strip(),
+            "drug-name": row["drug_name"].strip("\"").strip(),
+            "chembl-id": row["concept_id"],
+            "drug-claim-source": row["drug_claim_source"],
         }
 
         dataset.append(data)
@@ -82,12 +82,12 @@ def insert_interactions(session, max_rows, num_jobs, batch_size):
 
     for row in rows[:max_rows]:
         data = {
-            "gene-name": row[0].strip(),
-            "entrez-id": row[2].strip(),
-            "interaction-type": row[4].strip(),
-            "drug-claim-name": row[5].strip(),
-            "drug-name": row[7].strip(),
-            "chembl-id": row[8].strip(),
+            "gene-name": row["gene_name"],
+            "entrez-id": row["entrez_id"],
+            "interaction-type": row["interaction_types"],
+            "drug-claim-name": row["drug_claim_name"],
+            "drug-name": row["drug_name"],
+            "chembl-id": row["drug_concept_id"],
         }
 
         interactions.append(data)

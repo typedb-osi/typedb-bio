@@ -22,12 +22,12 @@ def get_tissue_dataset(max_rows):
 
     for row in rows[:max_rows]:
         data = {
-            "ensembl-gene-id": row[0].strip(),
-            "gene-symbol": row[1].strip(),
-            "tissue": row[2].rstrip("1234567890").strip(),
-            "cell-type": row[3].strip(),
-            "expression-value": row[4].strip(),
-            "expression-value-reliability": row[5].strip(),
+            "ensembl-gene-id": row["Gene"],
+            "gene-symbol": row["Gene name"],
+            "tissue": row["Tissue"].rstrip("1234567890").strip(),
+            "cell-type": row["Cell type"],
+            "expression-value": row["Level"],
+            "expression-value-reliability": row["Reliability"],
         }
 
         if data["expression-value"].lower() in ("low", "medium", "high", "ascending", "descending"):

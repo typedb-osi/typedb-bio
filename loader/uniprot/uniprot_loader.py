@@ -22,14 +22,14 @@ def get_uniprot_dataset(max_rows):
 
     for row in rows[:max_rows]:
         data = {
-            "uniprot-id": row[0].strip(),
-            "uniprot-entry-name": row[1].strip(),
-            "protein-name": row[3].strip(),
-            "gene-symbol": row[4].strip(),
-            "organism": row[5].strip(),
-            "function-description": row[7].strip(),
-            "ensembl-transcript": row[11].strip(),
-            "entrez-id": row[12][:-1].strip(),
+            "uniprot-id": row["Entry"],
+            "uniprot-entry-name": row["Entry name"],
+            "protein-name": row["Protein names"],
+            "gene-symbol": row["Gene names"],
+            "organism": row["Organism"],
+            "function-description": row["Function [CC]"],
+            "ensembl-transcript": row["Ensembl transcript"],
+            "entrez-id": row["Cross-reference (GeneID)"][:-1],
         }
 
         dataset.append(data)

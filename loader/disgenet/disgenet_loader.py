@@ -16,11 +16,11 @@ def insert_associations(session, max_rows, num_jobs, batch_size):
 
     for row in rows[:max_rows]:
         data = {
-            "entrez-id": row[0].strip(),
-            "gene-symbol": row[1].strip(),
-            "disease-id": row[4].strip(),
-            "disease-name": row[5].strip(),
-            "disgenet-score": row[9].strip()
+            "entrez-id": row["geneId"],
+            "gene-symbol": row["geneSymbol"],
+            "disease-id": row["diseaseId"],
+            "disease-name": row["diseaseName"],
+            "disgenet-score": row["score"],
         }
 
         dataset.append(data)

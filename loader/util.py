@@ -46,7 +46,7 @@ def read_tsv(path, header=True, delimiter="\t", archive=None):
             reader = csv.reader(file, delimiter=delimiter)
 
             if header:
-                next(reader)
+                labels = next(reader)
 
             rows = list(reader)
     elif archive == "gz":
@@ -54,7 +54,7 @@ def read_tsv(path, header=True, delimiter="\t", archive=None):
             reader = csv.reader(file, delimiter=delimiter)
 
             if header:
-                next(reader)
+                labels = next(reader)
 
             rows = list(reader)
     elif archive == "zip":
@@ -62,13 +62,16 @@ def read_tsv(path, header=True, delimiter="\t", archive=None):
             with zip_file.open(".".join(path.split("/")[-1].split(".")[:-1]), "r") as file:
                 reader = csv.reader(TextIOWrapper(file, "utf-8"), delimiter=delimiter)
                 if header:
-                    next(reader)
+                    labels = next(reader)
 
                 rows = list(reader)
     else:
         raise ValueError("Unknown archive type: {}".format(archive))
 
-    return rows
+    if header:
+        return [{labels[i].strip(): row[i].strip() for i in range(len(labels))} for row in rows]
+    else:
+        return rows
 
 
 def clean_string(string: str) -> str:

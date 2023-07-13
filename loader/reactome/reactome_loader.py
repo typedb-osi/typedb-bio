@@ -13,7 +13,7 @@ def load_reactome(session, max_pathways, num_jobs, batch_size):
 
 def get_reactome_dataset(max_rows):
     get_file("https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt", "dataset/reactome")
-    rows = [row for row in read_tsv("dataset/reactome/UniProt2Reactome_All_Levels.txt") if row[5] == "Homo sapiens"]
+    rows = [row for row in read_tsv("dataset/reactome/UniProt2Reactome_All_Levels.txt", header=False) if row[5] == "Homo sapiens"]
     dataset = list()
 
     if max_rows is None:

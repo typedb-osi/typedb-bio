@@ -19,18 +19,18 @@ def get_virus_dataset():
 
     for row in rows:
         data = {
-            "genbank-id": row[0],
-            "identity-percent": row[2],
-            "host": row[3].strip(),
-            "location-discovered": row[4].strip(),
-            "names": [row[1].strip()]
+            "genbank-id": row["GenBank ID"],
+            "identity-percent": row["Identity %"],
+            "host": row["Host"],
+            "location-discovered": row["Location discovered"],
+            "names": [name for name in row["Coronavirus"].replace("]", "").split("[") if name != ""]
         }
 
-        if len(row) > 5 and row[5].strip != "":
-            data["names"].append(row[5].strip())
+        if len(row) > 5 and row[5] != "":
+            data["names"].append(row[5])
 
-        if len(row) > 6 and row[6].strip != "":
-            data["names"].append(row[6].strip())
+        if len(row) > 6 and row[6] != "":
+            data["names"].append(row[6])
 
         dataset.append(data)
 
@@ -116,9 +116,9 @@ def insert_host_proteins(session, num_jobs, batch_size):
 
     for row in rows:
         data = {
-            "coronavirus": row[0].strip(),
-            "uniprot-id": row[3].strip(),
-            "entrez-id": row[4].strip()
+            "coronavirus": row["Coronavirus"],
+            "uniprot-id": row["UniProt ID"],
+            "entrez-id": row["Host Gene Entrez ID"],
         }
 
         dataset.append(data)

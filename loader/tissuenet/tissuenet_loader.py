@@ -19,7 +19,7 @@ def load_tissuenet(session, max_interactions, num_jobs, batch_size):
             file_name = path.split("/")[-1].split(".")[0]
             tissue = tissue_mapper(file_name)
             print("Loading TissueNet \"{}\" dataset...".format(file_name))
-            rows = read_tsv(path)
+            rows = read_tsv(path, header=False)
             os.remove(path)
             interactions = list()
 
@@ -28,8 +28,8 @@ def load_tissuenet(session, max_interactions, num_jobs, batch_size):
 
             for row in rows[:max_interactions]:
                 interaction = {
-                    "gene-id-1": row[0].strip(),
-                    "gene-id-2": row[1].strip(),
+                    "gene-id-1": row[0],
+                    "gene-id-2": row[1],
                     "tissue-name": tissue["tissue-name"],
                     "cell-name": tissue["cell-name"],
                 }
