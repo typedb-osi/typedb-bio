@@ -147,10 +147,10 @@ tissue-composition sub bio-relation,
 cell plays tissue-composition:composing-cell;
 tissue plays tissue-composition:composed-tissue;
 
-gene-gene-interaction sub bio-relation,
-    relates interacting-gene;
+encoded-protein-interaction sub bio-relation,
+    relates encoding-gene;
 
-gene plays gene-gene-interaction:interacting-gene;
+gene plays encoded-protein-interaction:encoding-gene;
 
 process-localisation sub bio-relation,
     relates biomolecular-process,
@@ -160,21 +160,21 @@ process-localisation sub bio-relation,
 cell plays process-localisation:cell-context;
 tissue plays process-localisation:tissue-context;
 protein-protein-interaction plays process-localisation:biomolecular-process;
-gene-gene-interaction plays process-localisation:biomolecular-process;
+encoded-protein-interaction plays process-localisation:biomolecular-process;
 
 # inferred bio-relations
 
 inferred-bio-relation sub bio-relation,
     abstract;
 
-gene-protein-encoding sub inferred-bio-relation,
+protein-encoding sub inferred-bio-relation,
     relates encoding-gene,
     relates encoded-protein;
 
-gene plays gene-protein-encoding:encoding-gene;
-protein plays gene-protein-encoding:encoded-protein;
+gene plays protein-encoding:encoding-gene;
+protein plays protein-encoding:encoded-protein;
 
-rule inferred-gene-protein-encoding:
+rule inferred-protein-encoding:
     when {
         $g isa gene;
         $t isa transcript;
@@ -182,7 +182,7 @@ rule inferred-gene-protein-encoding:
         (transcribed-gene: $g, synthesised-transcript: $t) isa transcription;
         (translated-transcript: $t, synthesised-protein: $p) isa translation;
     } then {
-        (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
+        (encoding-gene: $g, encoded-protein: $p) isa protein-encoding;
     };
 
 tissue-expression sub inferred-bio-relation,
@@ -215,7 +215,7 @@ rule inferred-disease-protein-interaction:
         $p isa protein;
         $g isa gene;
         $d isa disease;
-        (encoded-protein: $p, encoding-gene: $g) isa gene-protein-encoding;
+        (encoded-protein: $p, encoding-gene: $g) isa protein-encoding;
         (interacting-gene: $g, interacting-disease: $d) isa disease-gene-interaction;
     } then {
         (interacting-protein: $p, interacting-disease: $d) isa disease-protein-interaction;
@@ -234,7 +234,7 @@ rule inferred-drug-protein-interaction:
         $g isa gene;
         $p isa protein;
         (interacting-drug: $d, interacting-gene: $g) isa drug-gene-interaction;
-        (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
+        (encoding-gene: $g, encoded-protein: $p) isa protein-encoding;
     } then {
         (interacting-drug: $d, interacting-protein: $p) isa drug-protein-interaction;
     };
@@ -251,7 +251,7 @@ rule inferred-cell-enhancement:
         $p isa protein;
         $g isa gene;
         $c isa cell;
-        (encoded-protein: $p, encoding-gene: $g) isa gene-protein-encoding;
+        (encoded-protein: $p, encoding-gene: $g) isa protein-encoding;
         (expressed-gene: $g, expressing-cell: $t) isa cell-expression;
     } then {
         (expressed-protein: $p, enhanced-cell: $t) isa cell-enhancement;
@@ -269,7 +269,7 @@ rule inferred-tissue-enhancement:
         $p isa protein;
         $g isa gene;
         $t isa tissue;
-        (encoded-protein: $p, encoding-gene: $g) isa gene-protein-encoding;
+        (encoded-protein: $p, encoding-gene: $g) isa protein-encoding;
         (expressed-gene: $g, expressing-tissue: $t) isa tissue-expression;
     } then {
         (expressed-protein: $p, enhanced-tissue: $t) isa tissue-enhancement;
@@ -284,11 +284,11 @@ rule inferred-protein-interaction:
     when {
         $g1 isa gene;
         $p1 isa protein;
-        (encoding-gene: $g1, encoded-protein: $p1) isa gene-protein-encoding;
+        (encoding-gene: $g1, encoded-protein: $p1) isa protein-encoding;
         $g2 isa gene;
         $p2 isa protein;
-        (encoding-gene: $g2, encoded-protein: $p2) isa gene-protein-encoding;
-        (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+        (encoding-gene: $g2, encoded-protein: $p2) isa protein-encoding;
+        (encoding-gene: $g1, encoding-gene: $g2) isa encoded-protein-interaction;
     } then {
         (interacting-protein: $p1, interacting-protein: $p2) isa protein-protein-interaction;
     };
@@ -465,7 +465,7 @@ rule inferred-potential-disease-treatment:
 #    $g isa gene;
 #    $p isa protein;
 #    $v isa virus;
-#    (encoding-gene: $g, encoded-protein: $p) isa gene-protein-encoding;
+#    (encoding-gene: $g, encoded-protein: $p) isa protein-encoding;
 #    (targeted-protein: $p, interacting-virus: $v) isa virus-protein-interaction;
 #} then {
 #    (associated-gene: $g, associated-virus: $v) isa gene-virus-association;
@@ -475,7 +475,7 @@ rule inferred-tissue-context:
     when {
         $g1 isa gene;
         $g2 isa gene;
-        $i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+        $i (encoding-gene: $g1, encoding-gene: $g2) isa encoded-protein-interaction;
         $c isa cell;
         (biomolecular-process: $i, cell-context: $c) isa process-localisation;
         $t isa tissue;
@@ -488,11 +488,11 @@ rule inferred-protein-interaction-context:
     when {
         $g1 isa gene;
         $p1 isa protein;
-        (encoding-gene: $g1, encoded-protein: $p1) isa gene-protein-encoding;
+        (encoding-gene: $g1, encoded-protein: $p1) isa protein-encoding;
         $g2 isa gene;
         $p2 isa protein;
-        (encoding-gene: $g2, encoded-protein: $p2) isa gene-protein-encoding;
-        $gi (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;
+        (encoding-gene: $g2, encoded-protein: $p2) isa protein-encoding;
+        $gi (encoding-gene: $g1, encoding-gene: $g2) isa encoded-protein-interaction;
         {
             $c isa tissue;
             $context type process-localisation:tissue-context;

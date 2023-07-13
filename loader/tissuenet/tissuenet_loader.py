@@ -53,9 +53,9 @@ def load_interactions(interactions, session, num_jobs, batch_size):
             "has ensembl-gene-id \"{}\";",
             "$g2 isa gene,",
             "has ensembl-gene-id \"{}\";",
-            "not {{ (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction; }};"
+            "not {{ (encoding-gene: $g1, encoding-gene: $g2) isa encoded-protein-interaction; }};"
             "insert",
-            "$i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;",
+            "$i (encoding-gene: $g1, encoding-gene: $g2) isa encoded-protein-interaction;",
         ]).format(
             interaction["gene-id-1"],
             interaction["gene-id-2"],
@@ -80,7 +80,7 @@ def load_contexts(interactions, session, num_jobs, batch_size):
             "has ensembl-gene-id \"{}\";",
             "$g2 isa gene,",
             "has ensembl-gene-id \"{}\";",
-            "$i (interacting-gene: $g1, interacting-gene: $g2) isa gene-gene-interaction;",
+            "$i (encoding-gene: $g1, encoding-gene: $g2) isa encoded-protein-interaction;",
             "$t isa tissue;",
             "$c isa cell;",
             "(composed-tissue: $t, composing-cell: $c) isa tissue-composition;",
