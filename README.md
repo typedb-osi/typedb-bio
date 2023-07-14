@@ -24,7 +24,7 @@ The team behind TypeDB Bio consists of a partnership between [GSK](http://gsk.co
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows TypeDB Bio to become an intelligent database of biomedical data in the biomedical field that infers implicit knowledge based on the explicitly stored data. TypeDB Bio can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >= 3.10, [TypeDB Core >= 2.18.0](https://typedb.com/docs/typedb/2.x/installation.html), [TypeDB Python Driver >= 2.18.0](https://typedb.com/docs/clients/2.x/python/python-install.html), [TypeDB Studio >= 2.18.0](https://typedb.com/docs/clients/2.x/resources/downloads.html)
+**Prerequesites**: Python >= 3.10, JDK >= 11, [TypeDB Core >= 2.18.0](https://typedb.com/docs/typedb/2.x/installation.html), [TypeDB Python Driver >= 2.18.0](https://typedb.com/docs/clients/2.x/python/python-install.html), [TypeDB Studio >= 2.18.0](https://typedb.com/docs/clients/2.x/resources/downloads.html)
 
 Clone this repo:
 
