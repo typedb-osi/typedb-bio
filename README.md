@@ -24,7 +24,7 @@ The team behind TypeDB Bio consists of a partnership between [GSK](http://gsk.co
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows TypeDB Bio to become an intelligent database of biomedical data in the biomedical field that infers implicit knowledge based on the explicitly stored data. TypeDB Bio can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >3.10, [TypeDB Core 2.15.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.14.3](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
+**Prerequesites**: Python >= 3.10, [TypeDB Core >= 2.18.0](https://typedb.com/docs/typedb/2.x/installation.html), [TypeDB Python Driver >= 2.18.0](https://typedb.com/docs/clients/2.x/python/python-install.html), [TypeDB Studio >= 2.18.0](https://typedb.com/docs/clients/2.x/resources/downloads.html)
 
 Clone this repo:
 
@@ -51,13 +51,20 @@ typedb server
 Start the loader script
 
 ```bash
-python loader.py -n 4 # insert using 4 threads
+python loader.py
 ```
 
-For help with the loader script command line options:
+Config options can be set in: `config.ini`
+Some options can be overridden with command line arguments. For help with those arguments:
 
 ```bash
 python loader.py -h
+```
+
+If using TypeDB Enterprise or Cloud, the connection password can only be supplied via command line for security:
+
+```bash
+python loader.py -p my-password
 ```
 
 Now grab a coffee (or two) while the loader builds the schema and data for you!
@@ -84,9 +91,9 @@ pre-commit install
 ```
 
 ## Examples
-TypeQL queries can be run either in the [TypeDB console](https://docs.vaticle.com/docs/console/console), in [TypeDB Studio](https://docs.vaticle.com/docs/studio/overview) or through [client APIs](https://docs.vaticle.com/docs/client-api/overview).  However, we encourage running the queries on TypeDB Studio to have the best visual experience.
+TypeQL queries can be run either in [TypeDB Studio](https://typedb.com/docs/clients/2.x/studio.html), in [TypeDB Console](https://typedb.com/docs/clients/2.x/console.html), or through [driver APIs](https://typedb.com/docs/clients/2.x/clients.html#_typedb_drivers).  However, we encourage running the queries on TypeDB Studio to have the best visual experience.
 
-```bash
+```typeql
 # What are the drugs that interact with the genes associated to the virus Sars?
 
 match
