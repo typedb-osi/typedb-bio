@@ -2,10 +2,10 @@ import csv
 from loader.util import write_batches, read_tsv
 
 
-def load_coronavirus(session, load, num_jobs, batch_size):
-    if load:
+def load_coronavirus(session, max_coronaviruses, num_jobs, batch_size):
+    if max_coronaviruses is None or max_coronaviruses > 0:
         print("Loading Coronavirus dataset...")
-        virus_dataset = get_virus_dataset()
+        virus_dataset = get_virus_dataset(max_coronaviruses)
         insert_extra_roleplayers(virus_dataset, session, num_jobs, batch_size)
         insert_viruses(virus_dataset, session, num_jobs, batch_size)
         insert_host_proteins(session, num_jobs, batch_size)
@@ -13,11 +13,14 @@ def load_coronavirus(session, load, num_jobs, batch_size):
         print("--------------------------------------------------")
 
 
-def get_virus_dataset():
+def get_virus_dataset(max_rows):
     rows = read_tsv("dataset/coronavirus/Genome identity.csv", delimiter=",")
     dataset = list()
 
-    for row in rows:
+    if max_rows is None:
+        max_rows = len(rows)
+
+    for row in rows[:max_rows]:
         data = {
             "genbank-id": row["GenBank ID"],
             "identity-percent": row["Identity %"],
