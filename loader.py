@@ -67,29 +67,29 @@ def command_parser():
         "-s",
         "--server_type",
         type=str,
-        choices=["CORE", "CLUSTER"],
-        help="TypeDB server product in use, \"CORE\" or \"CLUSTER\".",
+        choices=["CORE", "ENTERPRISE", "CLOUD"],
+        help="TypeDB server product in use, \"CORE\", \"ENTERPRISE\", or \"CLOUD\".",
     )
 
     parser.add_argument(
         "-u",
         "--username",
         type=str,
-        help="Username for TypeDB Cluster.",
+        help="Username for TypeDB Enterprise and Cloud.",
     )
 
     parser.add_argument(
         "-p",
         "--password",
         type=str,
-        help="Password for TypeDB Cluster. Cannot be supplied via config file.",
+        help="Password for TypeDB Enterprise and Cloud. Cannot be supplied via config file.",
     )
 
     parser.add_argument(
         "-t",
         "--tls_cert_path",
         type=str,
-        help="TLS certificate path for TypeDB Cluster.",
+        help="TLS certificate path for TypeDB Enterprise and Cloud.",
     )
 
     parser.add_argument(
@@ -163,11 +163,11 @@ if __name__ == "__main__":
 
     if args["server_type"].lower() == "core":
         client_partial = partial(TypeDB.core_client, address=args["address"])
-    elif args["server_type"].lower() == "cluster":
+    elif args["server_type"].lower() in ["enterprise", "cloud"]:
         credential = TypeDBCredential(username=args["username"], password=args["password"], tls_root_ca_path=args["tls_cert_path"])
         client_partial = partial(TypeDB.cluster_client, addresses=args["address"], credential=credential)
     else:
-        raise ValueError("Unknown server type. Must be \"CORE\" or \"CLUSTER\".")
+        raise ValueError("Unknown server type. Must be \"CORE\", \"ENTERPRISE\", or \"CLOUD\".")
 
     print("Welcome to the TypeDB Bio database loader!")
     print("--------------------------------------------------")
