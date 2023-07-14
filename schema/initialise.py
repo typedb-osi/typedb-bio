@@ -3,13 +3,13 @@
 from typedb.client import SessionType, TransactionType
 
 
-def initialise_database(client, database, force):
+def initialise_database(client, database, overwrite):
     """Initialise the database."""
     if client.databases().contains(database):
-        if force:
+        if overwrite:
             client.databases().get(database).delete()
         else:
-            raise ValueError("database {} already exists, use --force True to overwrite")
+            raise ValueError("database {} already exists, use --overwrite True to overwrite")
 
     client.databases().create(database)
     print("Defining schema...")
