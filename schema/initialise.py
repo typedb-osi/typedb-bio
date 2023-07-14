@@ -14,7 +14,7 @@ def initialise_database(client, database, force):
     client.databases().create(database)
     print("Defining schema...")
 
-    with open("Schema/schema.tql", "r", encoding="utf-8") as file:
+    with open("schema/schema.tql", "r", encoding="utf-8") as file:
         schema = file.read()
 
     with client.session(database, SessionType.SCHEMA) as session:
