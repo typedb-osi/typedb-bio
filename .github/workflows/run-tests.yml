@@ -25,7 +25,7 @@ jobs:
           gpg --export 8F3DA4B5E9AEF44C | sudo tee /etc/apt/trusted.gpg.d/vaticle.gpg > /dev/null
           echo "deb [ arch=all ] https://repo.vaticle.com/repository/apt/ trusty main" | sudo tee /etc/apt/sources.list.d/vaticle.list > /dev/null
           sudo apt update
-          sudo apt install typedb-all=2.15.0 typedb-console=2.15.0 typedb-server=2.15.0 typedb-bin=2.12.0 -y
+          sudo apt install typedb-all=2.18.0 typedb-console=2.18.0 typedb-server=2.18.0 typedb-bin=2.18.0 -y
       - name: Run Python commands
         run: |
           pip install --upgrade pip

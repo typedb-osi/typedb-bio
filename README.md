@@ -24,7 +24,7 @@ The team behind TypeDB Bio consists of a partnership between [GSK](http://gsk.co
 The schema that models the underlying knowledge graph alongside the descriptive query language, TypeQL, makes writing complex queries an extremely straightforward and intuitive process. Furthermore, TypeDB's automated reasoning, allows TypeDB Bio to become an intelligent database of biomedical data in the biomedical field that infers implicit knowledge based on the explicitly stored data. TypeDB Bio can understand biological facts, infer based on new findings and enforce research constraints, all at query (run) time.
 
 ## Installation
-**Prerequesites**: Python >3.10, [TypeDB Core 2.15.0](https://vaticle.com/download#core), [TypeDB Python Client API 2.14.3](https://docs.vaticle.com/docs/client-api/python), [TypeDB Studio 2.11.0](https://vaticle.com/download#typedb-studio)
+**Prerequesites**: Python >= 3.10, JDK >= 11, [TypeDB Core >= 2.18.0](https://typedb.com/docs/typedb/2.x/installation.html), [TypeDB Python Driver >= 2.18.0](https://typedb.com/docs/clients/2.x/python/python-install.html), [TypeDB Studio >= 2.18.0](https://typedb.com/docs/clients/2.x/resources/downloads.html)
 
 Clone this repo:
 
@@ -32,7 +32,7 @@ Clone this repo:
 git clone https://github.com/vaticle/typedb-bio.git
 ```
 
-Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `Dataset/CORD_NER`
+Download the CORD-NER data set from [this link](https://uofi.app.box.com/s/k8pw7d5kozzpoum2jwfaqdaey1oij93x/file/651148518303) and add it to this directory: `dataset/cordner`
 
 Set up a virtual environment and install the dependencies:
 
@@ -48,19 +48,26 @@ Start typedb
 typedb server
 ```
 
-Start the migrator script
+Start the loader script
 
 ```bash
-python migrator.py -n 4 # insert using 4 threads
+python loader.py
 ```
 
-For help with the migrator script command line options:
+Config options can be set in: `config.ini`
+Some options can be overridden with command line arguments. For help with those arguments:
 
 ```bash
-python migrator.py -h
+python loader.py -h
 ```
 
-Now grab a coffee (or two) while the migrator builds the database and schema for you!
+If using TypeDB Enterprise or Cloud, the connection password can only be supplied via command line for security:
+
+```bash
+python loader.py -p my-password
+```
+
+Now grab a coffee (or two) while the loader builds the schema and data for you!
 
 ## Testing
 Install the test dependencies:
@@ -84,9 +91,9 @@ pre-commit install
 ```
 
 ## Examples
-TypeQL queries can be run either in the [TypeDB console](https://docs.vaticle.com/docs/console/console), in [TypeDB Studio](https://docs.vaticle.com/docs/studio/overview) or through [client APIs](https://docs.vaticle.com/docs/client-api/overview).  However, we encourage running the queries on TypeDB Studio to have the best visual experience.
+TypeQL queries can be run either in [TypeDB Studio](https://typedb.com/docs/clients/2.x/studio.html), in [TypeDB Console](https://typedb.com/docs/clients/2.x/console.html), or through [driver APIs](https://typedb.com/docs/clients/2.x/clients.html#_typedb_drivers).  However, we encourage running the queries on TypeDB Studio to have the best visual experience.
 
-```bash
+```typeql
 # What are the drugs that interact with the genes associated to the virus Sars?
 
 match
@@ -106,19 +113,18 @@ Currently the datasets we've integrated include:
 
 * [CORD-NER](https://xuanwang91.github.io/2020-03-20-cord19-ner/): The CORD-19 dataset that the White House released has been annotated and made publicly available. It uses various NER methods to recognise named entities on CORD-19 with distant or weak supervision.
 * [Uniprot](https://www.uniprot.org/uniprot/?query=proteome:UP000005640%20reviewed:yes): We’ve downloaded the reviewed human subset, and ingested genes, transcripts and protein identifiers.
-* [Coronaviruses](https://github.com/vaticle/typedb-bio/tree/master/Dataset/Coronaviruses): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
+* [Coronaviruses](https://github.com/vaticle/typedb-bio/tree/master/dataset/coronavirus): This is an annotated dataset of coronaviruses and their potential drug targets put together by Oxford PharmaGenesis based on literature review.
 * [DGIdb](http://www.dgidb.org/downloads): We’ve taken the *Interactions TSV* which includes all drug-gene interactions.
 * [Human Protein Atlas](https://www.proteinatlas.org/about/download): The *Normal Tissue Data* includes the expression profiles for proteins in human tissues.
 * [Reactome](https://reactome.org/download/current/UniProt2Reactome_All_Levels.txt): This dataset connects pathways and their participating proteins.
 * [DisGeNet](https://www.disgenet.org/downloads): We’ve taken the *curated gene-disease-associations* dataset, which contains associations from Uniprot, CGI, ClinGen, Genomics England and CTD, PsyGeNET, and Orphanet.
-* [SemMed](https://skr3.nlm.nih.gov/SemMedDB/dbinfo.html): This is a subset of the SemMed version 4.0 database
+* [SemMed](https://skr3.nlm.nih.gov/SemMedDB/dbinfo.html): This is a subset of the SemMed version 4.0 database.
+* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/): A dataset of protein-protein interactions.
 
 In progress:
 
 * [CORD-19](https://www.semanticscholar.org/cord19): We incorporate the original corpus which includes peer-reviewed publications from bioRxiv, medRxiv and others.
-    * TODO: write migrator script
-* [TissueNet](https://netbio.bgu.ac.il/labwebsite/tissuenet-v-2-download/)
-    * TODO: `./Migrators/TissueNet/TissueNetMigrator.py` incomplete: only migrates a single data file and is not called in `./migrator.py`.
+    * TODO: write loader script
 
 We plan to add many more datasets!
 
@@ -136,6 +142,7 @@ If you wish to get in touch, please talk to us on the #typedb-bio channel on our
 - Konrad Myśliwiec ([LinkedIn](https://www.linkedin.com/in/konrad-my%C5%9Bliwiec-764ba9163/))
 - Kim Wager ([LinkedIn](https://www.linkedin.com/in/kimwager/))
 - Tomás Sabat ([LinkedIn](https://www.linkedin.com/in/tom%C3%A1s-sabat-83265841/))
+- James Whiteside ([LinkedIn](https://www.linkedin.com/in/james-whiteside-engineer/))
 
 ## **Further Learning**
 - [TypeDB for Life Sciences](https://vaticle.com/use-cases/life-sciences)
