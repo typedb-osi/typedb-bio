@@ -360,26 +360,26 @@ rule inferred-disease-protein-association:
         (associated-disease: $d, associated-protein: $p) isa disease-protein-association;
     };
 
-#virus-protein-association sub indirect-bio-relation,
-#    relates associated-virus,
-#    relates associated-protein;
-#
-#virus plays virus-protein-association:associated-virus;
-#protein plays virus-protein-association:associated-protein;
-#
-#rule inferred-virus-protein-association:
-#    when {
-#        $v isa virus;
-#        $p isa protein;
-#        {
-#            (interacting-virus: $v, targeted-protein: $p) isa virus-protein-interaction;
-#        } or {
-#            (interacting-virus: $v, targeted-protein: $p2) isa virus-protein-interaction;
-#            (associated-protein: $p2, associated-protein: $p) isa protein-protein-association;
-#        };
-#    } then {
-#        (associated-virus: $v, associated-protein: $p) isa virus-protein-association;
-#    };
+virus-protein-association sub indirect-bio-relation,
+    relates associated-virus,
+    relates associated-protein;
+
+virus plays virus-protein-association:associated-virus;
+protein plays virus-protein-association:associated-protein;
+
+rule inferred-virus-protein-association:
+    when {
+        $v isa virus;
+        $p isa protein;
+        {
+            (interacting-virus: $v, targeted-protein: $p) isa virus-protein-interaction;
+        } or {
+            (interacting-virus: $v, targeted-protein: $p2) isa virus-protein-interaction;
+            (associated-protein: $p2, associated-protein: $p) isa protein-protein-association;
+        };
+    } then {
+        (associated-virus: $v, associated-protein: $p) isa virus-protein-association;
+    };
 
 potential-disease-treatment sub indirect-bio-relation,
     relates treating-drug,
@@ -397,6 +397,24 @@ rule inferred-potential-disease-treatment:
         (associated-protein: $p, associated-disease: $di) isa disease-protein-association;
     } then {
         (treating-drug: $dr, treated-disease: $di) isa potential-disease-treatment;
+    };
+
+potential-virus-treatment sub indirect-bio-relation,
+    relates treating-drug,
+    relates treated-virus;
+
+drug plays potential-virus-treatment:treating-drug;
+virus plays potential-virus-treatment:treated-virus;
+
+rule inferred-potential-virus-treatment:
+    when {
+        $d isa drug;
+        $p isa protein;
+        $v isa virus;
+        (associated-drug: $d, associated-protein: $p) isa drug-protein-association;
+        (associated-protein: $p, associated-virus: $v) isa virus-protein-association;
+    } then {
+        (treating-drug: $d, treated-virus: $v) isa potential-virus-treatment;
     };
 
 #disease-cell-association sub inferred-bio-relation,
