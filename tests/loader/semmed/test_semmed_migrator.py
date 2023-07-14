@@ -18,7 +18,6 @@ def _raise_exception(*args, **kwargs):
 def test_migrate_semmed(
     client: TypeDBClient,
     database: str,
-    db_uri: str,
     cache_dir: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -28,8 +27,6 @@ def test_migrate_semmed(
     :type client: TypeDBClient
     :param database: The database name.
     :type database: str
-    :param db_uri: The TypeDB server uri.
-    :type db_uri: str
     :param cache_dir: The cache directory.
     :type cache_dir: Path
     :param monkeypatch: The pytest monkeypatch fixture.
@@ -39,9 +36,8 @@ def test_migrate_semmed(
         _migrate_semmed = partial(
             load_semmed,
             session=session,
-            uri=db_uri,
-            num_semmed=100,
-            n_jobs=4,
+            max_publications=None,
+            num_jobs=4,
             batch_size=50,
             cache_dir=cache_dir,
         )
