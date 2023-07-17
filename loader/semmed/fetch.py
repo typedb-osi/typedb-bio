@@ -167,4 +167,6 @@ def fetch_data(
     with open(cache_dir / "failed_ids.json", "w", encoding="utf-8") as file:
         file.write(json.dumps({"failed_ids": failed_ids}, indent=4))
 
+    publications = [publication for publication in publications if "error" not in publication.keys()]
+
     return relations, publications
