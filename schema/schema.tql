@@ -252,9 +252,9 @@ rule inferred-cell-enhancement:
         $g isa gene;
         $c isa cell;
         (encoded-protein: $p, encoding-gene: $g) isa protein-encoding;
-        (expressed-gene: $g, expressing-cell: $t) isa cell-expression;
+        (expressed-gene: $g, expressing-cell: $c) isa cell-expression;
     } then {
-        (expressed-protein: $p, enhanced-cell: $t) isa cell-enhancement;
+        (expressed-protein: $p, enhanced-cell: $c) isa cell-enhancement;
     };
 
 tissue-enhancement sub inferred-bio-relation,
