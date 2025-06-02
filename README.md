@@ -8,6 +8,14 @@
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typedb-796de3.svg)](https://stackoverflow.com/questions/tagged/typedb)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typeql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/typeql)
 
+
+## Compatibility note
+
+**This repository has not been updated to be compatible with TypeDB 3.0.**
+
+The TypeDB team welcomes any community members wishing to contribute this upgrade, and are happy to provide guidance and reviews of any steps in this direction
+
+
 ## Overview
 TypeDB Bio is an open source biomedical knowledge graph to enable research in areas such as drug discovery, precision medicine and drug repurposing. It provides biomedical researchers an intuitive way to query interconnected and heterogeneous biomedical data in one single place.
 
